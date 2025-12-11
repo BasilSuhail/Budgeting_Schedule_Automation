@@ -2,107 +2,125 @@ import Link from 'next/link';
 
 export default function Home() {
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-8">
-      <div className="max-w-4xl w-full bg-white rounded-2xl shadow-2xl p-12">
-        <div className="text-center mb-8">
-          <h1 className="text-5xl font-bold text-gray-900 mb-4">
-            Budget Automation System
-          </h1>
-          <p className="text-xl text-gray-600 mb-2">
-            Master Budget Generator for Manufacturing Companies
+    <div className="min-h-screen bg-[#fafafa]">
+      {/* Header */}
+      <header className="py-4 px-6 border-b border-gray-200 bg-white/80 backdrop-blur-xl sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto">
+          <h1 className="text-xl font-semibold text-gray-900">Budget Automation</h1>
+        </div>
+      </header>
+
+      {/* Hero Section */}
+      <div className="max-w-5xl mx-auto px-6 py-20">
+        <div className="text-center mb-16">
+          <h2 className="text-6xl font-semibold text-gray-900 mb-6 tracking-tight">
+            Master Budget<br/>Generator
+          </h2>
+          <p className="text-2xl text-gray-600 mb-4 font-normal max-w-2xl mx-auto">
+            Create comprehensive financial budgets for manufacturing companies in minutes.
           </p>
-          <p className="text-sm text-gray-500">
-            Based on Ronald W. Hilton's 13-Schedule Framework
+          <p className="text-base text-gray-500 max-w-xl mx-auto">
+            Based on Ronald W. Hilton's proven 13-schedule framework
           </p>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-6 mb-8">
-          <div className="bg-blue-50 p-6 rounded-lg border-2 border-blue-200">
-            <h3 className="text-lg font-semibold text-blue-900 mb-2">
-              ✓ Automated Calculations
-            </h3>
-            <p className="text-sm text-blue-700">
-              All 13 budget schedules generated automatically from your inputs
-            </p>
-          </div>
-
-          <div className="bg-green-50 p-6 rounded-lg border-2 border-green-200">
-            <h3 className="text-lg font-semibold text-green-900 mb-2">
-              ✓ Industry Standard
-            </h3>
-            <p className="text-sm text-green-700">
-              Follows textbook methodology used by Fortune 500 companies
-            </p>
-          </div>
-
-          <div className="bg-purple-50 p-6 rounded-lg border-2 border-purple-200">
-            <h3 className="text-lg font-semibold text-purple-900 mb-2">
-              ✓ Flexible Inputs
-            </h3>
-            <p className="text-sm text-purple-700">
-              Enter historical data, rates, and assumptions at your own pace
-            </p>
-          </div>
-
-          <div className="bg-orange-50 p-6 rounded-lg border-2 border-orange-200">
-            <h3 className="text-lg font-semibold text-orange-900 mb-2">
-              ✓ Export Ready
-            </h3>
-            <p className="text-sm text-orange-700">
-              Download results in Excel, PDF, or CSV formats
-            </p>
-          </div>
-        </div>
-
-        <div className="text-center space-y-4">
+        {/* CTA */}
+        <div className="text-center mb-24">
           <Link
             href="/input"
-            className="inline-block bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-8 py-4 rounded-lg text-lg shadow-lg hover:shadow-xl transition-all duration-200"
+            className="inline-block bg-[#0071e3] hover:bg-[#0077ed] text-white font-medium px-8 py-3.5 rounded-xl text-lg shadow-sm"
           >
-            Start New Budget →
+            Start New Budget
           </Link>
-
-          <p className="text-sm text-gray-500">
-            No signup required • All data stays in your browser
+          <p className="text-sm text-gray-500 mt-4">
+            No signup required
           </p>
         </div>
 
-        <div className="mt-12 pt-8 border-t border-gray-200">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4 text-center">
+        {/* Features */}
+        <div className="grid md:grid-cols-2 gap-6 mb-20">
+          <div className="bg-white p-8 rounded-2xl border border-gray-200">
+            <div className="text-4xl mb-4">📊</div>
+            <h3 className="text-xl font-semibold text-gray-900 mb-3">
+              Automated Calculations
+            </h3>
+            <p className="text-gray-600 leading-relaxed">
+              All 13 budget schedules generated automatically from your inputs with industry-standard formulas.
+            </p>
+          </div>
+
+          <div className="bg-white p-8 rounded-2xl border border-gray-200">
+            <div className="text-4xl mb-4">✓</div>
+            <h3 className="text-xl font-semibold text-gray-900 mb-3">
+              Industry Standard
+            </h3>
+            <p className="text-gray-600 leading-relaxed">
+              Follows textbook methodology used by Fortune 500 companies and taught in business schools.
+            </p>
+          </div>
+
+          <div className="bg-white p-8 rounded-2xl border border-gray-200">
+            <div className="text-4xl mb-4">⚡</div>
+            <h3 className="text-xl font-semibold text-gray-900 mb-3">
+              Fast & Flexible
+            </h3>
+            <p className="text-gray-600 leading-relaxed">
+              Enter historical data, rates, and assumptions at your own pace. Save hours of manual work.
+            </p>
+          </div>
+
+          <div className="bg-white p-8 rounded-2xl border border-gray-200">
+            <div className="text-4xl mb-4">📄</div>
+            <h3 className="text-xl font-semibold text-gray-900 mb-3">
+              Export Ready
+            </h3>
+            <p className="text-gray-600 leading-relaxed">
+              Download results in professional formats ready for presentation and decision-making.
+            </p>
+          </div>
+        </div>
+
+        {/* Schedules List */}
+        <div className="bg-white rounded-2xl border border-gray-200 p-10">
+          <h3 className="text-3xl font-semibold text-gray-900 mb-8 text-center">
             The 13 Budget Schedules
-          </h2>
-          <div className="grid md:grid-cols-2 gap-3 text-sm">
+          </h3>
+          <div className="grid md:grid-cols-2 gap-x-8 gap-y-3 max-w-3xl mx-auto">
             {[
-              "1. Sales Budget",
-              "2. Production Budget",
-              "3. Direct-Material Budget",
-              "4. Direct-Labour Budget",
-              "5. Manufacturing Overhead Budget",
-              "6. Selling & Administrative Budget",
-              "7. Admin Expense Budget",
-              "8. Cash Receipts Budget",
-              "9. Cash Disbursement Budget",
-              "10. Cash Budget",
-              "11. Cost of Goods Manufactured & Sold",
-              "12. Budgeted Income Statement",
-              "13. Budgeted Balance Sheet"
+              "Sales Budget",
+              "Production Budget",
+              "Direct-Material Budget",
+              "Direct-Labour Budget",
+              "Manufacturing Overhead Budget",
+              "Selling & Administrative Budget",
+              "Admin Expense Budget",
+              "Cash Receipts Budget",
+              "Cash Disbursement Budget",
+              "Cash Budget",
+              "Cost of Goods Manufactured & Sold",
+              "Budgeted Income Statement",
+              "Budgeted Balance Sheet",
+              "Budgeted Cash Flow Statement"
             ].map((schedule, idx) => (
-              <div key={idx} className="flex items-center space-x-2 text-gray-700">
-                <span className="text-indigo-600">✓</span>
-                <span>{schedule}</span>
+              <div key={idx} className="flex items-center space-x-3 text-gray-700">
+                <span className="text-[#0071e3] text-sm font-medium w-6">{idx + 1}.</span>
+                <span className="text-base">{schedule}</span>
               </div>
             ))}
-            <div className="flex items-center space-x-2 text-gray-700">
-              <span className="text-indigo-600">✓</span>
-              <span>14. Budgeted Cash Flow Statement</span>
-            </div>
           </div>
         </div>
       </div>
 
-      <footer className="mt-8 text-center text-sm text-gray-600">
-        <p>Built with Next.js, TypeScript, and Tailwind CSS</p>
-        <p className="mt-1">© 2025 Budget Automation System</p>
+      {/* Footer */}
+      <footer className="border-t border-gray-200 py-8 mt-20">
+        <div className="max-w-5xl mx-auto px-6 text-center">
+          <p className="text-sm text-gray-500">
+            Built with Next.js, TypeScript, and Tailwind CSS
+          </p>
+          <p className="text-sm text-gray-500 mt-2">
+            © 2025 Budget Automation System
+          </p>
+        </div>
       </footer>
     </div>
   );

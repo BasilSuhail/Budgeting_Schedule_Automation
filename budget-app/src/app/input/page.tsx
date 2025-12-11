@@ -51,27 +51,35 @@ export default function InputPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8 px-4">
-      <div className="max-w-6xl mx-auto">
-        {/* Header */}
-        <div className="mb-8">
-          <Link href="/" className="text-indigo-600 hover:text-indigo-800 flex items-center gap-2 mb-4">
-            ← Back to Home
+    <div className="min-h-screen bg-[#fafafa]">
+      {/* Header */}
+      <header className="py-4 px-6 border-b border-gray-200 bg-white/80 backdrop-blur-xl sticky top-0 z-50">
+        <div className="max-w-[1600px] mx-auto flex items-center justify-between">
+          <Link href="/" className="text-[#0071e3] hover:text-[#0077ed] text-sm font-medium">
+            ← Back
           </Link>
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">
-            Budget Input Form
-          </h1>
-          <p className="text-gray-600">
-            Step 1: Sales Budget - Enter your forecasted sales data
+          <h1 className="text-xl font-semibold text-gray-900">Budget Input</h1>
+          <div className="w-16"></div>
+        </div>
+      </header>
+
+      <div className="max-w-[1600px] mx-auto px-6 py-12">
+        {/* Page Title */}
+        <div className="mb-12">
+          <h2 className="text-4xl font-semibold text-gray-900 mb-3 tracking-tight">
+            Schedule 1: Sales Budget
+          </h2>
+          <p className="text-lg text-gray-600">
+            Enter your forecasted sales data to begin
           </p>
         </div>
 
-        <div className="grid lg:grid-cols-2 gap-8">
-          {/* Input Form */}
-          <div className="bg-white rounded-lg shadow-lg p-6">
-            <h2 className="text-2xl font-bold text-gray-800 mb-6">Company Information</h2>
+        <div className="grid lg:grid-cols-[400px_1fr] gap-8">
+          {/* Input Form - Narrower */}
+          <div className="bg-white rounded-2xl border border-gray-200 p-8 h-fit sticky top-24">
+            <h3 className="text-xl font-semibold text-gray-900 mb-6">Company Info</h3>
 
-            <div className="space-y-4 mb-6">
+            <div className="space-y-5 mb-8">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Company Name
@@ -80,8 +88,8 @@ export default function InputPage() {
                   type="text"
                   value={companyName}
                   onChange={(e) => setCompanyName(e.target.value)}
-                  placeholder="e.g., Shahtaj Sugar Mills Limited"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                  placeholder="Shahtaj Sugar Mills"
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-base"
                 />
               </div>
 
@@ -93,113 +101,113 @@ export default function InputPage() {
                   type="text"
                   value={productName}
                   onChange={(e) => setProductName(e.target.value)}
-                  placeholder="e.g., Sugar"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                  placeholder="Sugar"
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-base"
                 />
               </div>
             </div>
 
-            <h2 className="text-2xl font-bold text-gray-800 mb-6 pt-6 border-t">
-              Schedule 1: Sales Budget
-            </h2>
+            <div className="border-t border-gray-200 pt-8 mb-8">
+              <h3 className="text-xl font-semibold text-gray-900 mb-6">Sales Data</h3>
 
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-5">
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Q1 (Oct-Dec)
+                    </label>
+                    <input
+                      type="number"
+                      value={q1Sales}
+                      onChange={(e) => setQ1Sales(e.target.value)}
+                      placeholder="1000"
+                      className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-base"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Q2 (Jan-Mar)
+                    </label>
+                    <input
+                      type="number"
+                      value={q2Sales}
+                      onChange={(e) => setQ2Sales(e.target.value)}
+                      placeholder="1500"
+                      className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-base"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Q3 (Apr-Jun)
+                    </label>
+                    <input
+                      type="number"
+                      value={q3Sales}
+                      onChange={(e) => setQ3Sales(e.target.value)}
+                      placeholder="1200"
+                      className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-base"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Q4 (Jul-Sep)
+                    </label>
+                    <input
+                      type="number"
+                      value={q4Sales}
+                      onChange={(e) => setQ4Sales(e.target.value)}
+                      placeholder="1300"
+                      className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-base"
+                    />
+                  </div>
+                </div>
+
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Q1 Sales (Units/M.Tons)
+                    Selling Price per Unit
                   </label>
                   <input
                     type="number"
-                    value={q1Sales}
-                    onChange={(e) => setQ1Sales(e.target.value)}
-                    placeholder="e.g., 1000"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                    value={sellingPrice}
+                    onChange={(e) => setSellingPrice(e.target.value)}
+                    placeholder="85000"
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-base"
                   />
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Q2 Sales (Units/M.Tons)
+                    Inflation Rate (Annual %)
                   </label>
                   <input
                     type="number"
-                    value={q2Sales}
-                    onChange={(e) => setQ2Sales(e.target.value)}
-                    placeholder="e.g., 1500"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                    step="0.01"
+                    value={inflationRate}
+                    onChange={(e) => setInflationRate(e.target.value)}
+                    placeholder="0.15"
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-base"
                   />
+                  <p className="text-xs text-gray-500 mt-2">
+                    Enter as decimal (e.g., 0.15 for 15%)
+                  </p>
                 </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Q3 Sales (Units/M.Tons)
-                  </label>
-                  <input
-                    type="number"
-                    value={q3Sales}
-                    onChange={(e) => setQ3Sales(e.target.value)}
-                    placeholder="e.g., 1200"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Q4 Sales (Units/M.Tons)
-                  </label>
-                  <input
-                    type="number"
-                    value={q4Sales}
-                    onChange={(e) => setQ4Sales(e.target.value)}
-                    placeholder="e.g., 1300"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Selling Price per Unit (PKR)
-                </label>
-                <input
-                  type="number"
-                  value={sellingPrice}
-                  onChange={(e) => setSellingPrice(e.target.value)}
-                  placeholder="e.g., 85000"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Price Inflation Rate (Annual %) - Optional
-                </label>
-                <input
-                  type="number"
-                  step="0.01"
-                  value={inflationRate}
-                  onChange={(e) => setInflationRate(e.target.value)}
-                  placeholder="e.g., 0.15 for 15%"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                />
-                <p className="text-xs text-gray-500 mt-1">
-                  Enter as decimal (e.g., 0.15 for 15% inflation)
-                </p>
               </div>
             </div>
 
             <button
               onClick={handleCalculate}
-              className="w-full mt-6 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200"
+              className="w-full bg-[#0071e3] hover:bg-[#0077ed] text-white font-medium py-3 px-6 rounded-lg text-base"
             >
-              Calculate Sales Budget
+              Calculate
             </button>
 
             {errors.length > 0 && (
-              <div className="mt-4 bg-red-50 border border-red-200 rounded-lg p-4">
-                <h3 className="text-red-800 font-semibold mb-2">Validation Errors:</h3>
-                <ul className="list-disc list-inside text-red-700 text-sm space-y-1">
+              <div className="mt-6 bg-red-50 border border-red-200 rounded-lg p-4">
+                <h4 className="text-red-800 font-semibold text-sm mb-2">Errors:</h4>
+                <ul className="list-disc list-inside text-red-700 text-xs space-y-1">
                   {errors.map((error, idx) => (
                     <li key={idx}>{error}</li>
                   ))}
@@ -208,68 +216,71 @@ export default function InputPage() {
             )}
           </div>
 
-          {/* Results Display */}
-          <div className="bg-white rounded-lg shadow-lg p-6">
-            <h2 className="text-2xl font-bold text-gray-800 mb-6">Results: Sales Budget</h2>
+          {/* Results Display - Wider */}
+          <div className="bg-white rounded-2xl border border-gray-200 p-8">
+            <h3 className="text-2xl font-semibold text-gray-900 mb-8">Results</h3>
 
             {!result && (
-              <div className="text-center py-12 text-gray-400">
+              <div className="text-center py-20 text-gray-400">
+                <div className="text-6xl mb-4">📊</div>
                 <p className="text-lg mb-2">No results yet</p>
-                <p className="text-sm">Enter data and click "Calculate" to see your sales budget</p>
+                <p className="text-sm">Enter data and click Calculate to see your sales budget</p>
               </div>
             )}
 
             {result && (
-              <div className="overflow-x-auto">
-                <div className="mb-4 p-4 bg-blue-50 rounded-lg">
-                  <h3 className="font-semibold text-blue-900 mb-1">
+              <div>
+                <div className="mb-8 p-6 bg-gray-50 rounded-xl border border-gray-200">
+                  <h4 className="font-semibold text-gray-900 text-lg mb-1">
                     {companyName || 'Your Company'}
-                  </h3>
-                  <p className="text-sm text-blue-700">
-                    Product: {productName || 'Product'} | Schedule 1: Sales Budget
+                  </h4>
+                  <p className="text-sm text-gray-600">
+                    Product: {productName || 'Product'} • Schedule 1: Sales Budget
                   </p>
                 </div>
 
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b-2 border-gray-300">
-                      {result.headers.map((header: string, idx: number) => (
-                        <th
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b-2 border-gray-300">
+                        {result.headers.map((header: string, idx: number) => (
+                          <th
+                            key={idx}
+                            className={`py-4 px-4 text-left font-semibold text-gray-700 text-sm ${
+                              idx === 0 ? 'w-48' : 'text-right'
+                            }`}
+                          >
+                            {header}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {result.rows.map((row: any, idx: number) => (
+                        <tr
                           key={idx}
-                          className={`py-3 px-2 text-left font-semibold text-gray-700 ${
-                            idx === 0 ? 'w-1/4' : ''
+                          className={`border-b border-gray-200 ${
+                            idx === result.rows.length - 1 ? 'font-semibold bg-blue-50' : ''
                           }`}
                         >
-                          {header}
-                        </th>
+                          <td className="py-4 px-4 text-gray-800 text-sm">{row.label}</td>
+                          <td className="py-4 px-4 text-right text-sm font-mono">{row.q1}</td>
+                          <td className="py-4 px-4 text-right text-sm font-mono">{row.q2}</td>
+                          <td className="py-4 px-4 text-right text-sm font-mono">{row.q3}</td>
+                          <td className="py-4 px-4 text-right text-sm font-mono">{row.q4}</td>
+                          <td className="py-4 px-4 text-right text-sm font-semibold font-mono">{row.yearly}</td>
+                        </tr>
                       ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {result.rows.map((row: any, idx: number) => (
-                      <tr
-                        key={idx}
-                        className={`border-b border-gray-200 ${
-                          idx === result.rows.length - 1 ? 'font-semibold bg-indigo-50' : ''
-                        }`}
-                      >
-                        <td className="py-3 px-2 text-gray-800">{row.label}</td>
-                        <td className="py-3 px-2 text-right">{row.q1}</td>
-                        <td className="py-3 px-2 text-right">{row.q2}</td>
-                        <td className="py-3 px-2 text-right">{row.q3}</td>
-                        <td className="py-3 px-2 text-right">{row.q4}</td>
-                        <td className="py-3 px-2 text-right font-semibold">{row.yearly}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </tbody>
+                  </table>
+                </div>
 
-                <div className="mt-6 p-4 bg-green-50 rounded-lg">
-                  <p className="text-sm text-green-800">
-                    ✓ Sales Budget calculated successfully!
+                <div className="mt-8 p-6 bg-green-50 border border-green-200 rounded-xl">
+                  <p className="text-sm text-green-800 font-medium">
+                    ✓ Sales Budget calculated successfully
                   </p>
-                  <p className="text-xs text-green-700 mt-1">
-                    Next step: Use this data to create the Production Budget (Schedule 2)
+                  <p className="text-xs text-green-700 mt-2">
+                    Next: Use this data to create Production Budget (Schedule 2)
                   </p>
                 </div>
               </div>
@@ -277,21 +288,17 @@ export default function InputPage() {
           </div>
         </div>
 
-        {/* Information Box */}
-        <div className="mt-8 bg-blue-50 border border-blue-200 rounded-lg p-6">
-          <h3 className="text-lg font-semibold text-blue-900 mb-2">
+        {/* Info Box */}
+        <div className="mt-12 bg-white border border-gray-200 rounded-2xl p-8 max-w-4xl">
+          <h4 className="text-lg font-semibold text-gray-900 mb-3">
             About the Sales Budget
-          </h3>
-          <p className="text-sm text-blue-800 mb-3">
+          </h4>
+          <p className="text-base text-gray-600 leading-relaxed mb-4">
             The Sales Budget is the starting point for the master budget. It shows expected sales
             in both units and revenue for each quarter and the entire year.
           </p>
-          <p className="text-sm text-blue-800">
+          <p className="text-sm text-gray-600 leading-relaxed">
             <strong>Formula:</strong> Sales Revenue = Expected Sales Units × Selling Price per Unit
-          </p>
-          <p className="text-sm text-blue-700 mt-2">
-            If you include an inflation rate, the selling price will increase each quarter,
-            reflecting expected price adjustments.
           </p>
         </div>
       </div>
