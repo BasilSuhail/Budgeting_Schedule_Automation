@@ -1,11 +1,36 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 
 export default function Home() {
   const [darkMode, setDarkMode] = useState(false);
   const [highContrast, setHighContrast] = useState(false);
+
+  // Load preferences from localStorage on mount
+  useEffect(() => {
+    const savedDarkMode = localStorage.getItem('darkMode') === 'true';
+    const savedHighContrast = localStorage.getItem('highContrast') === 'true';
+    setDarkMode(savedDarkMode);
+    setHighContrast(savedHighContrast);
+  }, []);
+
+  // Save preferences to localStorage when they change
+  const toggleDarkMode = () => {
+    const newValue = !darkMode;
+    setDarkMode(newValue);
+    localStorage.setItem('darkMode', String(newValue));
+  };
+
+  const toggleHighContrast = () => {
+    const newValue = !highContrast;
+    setHighContrast(newValue);
+    localStorage.setItem('highContrast', String(newValue));
+  };
+
+  const textColor = highContrast
+    ? (darkMode ? 'text-white' : 'text-black')
+    : (darkMode ? 'text-gray-100' : 'text-[#454545]');
 
   return (
     <div className={`min-h-screen ${darkMode ? 'bg-[#111] text-gray-100' : 'bg-white text-[#454545]'}`}>
@@ -16,13 +41,13 @@ export default function Home() {
         </h1>
         <div className="flex gap-4 text-sm">
           <button
-            onClick={() => setHighContrast(!highContrast)}
+            onClick={toggleHighContrast}
             className={`hover:underline ${darkMode ? 'text-gray-300' : 'text-[#454545]'}`}
           >
             {highContrast ? 'Less contrast' : 'More contrast'}
           </button>
           <button
-            onClick={() => setDarkMode(!darkMode)}
+            onClick={toggleDarkMode}
             className={`hover:underline ${darkMode ? 'text-gray-300' : 'text-[#454545]'}`}
           >
             {darkMode ? 'Light mode' : 'Dark mode'}
@@ -31,7 +56,7 @@ export default function Home() {
       </header>
 
       {/* Content */}
-      <main className={`max-w-3xl mx-auto px-6 py-12 ${highContrast ? (darkMode ? 'text-white' : 'text-black') : ''}`}>
+      <main className={`max-w-3xl mx-auto px-6 py-12 ${textColor}`}>
         <h2 className={`text-5xl font-bold mb-8 ${darkMode ? 'text-white' : 'text-black'}`}>
           Master Budget Generator
         </h2>

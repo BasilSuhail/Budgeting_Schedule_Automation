@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { calculateSalesBudget, validateSalesBudgetInputs, formatSalesBudgetForDisplay } from '@/lib/calculations/01-salesBudget';
 import type { SalesBudgetInputs } from '@/lib/types/budgets';
@@ -9,8 +9,17 @@ export default function InputPage() {
   const [darkMode, setDarkMode] = useState(false);
   const [highContrast, setHighContrast] = useState(false);
 
+  // Load preferences from localStorage on mount
+  useEffect(() => {
+    const savedDarkMode = localStorage.getItem('darkMode') === 'true';
+    const savedHighContrast = localStorage.getItem('highContrast') === 'true';
+    setDarkMode(savedDarkMode);
+    setHighContrast(savedHighContrast);
+  }, []);
+
   const [companyName, setCompanyName] = useState('');
   const [productName, setProductName] = useState('');
+  const [currency, setCurrency] = useState('PKR');
   const [q1Sales, setQ1Sales] = useState('');
   const [q2Sales, setQ2Sales] = useState('');
   const [q3Sales, setQ3Sales] = useState('');
@@ -20,6 +29,19 @@ export default function InputPage() {
 
   const [result, setResult] = useState<any>(null);
   const [errors, setErrors] = useState<string[]>([]);
+
+  // Save preferences to localStorage when they change
+  const toggleDarkMode = () => {
+    const newValue = !darkMode;
+    setDarkMode(newValue);
+    localStorage.setItem('darkMode', String(newValue));
+  };
+
+  const toggleHighContrast = () => {
+    const newValue = !highContrast;
+    setHighContrast(newValue);
+    localStorage.setItem('highContrast', String(newValue));
+  };
 
   const handleCalculate = () => {
     const inputs: SalesBudgetInputs = {
@@ -47,11 +69,41 @@ export default function InputPage() {
     setErrors([]);
   };
 
+  const downloadCSV = () => {
+    if (!result) return;
+
+    let csvContent = `${companyName || 'Your Company'} - ${productName || 'Product'}\n`;
+    csvContent += `Schedule 1: Sales Budget\n`;
+    csvContent += `Currency: ${currency}\n\n`;
+
+    // Headers
+    csvContent += result.headers.join(',') + '\n';
+
+    // Rows - remove commas from numbers to prevent CSV corruption
+    result.rows.forEach((row: any) => {
+      const cleanQ1 = String(row.q1).replace(/,/g, '');
+      const cleanQ2 = String(row.q2).replace(/,/g, '');
+      const cleanQ3 = String(row.q3).replace(/,/g, '');
+      const cleanQ4 = String(row.q4).replace(/,/g, '');
+      const cleanYearly = String(row.yearly).replace(/,/g, '');
+      csvContent += `"${row.label}",${cleanQ1},${cleanQ2},${cleanQ3},${cleanQ4},${cleanYearly}\n`;
+    });
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `sales-budget-${companyName.replace(/\s+/g, '-').toLowerCase() || 'export'}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   const bgColor = darkMode ? 'bg-[#111]' : 'bg-white';
   const textColor = darkMode ? 'text-gray-100' : 'text-[#454545]';
   const headingColor = darkMode ? 'text-white' : 'text-black';
-  const inputBg = darkMode ? 'bg-[#222] border-gray-700' : 'bg-white border-gray-300';
-  const inputText = darkMode ? 'text-white' : 'text-black';
+  const inputBg = darkMode ? 'bg-[#222] border-gray-700 text-white' : 'bg-white border-gray-300 text-black';
   const buttonBg = darkMode ? 'bg-white text-black hover:bg-gray-200' : 'bg-black text-white hover:bg-gray-800';
   const hrColor = darkMode ? 'border-gray-800' : 'border-gray-200';
   const contrastText = highContrast ? (darkMode ? 'text-white' : 'text-black') : textColor;
@@ -68,13 +120,13 @@ export default function InputPage() {
         </h1>
         <div className="flex gap-4 text-sm">
           <button
-            onClick={() => setHighContrast(!highContrast)}
+            onClick={toggleHighContrast}
             className={`hover:underline ${darkMode ? 'text-gray-300' : 'text-[#454545]'}`}
           >
             {highContrast ? 'Less contrast' : 'More contrast'}
           </button>
           <button
-            onClick={() => setDarkMode(!darkMode)}
+            onClick={toggleDarkMode}
             className={`hover:underline ${darkMode ? 'text-gray-300' : 'text-[#454545]'}`}
           >
             {darkMode ? 'Light mode' : 'Dark mode'}
@@ -94,7 +146,7 @@ export default function InputPage() {
         <div className="mb-12">
           <h3 className={`text-2xl font-semibold mb-6 ${headingColor}`}>Company Information</h3>
 
-          <div className="grid md:grid-cols-2 gap-6 mb-8">
+          <div className="grid md:grid-cols-3 gap-6 mb-8">
             <div>
               <label className={`block text-sm font-medium mb-2 ${headingColor}`}>
                 Company Name
@@ -104,7 +156,7 @@ export default function InputPage() {
                 value={companyName}
                 onChange={(e) => setCompanyName(e.target.value)}
                 placeholder="Shahtaj Sugar Mills"
-                className={`w-full px-4 py-3 border ${inputBg} ${inputText} text-base`}
+                className={`w-full px-4 py-3 border ${inputBg} text-base`}
               />
             </div>
 
@@ -117,7 +169,20 @@ export default function InputPage() {
                 value={productName}
                 onChange={(e) => setProductName(e.target.value)}
                 placeholder="Sugar"
-                className={`w-full px-4 py-3 border ${inputBg} ${inputText} text-base`}
+                className={`w-full px-4 py-3 border ${inputBg} text-base`}
+              />
+            </div>
+
+            <div>
+              <label className={`block text-sm font-medium mb-2 ${headingColor}`}>
+                Currency
+              </label>
+              <input
+                type="text"
+                value={currency}
+                onChange={(e) => setCurrency(e.target.value)}
+                placeholder="PKR"
+                className={`w-full px-4 py-3 border ${inputBg} text-base`}
               />
             </div>
           </div>
@@ -136,7 +201,7 @@ export default function InputPage() {
                 value={q1Sales}
                 onChange={(e) => setQ1Sales(e.target.value)}
                 placeholder="1000"
-                className={`w-full px-4 py-3 border ${inputBg} ${inputText} text-base`}
+                className={`w-full px-4 py-3 border ${inputBg} text-base`}
               />
             </div>
 
@@ -149,7 +214,7 @@ export default function InputPage() {
                 value={q2Sales}
                 onChange={(e) => setQ2Sales(e.target.value)}
                 placeholder="1500"
-                className={`w-full px-4 py-3 border ${inputBg} ${inputText} text-base`}
+                className={`w-full px-4 py-3 border ${inputBg} text-base`}
               />
             </div>
 
@@ -162,7 +227,7 @@ export default function InputPage() {
                 value={q3Sales}
                 onChange={(e) => setQ3Sales(e.target.value)}
                 placeholder="1200"
-                className={`w-full px-4 py-3 border ${inputBg} ${inputText} text-base`}
+                className={`w-full px-4 py-3 border ${inputBg} text-base`}
               />
             </div>
 
@@ -175,7 +240,7 @@ export default function InputPage() {
                 value={q4Sales}
                 onChange={(e) => setQ4Sales(e.target.value)}
                 placeholder="1300"
-                className={`w-full px-4 py-3 border ${inputBg} ${inputText} text-base`}
+                className={`w-full px-4 py-3 border ${inputBg} text-base`}
               />
             </div>
           </div>
@@ -183,14 +248,14 @@ export default function InputPage() {
           <div className="grid md:grid-cols-2 gap-6 mb-8">
             <div>
               <label className={`block text-sm font-medium mb-2 ${headingColor}`}>
-                Selling Price per Unit
+                Selling Price per Unit ({currency})
               </label>
               <input
                 type="number"
                 value={sellingPrice}
                 onChange={(e) => setSellingPrice(e.target.value)}
                 placeholder="85000"
-                className={`w-full px-4 py-3 border ${inputBg} ${inputText} text-base`}
+                className={`w-full px-4 py-3 border ${inputBg} text-base`}
               />
             </div>
 
@@ -204,7 +269,7 @@ export default function InputPage() {
                 value={inflationRate}
                 onChange={(e) => setInflationRate(e.target.value)}
                 placeholder="0.15"
-                className={`w-full px-4 py-3 border ${inputBg} ${inputText} text-base`}
+                className={`w-full px-4 py-3 border ${inputBg} text-base`}
               />
               <p className={`text-xs mt-2 ${textColor}`}>
                 Enter as decimal (e.g., 0.15 for 15%)
@@ -237,7 +302,17 @@ export default function InputPage() {
 
         {/* Results */}
         <div>
-          <h3 className={`text-2xl font-semibold mb-6 ${headingColor}`}>Results</h3>
+          <div className="flex justify-between items-center mb-6">
+            <h3 className={`text-2xl font-semibold ${headingColor}`}>Results</h3>
+            {result && (
+              <button
+                onClick={downloadCSV}
+                className={`${buttonBg} font-medium px-6 py-2 text-sm`}
+              >
+                Download CSV
+              </button>
+            )}
+          </div>
 
           {!result && (
             <p className="text-lg leading-relaxed">
@@ -248,7 +323,7 @@ export default function InputPage() {
           {result && (
             <div>
               <p className={`text-lg mb-6 ${headingColor}`}>
-                <strong>{companyName || 'Your Company'}</strong> — {productName || 'Product'}
+                <strong>{companyName || 'Your Company'}</strong> — {productName || 'Product'} ({currency})
               </p>
 
               <div className="overflow-x-auto mb-8">
