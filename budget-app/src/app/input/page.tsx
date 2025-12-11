@@ -20,6 +20,7 @@ export default function InputPage() {
   const [companyName, setCompanyName] = useState('');
   const [productName, setProductName] = useState('');
   const [currency, setCurrency] = useState('PKR');
+  const [fiscalYear, setFiscalYear] = useState(new Date().getFullYear().toString());
 
   // Prior year sales (optional)
   const [priorQ1Sales, setPriorQ1Sales] = useState('');
@@ -437,6 +438,45 @@ export default function InputPage() {
                     ))}
                   </tbody>
                 </table>
+              </div>
+
+              <div className="mb-8">
+                <h4 className={`text-lg font-semibold mb-3 ${headingColor}`}>
+                  Seasonal Distribution
+                </h4>
+                <p className={`text-sm mb-4 ${textColor}`}>
+                  Percentage of annual sales expected in each quarter:
+                </p>
+                <div className="grid grid-cols-4 gap-4">
+                  {result.seasonalDistribution && (
+                    <>
+                      <div className={`p-3 border ${darkMode ? 'border-gray-700' : 'border-gray-300'}`}>
+                        <div className={`text-xs mb-1 ${textColor}`}>Q1 (Oct-Dec)</div>
+                        <div className={`text-2xl font-semibold ${headingColor}`}>
+                          {result.seasonalDistribution.q1.toFixed(1)}%
+                        </div>
+                      </div>
+                      <div className={`p-3 border ${darkMode ? 'border-gray-700' : 'border-gray-300'}`}>
+                        <div className={`text-xs mb-1 ${textColor}`}>Q2 (Jan-Mar)</div>
+                        <div className={`text-2xl font-semibold ${headingColor}`}>
+                          {result.seasonalDistribution.q2.toFixed(1)}%
+                        </div>
+                      </div>
+                      <div className={`p-3 border ${darkMode ? 'border-gray-700' : 'border-gray-300'}`}>
+                        <div className={`text-xs mb-1 ${textColor}`}>Q3 (Apr-Jun)</div>
+                        <div className={`text-2xl font-semibold ${headingColor}`}>
+                          {result.seasonalDistribution.q3.toFixed(1)}%
+                        </div>
+                      </div>
+                      <div className={`p-3 border ${darkMode ? 'border-gray-700' : 'border-gray-300'}`}>
+                        <div className={`text-xs mb-1 ${textColor}`}>Q4 (Jul-Sep)</div>
+                        <div className={`text-2xl font-semibold ${headingColor}`}>
+                          {result.seasonalDistribution.q4.toFixed(1)}%
+                        </div>
+                      </div>
+                    </>
+                  )}
+                </div>
               </div>
 
               <p className="text-lg leading-relaxed">
