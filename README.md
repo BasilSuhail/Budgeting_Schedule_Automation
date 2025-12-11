@@ -28,7 +28,7 @@ npm install
 npm run dev
 ```
 
-Open [http://localhost:3000/Budgeting_Schedule_Automation](http://localhost:3000/Budgeting_Schedule_Automation)
+Open http://localhost:3000/Budgeting_Schedule_Automation
 
 ### Deploy Updates
 
