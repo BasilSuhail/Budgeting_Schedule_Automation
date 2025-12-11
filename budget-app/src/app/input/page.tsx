@@ -20,6 +20,14 @@ export default function InputPage() {
   const [companyName, setCompanyName] = useState('');
   const [productName, setProductName] = useState('');
   const [currency, setCurrency] = useState('PKR');
+
+  // Prior year sales (optional)
+  const [priorQ1Sales, setPriorQ1Sales] = useState('');
+  const [priorQ2Sales, setPriorQ2Sales] = useState('');
+  const [priorQ3Sales, setPriorQ3Sales] = useState('');
+  const [priorQ4Sales, setPriorQ4Sales] = useState('');
+
+  // Current year forecast
   const [q1Sales, setQ1Sales] = useState('');
   const [q2Sales, setQ2Sales] = useState('');
   const [q3Sales, setQ3Sales] = useState('');
@@ -44,7 +52,17 @@ export default function InputPage() {
   };
 
   const handleCalculate = () => {
+    const priorYearTotal = (parseFloat(priorQ1Sales) || 0) + (parseFloat(priorQ2Sales) || 0) + (parseFloat(priorQ3Sales) || 0) + (parseFloat(priorQ4Sales) || 0);
+    const hasPriorYearData = priorYearTotal > 0;
+
     const inputs: SalesBudgetInputs = {
+      historicalSalesUnits: hasPriorYearData ? {
+        q1: parseFloat(priorQ1Sales) || 0,
+        q2: parseFloat(priorQ2Sales) || 0,
+        q3: parseFloat(priorQ3Sales) || 0,
+        q4: parseFloat(priorQ4Sales) || 0,
+        yearly: priorYearTotal,
+      } : undefined,
       forecastedSalesUnits: {
         q1: parseFloat(q1Sales) || 0,
         q2: parseFloat(q2Sales) || 0,
@@ -64,7 +82,7 @@ export default function InputPage() {
     }
 
     const output = calculateSalesBudget(inputs);
-    const formatted = formatSalesBudgetForDisplay(output);
+    const formatted = formatSalesBudgetForDisplay(output, inputs);
     setResult(formatted);
     setErrors([]);
   };
@@ -189,7 +207,68 @@ export default function InputPage() {
 
           <hr className={`my-12 ${hrColor}`} />
 
-          <h3 className={`text-2xl font-semibold mb-6 ${headingColor}`}>Quarterly Sales Data</h3>
+          <h3 className={`text-2xl font-semibold mb-6 ${headingColor}`}>Prior Year Sales (Optional)</h3>
+          <p className={`text-sm mb-4 ${textColor}`}>
+            Enter last year's sales to see growth comparison. Leave blank if not applicable.
+          </p>
+
+          <div className="grid md:grid-cols-4 gap-4 mb-8">
+            <div>
+              <label className={`block text-sm font-medium mb-2 ${headingColor}`}>
+                Q1 (Oct-Dec)
+              </label>
+              <input
+                type="number"
+                value={priorQ1Sales}
+                onChange={(e) => setPriorQ1Sales(e.target.value)}
+                placeholder="800"
+                className={`w-full px-4 py-3 border ${inputBg} text-base`}
+              />
+            </div>
+
+            <div>
+              <label className={`block text-sm font-medium mb-2 ${headingColor}`}>
+                Q2 (Jan-Mar)
+              </label>
+              <input
+                type="number"
+                value={priorQ2Sales}
+                onChange={(e) => setPriorQ2Sales(e.target.value)}
+                placeholder="1200"
+                className={`w-full px-4 py-3 border ${inputBg} text-base`}
+              />
+            </div>
+
+            <div>
+              <label className={`block text-sm font-medium mb-2 ${headingColor}`}>
+                Q3 (Apr-Jun)
+              </label>
+              <input
+                type="number"
+                value={priorQ3Sales}
+                onChange={(e) => setPriorQ3Sales(e.target.value)}
+                placeholder="1000"
+                className={`w-full px-4 py-3 border ${inputBg} text-base`}
+              />
+            </div>
+
+            <div>
+              <label className={`block text-sm font-medium mb-2 ${headingColor}`}>
+                Q4 (Jul-Sep)
+              </label>
+              <input
+                type="number"
+                value={priorQ4Sales}
+                onChange={(e) => setPriorQ4Sales(e.target.value)}
+                placeholder="1100"
+                className={`w-full px-4 py-3 border ${inputBg} text-base`}
+              />
+            </div>
+          </div>
+
+          <hr className={`my-12 ${hrColor}`} />
+
+          <h3 className={`text-2xl font-semibold mb-6 ${headingColor}`}>Forecasted Sales (Current Year)</h3>
 
           <div className="grid md:grid-cols-4 gap-4 mb-8">
             <div>

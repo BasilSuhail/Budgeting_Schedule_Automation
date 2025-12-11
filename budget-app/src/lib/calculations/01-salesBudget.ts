@@ -108,34 +108,63 @@ export function validateSalesBudgetInputs(inputs: SalesBudgetInputs): string[] {
 /**
  * Helper function to format sales budget output for display
  */
-export function formatSalesBudgetForDisplay(output: SalesBudgetOutput) {
+export function formatSalesBudgetForDisplay(output: SalesBudgetOutput, inputs?: SalesBudgetInputs) {
+  const rows = [
+    {
+      label: 'Expected Sales (Units)',
+      q1: output.salesUnits.q1.toFixed(2),
+      q2: output.salesUnits.q2.toFixed(2),
+      q3: output.salesUnits.q3.toFixed(2),
+      q4: output.salesUnits.q4.toFixed(2),
+      yearly: output.salesUnits.yearly.toFixed(2),
+    },
+    {
+      label: 'Selling Price per Unit',
+      q1: output.sellingPrice.q1.toFixed(2),
+      q2: output.sellingPrice.q2.toFixed(2),
+      q3: output.sellingPrice.q3.toFixed(2),
+      q4: output.sellingPrice.q4.toFixed(2),
+      yearly: output.sellingPrice.yearly.toFixed(2),
+    },
+    {
+      label: 'Sales Revenue',
+      q1: output.salesRevenue.q1.toLocaleString('en-US', { minimumFractionDigits: 2 }),
+      q2: output.salesRevenue.q2.toLocaleString('en-US', { minimumFractionDigits: 2 }),
+      q3: output.salesRevenue.q3.toLocaleString('en-US', { minimumFractionDigits: 2 }),
+      q4: output.salesRevenue.q4.toLocaleString('en-US', { minimumFractionDigits: 2 }),
+      yearly: output.salesRevenue.yearly.toLocaleString('en-US', { minimumFractionDigits: 2 }),
+    },
+  ];
+
+  // Add growth comparison row if historical data is available
+  if (inputs?.historicalSalesUnits) {
+    const calcGrowth = (current: number, prior: number) => {
+      if (prior === 0) return 'N/A';
+      const growth = ((current - prior) / prior) * 100;
+      return `${growth >= 0 ? '+' : ''}${growth.toFixed(1)}%`;
+    };
+
+    rows.push({
+      label: 'Growth vs Prior Year',
+      q1: calcGrowth(output.salesUnits.q1, inputs.historicalSalesUnits.q1),
+      q2: calcGrowth(output.salesUnits.q2, inputs.historicalSalesUnits.q2),
+      q3: calcGrowth(output.salesUnits.q3, inputs.historicalSalesUnits.q3),
+      q4: calcGrowth(output.salesUnits.q4, inputs.historicalSalesUnits.q4),
+      yearly: calcGrowth(output.salesUnits.yearly, inputs.historicalSalesUnits.yearly),
+    });
+  }
+
+  // Calculate seasonal distribution
+  const seasonalDistribution = {
+    q1: output.salesUnits.yearly > 0 ? (output.salesUnits.q1 / output.salesUnits.yearly) * 100 : 0,
+    q2: output.salesUnits.yearly > 0 ? (output.salesUnits.q2 / output.salesUnits.yearly) * 100 : 0,
+    q3: output.salesUnits.yearly > 0 ? (output.salesUnits.q3 / output.salesUnits.yearly) * 100 : 0,
+    q4: output.salesUnits.yearly > 0 ? (output.salesUnits.q4 / output.salesUnits.yearly) * 100 : 0,
+  };
+
   return {
     headers: ['', 'Q1 (Oct-Dec)', 'Q2 (Jan-Mar)', 'Q3 (Apr-Jun)', 'Q4 (Jul-Sep)', 'Yearly Total'],
-    rows: [
-      {
-        label: 'Expected Sales (Units)',
-        q1: output.salesUnits.q1.toFixed(2),
-        q2: output.salesUnits.q2.toFixed(2),
-        q3: output.salesUnits.q3.toFixed(2),
-        q4: output.salesUnits.q4.toFixed(2),
-        yearly: output.salesUnits.yearly.toFixed(2),
-      },
-      {
-        label: 'Selling Price per Unit',
-        q1: output.sellingPrice.q1.toFixed(2),
-        q2: output.sellingPrice.q2.toFixed(2),
-        q3: output.sellingPrice.q3.toFixed(2),
-        q4: output.sellingPrice.q4.toFixed(2),
-        yearly: output.sellingPrice.yearly.toFixed(2),
-      },
-      {
-        label: 'Sales Revenue',
-        q1: output.salesRevenue.q1.toLocaleString('en-US', { minimumFractionDigits: 2 }),
-        q2: output.salesRevenue.q2.toLocaleString('en-US', { minimumFractionDigits: 2 }),
-        q3: output.salesRevenue.q3.toLocaleString('en-US', { minimumFractionDigits: 2 }),
-        q4: output.salesRevenue.q4.toLocaleString('en-US', { minimumFractionDigits: 2 }),
-        yearly: output.salesRevenue.yearly.toLocaleString('en-US', { minimumFractionDigits: 2 }),
-      },
-    ],
+    rows,
+    seasonalDistribution,
   };
 }
