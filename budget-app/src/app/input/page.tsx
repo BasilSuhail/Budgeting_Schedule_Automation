@@ -19,7 +19,7 @@ export default function InputPage() {
 
   const [companyName, setCompanyName] = useState('');
   const [productName, setProductName] = useState('');
-  const [currency, setCurrency] = useState('PKR');
+  const [currency, setCurrency] = useState('');
   const [fiscalYear, setFiscalYear] = useState(new Date().getFullYear().toString());
   const [assumptions, setAssumptions] = useState('');
 
@@ -212,7 +212,7 @@ export default function InputPage() {
                 type="text"
                 value={companyName}
                 onChange={(e) => setCompanyName(e.target.value)}
-                placeholder="Shahtaj Sugar Mills"
+                placeholder="Type company name"
                 className={`w-full px-4 py-3 border ${inputBg} text-base`}
               />
             </div>
@@ -225,7 +225,7 @@ export default function InputPage() {
                 type="text"
                 value={productName}
                 onChange={(e) => setProductName(e.target.value)}
-                placeholder="Sugar"
+                placeholder="Type product name"
                 className={`w-full px-4 py-3 border ${inputBg} text-base`}
               />
             </div>
@@ -238,7 +238,7 @@ export default function InputPage() {
                 type="text"
                 value={currency}
                 onChange={(e) => setCurrency(e.target.value)}
-                placeholder="PKR"
+                placeholder="Type currency"
                 className={`w-full px-4 py-3 border ${inputBg} text-base`}
               />
             </div>
@@ -251,7 +251,7 @@ export default function InputPage() {
                 type="text"
                 value={fiscalYear}
                 onChange={(e) => setFiscalYear(e.target.value)}
-                placeholder="2025"
+                placeholder="Type fiscal year"
                 className={`w-full px-4 py-3 border ${inputBg} text-base`}
               />
             </div>

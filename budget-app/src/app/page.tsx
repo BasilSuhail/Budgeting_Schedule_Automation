@@ -66,8 +66,7 @@ export default function Home() {
         </p>
 
         <p className="text-lg mb-12 leading-relaxed">
-          Based on Ronald W. Hilton's proven 13-schedule framework. No signup required.
-          All calculations happen in your browser.
+          No signup required. All calculations happen in your browser.
         </p>
 
         <Link
