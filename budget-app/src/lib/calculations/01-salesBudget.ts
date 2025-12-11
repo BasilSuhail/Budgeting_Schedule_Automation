@@ -80,12 +80,15 @@ export function validateSalesBudgetInputs(inputs: SalesBudgetInputs): string[] {
   }
 
   // Validate inflation rate if provided
-  if (inputs.priceInflationRate !== undefined) {
+  if (inputs.priceInflationRate !== undefined && inputs.priceInflationRate !== 0) {
     if (inputs.priceInflationRate < -1) {
       errors.push('Price inflation rate cannot be less than -100%');
     }
     if (inputs.priceInflationRate > 2) {
       errors.push('Price inflation rate seems unrealistic (over 200%)');
+    }
+    if (inputs.priceInflationRate > 0.5) {
+      errors.push('WARNING: Inflation rate over 50% is unusually high. Please verify.');
     }
   }
 
@@ -100,6 +103,28 @@ export function validateSalesBudgetInputs(inputs: SalesBudgetInputs): string[] {
     errors.push(
       `Yearly total (${inputs.forecastedSalesUnits.yearly}) does not match sum of quarters (${calculatedYearly})`
     );
+  }
+
+  // Warning for zero sales in any quarter
+  const quarters = [
+    { name: 'Q1', value: inputs.forecastedSalesUnits.q1 },
+    { name: 'Q2', value: inputs.forecastedSalesUnits.q2 },
+    { name: 'Q3', value: inputs.forecastedSalesUnits.q3 },
+    { name: 'Q4', value: inputs.forecastedSalesUnits.q4 },
+  ];
+  const zeroQuarters = quarters.filter(q => q.value === 0);
+  if (zeroQuarters.length > 0 && calculatedYearly > 0) {
+    errors.push(`WARNING: Zero sales forecasted for ${zeroQuarters.map(q => q.name).join(', ')}. Is this intentional?`);
+  }
+
+  // Warning for highly concentrated sales (>80% in one quarter)
+  if (calculatedYearly > 0) {
+    quarters.forEach(q => {
+      const percentage = (q.value / calculatedYearly) * 100;
+      if (percentage > 80) {
+        errors.push(`WARNING: ${percentage.toFixed(0)}% of annual sales are in ${q.name}. This is an unusual pattern.`);
+      }
+    });
   }
 
   return errors;

@@ -21,6 +21,7 @@ export default function InputPage() {
   const [productName, setProductName] = useState('');
   const [currency, setCurrency] = useState('PKR');
   const [fiscalYear, setFiscalYear] = useState(new Date().getFullYear().toString());
+  const [assumptions, setAssumptions] = useState('');
 
   // Prior year sales (optional)
   const [priorQ1Sales, setPriorQ1Sales] = useState('');
@@ -35,6 +36,10 @@ export default function InputPage() {
   const [q4Sales, setQ4Sales] = useState('');
   const [sellingPrice, setSellingPrice] = useState('');
   const [inflationRate, setInflationRate] = useState('0');
+  const [priceAdjustment, setPriceAdjustment] = useState<'constant' | 'inflation'>('inflation');
+
+  // Growth rate calculator
+  const [growthRate, setGrowthRate] = useState('');
 
   const [result, setResult] = useState<any>(null);
   const [errors, setErrors] = useState<string[]>([]);
@@ -50,6 +55,24 @@ export default function InputPage() {
     const newValue = !highContrast;
     setHighContrast(newValue);
     localStorage.setItem('highContrast', String(newValue));
+  };
+
+  const applyGrowthRate = () => {
+    const growth = parseFloat(growthRate) / 100 || 0;
+    const priorQ1 = parseFloat(priorQ1Sales) || 0;
+    const priorQ2 = parseFloat(priorQ2Sales) || 0;
+    const priorQ3 = parseFloat(priorQ3Sales) || 0;
+    const priorQ4 = parseFloat(priorQ4Sales) || 0;
+
+    if (priorQ1 === 0 && priorQ2 === 0 && priorQ3 === 0 && priorQ4 === 0) {
+      alert('Please enter prior year sales data first');
+      return;
+    }
+
+    setQ1Sales(String(Math.round(priorQ1 * (1 + growth))));
+    setQ2Sales(String(Math.round(priorQ2 * (1 + growth))));
+    setQ3Sales(String(Math.round(priorQ3 * (1 + growth))));
+    setQ4Sales(String(Math.round(priorQ4 * (1 + growth))));
   };
 
   const handleCalculate = () => {
@@ -72,11 +95,13 @@ export default function InputPage() {
         yearly: (parseFloat(q1Sales) || 0) + (parseFloat(q2Sales) || 0) + (parseFloat(q3Sales) || 0) + (parseFloat(q4Sales) || 0),
       },
       sellingPricePerUnit: parseFloat(sellingPrice) || 0,
-      priceInflationRate: parseFloat(inflationRate) || 0,
+      priceInflationRate: priceAdjustment === 'inflation' ? (parseFloat(inflationRate) || 0) : 0,
     };
 
     const validationErrors = validateSalesBudgetInputs(inputs);
-    if (validationErrors.length > 0) {
+    const actualErrors = validationErrors.filter(e => !e.startsWith('WARNING:'));
+
+    if (actualErrors.length > 0) {
       setErrors(validationErrors);
       setResult(null);
       return;
@@ -85,7 +110,7 @@ export default function InputPage() {
     const output = calculateSalesBudget(inputs);
     const formatted = formatSalesBudgetForDisplay(output, inputs);
     setResult(formatted);
-    setErrors([]);
+    setErrors(validationErrors); // Keep warnings visible even after successful calculation
   };
 
   const downloadCSV = () => {
@@ -93,7 +118,12 @@ export default function InputPage() {
 
     let csvContent = `${companyName || 'Your Company'} - ${productName || 'Product'}\n`;
     csvContent += `Schedule 1: Sales Budget\n`;
-    csvContent += `Currency: ${currency}\n\n`;
+    csvContent += `For the Year Ending December 31, ${fiscalYear}\n`;
+    csvContent += `Currency: ${currency}\n`;
+    if (assumptions) {
+      csvContent += `Assumptions: ${assumptions}\n`;
+    }
+    csvContent += `\n`;
 
     // Headers
     csvContent += result.headers.join(',') + '\n';
@@ -165,7 +195,7 @@ export default function InputPage() {
         <div className="mb-12">
           <h3 className={`text-2xl font-semibold mb-6 ${headingColor}`}>Company Information</h3>
 
-          <div className="grid md:grid-cols-3 gap-6 mb-8">
+          <div className="grid md:grid-cols-4 gap-6 mb-8">
             <div>
               <label className={`block text-sm font-medium mb-2 ${headingColor}`}>
                 Company Name
@@ -201,6 +231,19 @@ export default function InputPage() {
                 value={currency}
                 onChange={(e) => setCurrency(e.target.value)}
                 placeholder="PKR"
+                className={`w-full px-4 py-3 border ${inputBg} text-base`}
+              />
+            </div>
+
+            <div>
+              <label className={`block text-sm font-medium mb-2 ${headingColor}`}>
+                Fiscal Year
+              </label>
+              <input
+                type="text"
+                value={fiscalYear}
+                onChange={(e) => setFiscalYear(e.target.value)}
+                placeholder="2025"
                 className={`w-full px-4 py-3 border ${inputBg} text-base`}
               />
             </div>
@@ -267,6 +310,36 @@ export default function InputPage() {
             </div>
           </div>
 
+          <div className={`p-4 border ${darkMode ? 'border-gray-700 bg-gray-900' : 'border-gray-300 bg-gray-50'} mb-8`}>
+            <h4 className={`text-sm font-semibold mb-3 ${headingColor}`}>
+              Quick Forecast Calculator
+            </h4>
+            <p className={`text-xs mb-3 ${textColor}`}>
+              Apply a growth rate to prior year sales to auto-calculate current year forecast
+            </p>
+            <div className="flex gap-3 items-end">
+              <div className="flex-1">
+                <label className={`block text-xs font-medium mb-2 ${headingColor}`}>
+                  Growth Rate (%)
+                </label>
+                <input
+                  type="number"
+                  step="0.1"
+                  value={growthRate}
+                  onChange={(e) => setGrowthRate(e.target.value)}
+                  placeholder="e.g., 15 for 15% growth"
+                  className={`w-full px-3 py-2 border ${inputBg} text-sm`}
+                />
+              </div>
+              <button
+                onClick={applyGrowthRate}
+                className={`${buttonBg} font-medium px-6 py-2 text-sm`}
+              >
+                Apply to Forecast
+              </button>
+            </div>
+          </div>
+
           <hr className={`my-12 ${hrColor}`} />
 
           <h3 className={`text-2xl font-semibold mb-6 ${headingColor}`}>Forecasted Sales (Current Year)</h3>
@@ -325,6 +398,36 @@ export default function InputPage() {
             </div>
           </div>
 
+          <div className="mb-6">
+            <label className={`block text-sm font-medium mb-3 ${headingColor}`}>
+              Price Adjustment Method
+            </label>
+            <div className="flex gap-4">
+              <label className="flex items-center cursor-pointer">
+                <input
+                  type="radio"
+                  name="priceAdjustment"
+                  value="constant"
+                  checked={priceAdjustment === 'constant'}
+                  onChange={(e) => setPriceAdjustment(e.target.value as 'constant' | 'inflation')}
+                  className="mr-2"
+                />
+                <span className={`text-sm ${textColor}`}>Constant Price (same across all quarters)</span>
+              </label>
+              <label className="flex items-center cursor-pointer">
+                <input
+                  type="radio"
+                  name="priceAdjustment"
+                  value="inflation"
+                  checked={priceAdjustment === 'inflation'}
+                  onChange={(e) => setPriceAdjustment(e.target.value as 'constant' | 'inflation')}
+                  className="mr-2"
+                />
+                <span className={`text-sm ${textColor}`}>Inflation-Adjusted Price</span>
+              </label>
+            </div>
+          </div>
+
           <div className="grid md:grid-cols-2 gap-6 mb-8">
             <div>
               <label className={`block text-sm font-medium mb-2 ${headingColor}`}>
@@ -350,11 +453,30 @@ export default function InputPage() {
                 onChange={(e) => setInflationRate(e.target.value)}
                 placeholder="0.15"
                 className={`w-full px-4 py-3 border ${inputBg} text-base`}
+                disabled={priceAdjustment === 'constant'}
               />
               <p className={`text-xs mt-2 ${textColor}`}>
-                Enter as decimal (e.g., 0.15 for 15%)
+                {priceAdjustment === 'constant'
+                  ? 'Disabled when using constant price'
+                  : 'Enter as decimal (e.g., 0.15 for 15%)'}
               </p>
             </div>
+          </div>
+
+          <div className="mb-8">
+            <label className={`block text-sm font-medium mb-2 ${headingColor}`}>
+              Budget Assumptions & Notes (Optional)
+            </label>
+            <textarea
+              value={assumptions}
+              onChange={(e) => setAssumptions(e.target.value)}
+              placeholder="e.g., Conservative forecast due to market uncertainty; New market entry in Q3; Based on historical growth trends..."
+              rows={3}
+              className={`w-full px-4 py-3 border ${inputBg} text-base`}
+            />
+            <p className={`text-xs mt-2 ${textColor}`}>
+              Document key assumptions for reference
+            </p>
           </div>
 
           <button
@@ -365,15 +487,31 @@ export default function InputPage() {
           </button>
 
           {errors.length > 0 && (
-            <div className={`mt-6 p-4 ${darkMode ? 'bg-red-900/30 border-red-700' : 'bg-red-50 border-red-200'} border`}>
-              <p className={`font-semibold text-sm mb-2 ${darkMode ? 'text-red-300' : 'text-red-800'}`}>
-                Errors:
-              </p>
-              <ul className={`list-disc list-inside text-xs space-y-1 ${darkMode ? 'text-red-400' : 'text-red-700'}`}>
-                {errors.map((error, idx) => (
-                  <li key={idx}>{error}</li>
-                ))}
-              </ul>
+            <div className="mt-6 space-y-3">
+              {errors.filter(e => !e.startsWith('WARNING:')).length > 0 && (
+                <div className={`p-4 ${darkMode ? 'bg-red-900/30 border-red-700' : 'bg-red-50 border-red-200'} border`}>
+                  <p className={`font-semibold text-sm mb-2 ${darkMode ? 'text-red-300' : 'text-red-800'}`}>
+                    Errors:
+                  </p>
+                  <ul className={`list-disc list-inside text-xs space-y-1 ${darkMode ? 'text-red-400' : 'text-red-700'}`}>
+                    {errors.filter(e => !e.startsWith('WARNING:')).map((error, idx) => (
+                      <li key={idx}>{error}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              {errors.filter(e => e.startsWith('WARNING:')).length > 0 && (
+                <div className={`p-4 ${darkMode ? 'bg-yellow-900/30 border-yellow-700' : 'bg-yellow-50 border-yellow-200'} border`}>
+                  <p className={`font-semibold text-sm mb-2 ${darkMode ? 'text-yellow-300' : 'text-yellow-800'}`}>
+                    Warnings:
+                  </p>
+                  <ul className={`list-disc list-inside text-xs space-y-1 ${darkMode ? 'text-yellow-400' : 'text-yellow-700'}`}>
+                    {errors.filter(e => e.startsWith('WARNING:')).map((error, idx) => (
+                      <li key={idx}>{error.replace('WARNING: ', '')}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -402,11 +540,20 @@ export default function InputPage() {
 
           {result && (
             <div>
-              <p className={`text-lg mb-6 ${headingColor}`}>
-                <strong>{companyName || 'Your Company'}</strong> — {productName || 'Product'} ({currency})
+              <p className={`text-lg mb-2 ${headingColor}`}>
+                <strong>{companyName || 'Your Company'}</strong> — {productName || 'Product'}
               </p>
+              <p className={`text-sm mb-2 ${textColor}`}>
+                For the Year Ending December 31, {fiscalYear} | Currency: {currency}
+              </p>
+              {assumptions && (
+                <div className={`mb-6 p-3 border ${darkMode ? 'border-gray-700 bg-gray-900' : 'border-gray-300 bg-gray-50'}`}>
+                  <p className={`text-xs font-semibold mb-1 ${headingColor}`}>Assumptions & Notes:</p>
+                  <p className={`text-sm ${textColor}`}>{assumptions}</p>
+                </div>
+              )}
 
-              <div className="overflow-x-auto mb-8">
+              <div className="overflow-x-auto mb-4">
                 <table className="w-full border-collapse">
                   <thead>
                     <tr className={`border-b-2 ${darkMode ? 'border-gray-700' : 'border-gray-300'}`}>
@@ -439,6 +586,9 @@ export default function InputPage() {
                   </tbody>
                 </table>
               </div>
+              <p className={`text-xs mb-8 ${textColor}`}>
+                Note: The "Yearly Total" price is the weighted average selling price across all quarters.
+              </p>
 
               <div className="mb-8">
                 <h4 className={`text-lg font-semibold mb-3 ${headingColor}`}>
