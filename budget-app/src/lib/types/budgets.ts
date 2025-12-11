@@ -44,6 +44,10 @@ export interface SalesBudgetInputs {
 
   // Growth assumptions
   salesGrowthRate?: number;  // Expected sales volume growth
+
+  // Cash vs Credit Sales (for Cash Receipts Budget - Schedule 8)
+  cashSalesPercentage?: number;  // % of sales collected as cash (e.g., 0.40 for 40%)
+  creditSalesPercentage?: number;  // % of sales on account (e.g., 0.60 for 60%)
 }
 
 // ============================================================================
@@ -216,6 +220,8 @@ export interface SalesBudgetOutput {
   salesUnits: QuarterlyData;
   sellingPrice: QuarterlyData;  // Can vary by quarter if inflation applied
   salesRevenue: QuarterlyData;
+  cashSales?: QuarterlyData;  // Cash portion of sales revenue
+  creditSales?: QuarterlyData;  // Credit portion of sales revenue
 }
 
 export interface ProductionBudgetOutput {

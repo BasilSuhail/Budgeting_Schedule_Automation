@@ -38,6 +38,10 @@ export default function InputPage() {
   const [inflationRate, setInflationRate] = useState('0');
   const [priceAdjustment, setPriceAdjustment] = useState<'constant' | 'inflation'>('inflation');
 
+  // Cash vs Credit Sales
+  const [cashSalesPercentage, setCashSalesPercentage] = useState('');
+  const [creditSalesPercentage, setCreditSalesPercentage] = useState('');
+
   // Growth rate calculator
   const [growthRate, setGrowthRate] = useState('');
 
@@ -79,6 +83,8 @@ export default function InputPage() {
     const priorYearTotal = (parseFloat(priorQ1Sales) || 0) + (parseFloat(priorQ2Sales) || 0) + (parseFloat(priorQ3Sales) || 0) + (parseFloat(priorQ4Sales) || 0);
     const hasPriorYearData = priorYearTotal > 0;
 
+    const hasCashCreditData = cashSalesPercentage !== '' || creditSalesPercentage !== '';
+
     const inputs: SalesBudgetInputs = {
       historicalSalesUnits: hasPriorYearData ? {
         q1: parseFloat(priorQ1Sales) || 0,
@@ -96,6 +102,8 @@ export default function InputPage() {
       },
       sellingPricePerUnit: parseFloat(sellingPrice) || 0,
       priceInflationRate: priceAdjustment === 'inflation' ? (parseFloat(inflationRate) || 0) : 0,
+      cashSalesPercentage: hasCashCreditData ? (parseFloat(cashSalesPercentage) || 0) : undefined,
+      creditSalesPercentage: hasCashCreditData ? (parseFloat(creditSalesPercentage) || 0) : undefined,
     };
 
     const validationErrors = validateSalesBudgetInputs(inputs);
@@ -462,6 +470,49 @@ export default function InputPage() {
               </p>
             </div>
           </div>
+
+          <h3 className={`text-2xl font-semibold mb-6 ${headingColor}`}>Cash vs Credit Sales (Optional)</h3>
+          <p className={`text-sm mb-4 ${textColor}`}>
+            Split sales revenue into cash (collected immediately) and credit (collected later). Required for Schedule 8 (Cash Receipts Budget).
+          </p>
+
+          <div className="grid md:grid-cols-2 gap-6 mb-8">
+            <div>
+              <label className={`block text-sm font-medium mb-2 ${headingColor}`}>
+                Cash Sales Percentage
+              </label>
+              <input
+                type="number"
+                step="0.01"
+                value={cashSalesPercentage}
+                onChange={(e) => setCashSalesPercentage(e.target.value)}
+                placeholder="0.40"
+                className={`w-full px-4 py-3 border ${inputBg} text-base`}
+              />
+              <p className={`text-xs mt-2 ${textColor}`}>
+                Enter as decimal (e.g., 0.40 for 40% cash sales)
+              </p>
+            </div>
+
+            <div>
+              <label className={`block text-sm font-medium mb-2 ${headingColor}`}>
+                Credit Sales Percentage
+              </label>
+              <input
+                type="number"
+                step="0.01"
+                value={creditSalesPercentage}
+                onChange={(e) => setCreditSalesPercentage(e.target.value)}
+                placeholder="0.60"
+                className={`w-full px-4 py-3 border ${inputBg} text-base`}
+              />
+              <p className={`text-xs mt-2 ${textColor}`}>
+                Enter as decimal (e.g., 0.60 for 60% credit sales)
+              </p>
+            </div>
+          </div>
+
+          <hr className={`my-12 ${hrColor}`} />
 
           <div className="mb-8">
             <label className={`block text-sm font-medium mb-2 ${headingColor}`}>

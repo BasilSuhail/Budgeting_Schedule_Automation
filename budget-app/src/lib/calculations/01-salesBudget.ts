@@ -21,7 +21,7 @@
 import type { SalesBudgetInputs, SalesBudgetOutput, QuarterlyData } from '../types/budgets';
 
 export function calculateSalesBudget(inputs: SalesBudgetInputs): SalesBudgetOutput {
-  const { forecastedSalesUnits, sellingPricePerUnit, priceInflationRate = 0 } = inputs;
+  const { forecastedSalesUnits, sellingPricePerUnit, priceInflationRate = 0, cashSalesPercentage, creditSalesPercentage } = inputs;
 
   // Calculate selling price for each quarter (with inflation if applicable)
   const sellingPrice: QuarterlyData = {
@@ -55,10 +55,37 @@ export function calculateSalesBudget(inputs: SalesBudgetInputs): SalesBudgetOutp
   // Calculate yearly total revenue
   salesRevenue.yearly = salesRevenue.q1 + salesRevenue.q2 + salesRevenue.q3 + salesRevenue.q4;
 
+  // Calculate cash and credit sales if percentages are provided
+  let cashSales: QuarterlyData | undefined;
+  let creditSales: QuarterlyData | undefined;
+
+  if (cashSalesPercentage !== undefined || creditSalesPercentage !== undefined) {
+    const cashPct = cashSalesPercentage || 0;
+    const creditPct = creditSalesPercentage || 0;
+
+    cashSales = {
+      q1: salesRevenue.q1 * cashPct,
+      q2: salesRevenue.q2 * cashPct,
+      q3: salesRevenue.q3 * cashPct,
+      q4: salesRevenue.q4 * cashPct,
+      yearly: salesRevenue.yearly * cashPct,
+    };
+
+    creditSales = {
+      q1: salesRevenue.q1 * creditPct,
+      q2: salesRevenue.q2 * creditPct,
+      q3: salesRevenue.q3 * creditPct,
+      q4: salesRevenue.q4 * creditPct,
+      yearly: salesRevenue.yearly * creditPct,
+    };
+  }
+
   return {
     salesUnits: forecastedSalesUnits,
     sellingPrice,
     salesRevenue,
+    cashSales,
+    creditSales,
   };
 }
 
@@ -127,6 +154,24 @@ export function validateSalesBudgetInputs(inputs: SalesBudgetInputs): string[] {
     });
   }
 
+  // Validate cash and credit sales percentages
+  if (inputs.cashSalesPercentage !== undefined || inputs.creditSalesPercentage !== undefined) {
+    const cashPct = inputs.cashSalesPercentage || 0;
+    const creditPct = inputs.creditSalesPercentage || 0;
+
+    if (cashPct < 0 || cashPct > 1) {
+      errors.push('Cash sales percentage must be between 0 and 1 (0% to 100%)');
+    }
+    if (creditPct < 0 || creditPct > 1) {
+      errors.push('Credit sales percentage must be between 0 and 1 (0% to 100%)');
+    }
+
+    const totalPct = cashPct + creditPct;
+    if (Math.abs(totalPct - 1) > 0.01) {
+      errors.push(`Cash and credit percentages must add up to 100%. Currently: ${(totalPct * 100).toFixed(1)}%`);
+    }
+  }
+
   return errors;
 }
 
@@ -160,6 +205,27 @@ export function formatSalesBudgetForDisplay(output: SalesBudgetOutput, inputs?: 
       yearly: output.salesRevenue.yearly.toLocaleString('en-US', { minimumFractionDigits: 2 }),
     },
   ];
+
+  // Add cash and credit sales rows if available
+  if (output.cashSales && output.creditSales) {
+    rows.push({
+      label: 'Cash Sales',
+      q1: output.cashSales.q1.toLocaleString('en-US', { minimumFractionDigits: 2 }),
+      q2: output.cashSales.q2.toLocaleString('en-US', { minimumFractionDigits: 2 }),
+      q3: output.cashSales.q3.toLocaleString('en-US', { minimumFractionDigits: 2 }),
+      q4: output.cashSales.q4.toLocaleString('en-US', { minimumFractionDigits: 2 }),
+      yearly: output.cashSales.yearly.toLocaleString('en-US', { minimumFractionDigits: 2 }),
+    });
+
+    rows.push({
+      label: 'Credit Sales',
+      q1: output.creditSales.q1.toLocaleString('en-US', { minimumFractionDigits: 2 }),
+      q2: output.creditSales.q2.toLocaleString('en-US', { minimumFractionDigits: 2 }),
+      q3: output.creditSales.q3.toLocaleString('en-US', { minimumFractionDigits: 2 }),
+      q4: output.creditSales.q4.toLocaleString('en-US', { minimumFractionDigits: 2 }),
+      yearly: output.creditSales.yearly.toLocaleString('en-US', { minimumFractionDigits: 2 }),
+    });
+  }
 
   // Add growth comparison row if historical data is available
   if (inputs?.historicalSalesUnits) {
