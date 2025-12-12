@@ -90,21 +90,39 @@ export interface ProductionBudgetInputs {
 // 3. DIRECT MATERIAL BUDGET INPUTS
 // ============================================================================
 
+export interface MaterialType {
+  name: string;  // e.g., "Tent Fabric", "Tent Poles"
+  requiredPerUnit: number;  // Quantity per finished product
+  costPerUnit: number;  // Purchase price per unit
+  beginningInventory: number;  // Opening inventory balance
+  desiredEndingInventoryRatio: number;  // % of next quarter's production needs
+  unit: string;  // e.g., "yards", "kits", "pounds"
+
+  // Optional enhancements
+  scrapWastePercentage?: number;  // % of material lost to waste (e.g., 0.05 for 5%)
+  supplierLeadTimeDays?: number;  // Days from order to delivery
+  useJIT?: boolean;  // Just-in-Time delivery (no ending inventory needed)
+  priceInflationRate?: number;  // Expected price increase per quarter
+  bulkDiscountThreshold?: number;  // Quantity for discount
+  bulkDiscountRate?: number;  // Discount % if threshold met
+}
+
 export interface DirectMaterialBudgetInputs {
-  // Material requirements
-  materialRequiredPerUnit: number;  // e.g., 10 tons of sugarcane per ton of sugar
+  // Production requirements (from Schedule 2)
+  unitsToBeProduced: QuarterlyData;
+  nextYearQ1Production?: number;  // For Q4 ending inventory calculation
 
-  // Material pricing
-  materialCostPerUnit: number;  // Cost per unit of raw material
-  materialCostInflationRate?: number;
+  // Material types
+  materials: MaterialType[];  // Can have multiple materials (fabric, poles, etc.)
 
-  // Inventory policy
-  beginningMaterialInventory: number;
-  desiredMaterialEndingInventoryRatio: number;  // % of next quarter's production needs
+  // Optional: Overall payment terms (for cash disbursements)
+  percentPaidInCurrentQuarter?: number;  // e.g., 0.60 for 60% paid in same quarter
+  percentPaidInNextQuarter?: number;  // e.g., 0.40 for 40% paid next quarter
 
-  // Payment terms
-  percentPaidInCurrentQuarter: number;  // e.g., 0.60 for 60% paid in same quarter
-  percentPaidInNextQuarter: number;  // e.g., 0.40 for 40% paid next quarter
+  // Optional: Vendor performance tracking
+  trackVendorMetrics?: boolean;
+  targetOnTimeDeliveryRate?: number;  // e.g., 0.95 for 95%
+  targetQualityRate?: number;  // e.g., 0.98 for 98% defect-free
 }
 
 // ============================================================================
@@ -262,14 +280,35 @@ export interface ProductionBudgetOutput {
   productionEfficiency?: QuarterlyData;  // Ratio of optimal production
 }
 
+export interface MaterialBudgetDetail {
+  name: string;
+  unit: string;
+  productionNeeds: QuarterlyData;  // Units to be produced
+  materialRequiredForProduction: QuarterlyData;  // Material needed for production
+  desiredEndingInventory: QuarterlyData;  // Target ending inventory
+  totalMaterialRequired: QuarterlyData;  // Production needs + ending inventory
+  beginningInventory: QuarterlyData;  // Opening inventory
+  materialToBePurchased: QuarterlyData;  // Units to purchase
+  costPerUnit: QuarterlyData;  // Unit cost (can vary with inflation/discounts)
+  totalPurchaseCost: QuarterlyData;  // Total cost of purchases
+
+  // Optional analytics
+  scrapWasteCost?: QuarterlyData;
+  bulkDiscountSavings?: QuarterlyData;
+  inventoryTurnoverRatio?: number;  // Annual turnover
+  daysInventoryOutstanding?: number;  // Average days of inventory
+}
+
 export interface DirectMaterialBudgetOutput {
-  productionNeeds: QuarterlyData;
-  materialRequired: QuarterlyData;
-  beginningInventory: QuarterlyData;
-  endingInventory: QuarterlyData;
-  materialPurchases: QuarterlyData;
-  materialCost: QuarterlyData;
-  cashDisbursements: QuarterlyData;
+  materials: MaterialBudgetDetail[];  // Detailed breakdown by material type
+  totalMaterialPurchaseCost: QuarterlyData;  // Sum of all materials
+  cashDisbursements?: QuarterlyData;  // Payment schedule
+
+  // Optional analytics
+  totalScrapWasteCost?: QuarterlyData;
+  totalBulkDiscountSavings?: QuarterlyData;
+  overallInventoryTurnover?: number;
+  criticalMaterials?: string[];  // Materials at risk of shortage
 }
 
 export interface DirectLabourBudgetOutput {
