@@ -16,7 +16,17 @@ Budget Generator for manufacturing companies. Automates the creation of all 13 i
 - Growth rate calculator
 - CSV export
 
-🚧 **Schedules 2-13** - Coming soon
+✅ **Schedule 2: Production Budget** - Fully functional with all enhancements
+- Core production calculations (Sales + Ending Inventory - Beginning Inventory)
+- Production capacity constraints tracking
+- Batch size optimization (minimum and optimal)
+- Just-in-Time (JIT) manufacturing mode
+- Inventory carrying cost analysis
+- Obsolescence risk calculations
+- Production efficiency metrics
+- CSV export
+
+🚧 **Schedules 3-13** - Coming soon
 
 ## Development
 

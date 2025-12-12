@@ -129,8 +129,13 @@ export default function Home() {
           set pricing and inflation rates, get automatic calculations.
         </p>
 
+        <p className="text-lg mb-6 leading-relaxed">
+          <strong>Schedule 2: Production Budget</strong> — Fully functional. Calculate production requirements
+          with inventory management, capacity constraints, batch sizing, JIT mode, and cost analysis.
+        </p>
+
         <p className="text-lg mb-12 leading-relaxed">
-          Schedules 2-14 are coming soon.
+          Schedules 3-14 are coming soon.
         </p>
 
         <hr className={`my-16 ${darkMode ? 'border-gray-700' : 'border-gray-300'}`} />

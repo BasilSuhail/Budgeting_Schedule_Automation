@@ -3,7 +3,8 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { calculateSalesBudget, validateSalesBudgetInputs, formatSalesBudgetForDisplay } from '@/lib/calculations/01-salesBudget';
-import type { SalesBudgetInputs } from '@/lib/types/budgets';
+import { calculateProductionBudget, validateProductionBudgetInputs, formatProductionBudgetForDisplay } from '@/lib/calculations/02-productionBudget';
+import type { SalesBudgetInputs, ProductionBudgetInputs } from '@/lib/types/budgets';
 
 export default function InputPage() {
   const [darkMode, setDarkMode] = useState(false);
@@ -47,6 +48,20 @@ export default function InputPage() {
 
   const [result, setResult] = useState<any>(null);
   const [errors, setErrors] = useState<string[]>([]);
+
+  // Schedule 2: Production Budget state
+  const [beginningInventory, setBeginningInventory] = useState('');
+  const [endingInventoryRatio, setEndingInventoryRatio] = useState('');
+  const [nextYearQ1Sales, setNextYearQ1Sales] = useState('');
+  const [maxCapacity, setMaxCapacity] = useState('');
+  const [minBatchSize, setMinBatchSize] = useState('');
+  const [optimalBatchSize, setOptimalBatchSize] = useState('');
+  const [carryingCost, setCarryingCost] = useState('');
+  const [useJIT, setUseJIT] = useState(false);
+  const [obsolescenceRisk, setObsolescenceRisk] = useState('');
+
+  const [productionResult, setProductionResult] = useState<any>(null);
+  const [productionErrors, setProductionErrors] = useState<string[]>([]);
 
   // Save preferences to localStorage when they change
   const toggleDarkMode = () => {
@@ -121,6 +136,46 @@ export default function InputPage() {
     setErrors(validationErrors); // Keep warnings visible even after successful calculation
   };
 
+  const handleCalculateProduction = () => {
+    if (!result) {
+      alert('Please calculate Sales Budget first (Schedule 1)');
+      return;
+    }
+
+    const inputs: ProductionBudgetInputs = {
+      forecastedSalesUnits: {
+        q1: parseFloat(q1Sales) || 0,
+        q2: parseFloat(q2Sales) || 0,
+        q3: parseFloat(q3Sales) || 0,
+        q4: parseFloat(q4Sales) || 0,
+        yearly: (parseFloat(q1Sales) || 0) + (parseFloat(q2Sales) || 0) + (parseFloat(q3Sales) || 0) + (parseFloat(q4Sales) || 0),
+      },
+      beginningInventory: parseFloat(beginningInventory) || 0,
+      desiredEndingInventoryRatio: parseFloat(endingInventoryRatio) || 0,
+      nextYearQ1ForecastedSales: nextYearQ1Sales ? parseFloat(nextYearQ1Sales) : undefined,
+      maxProductionCapacityPerQuarter: maxCapacity ? parseFloat(maxCapacity) : undefined,
+      minimumBatchSize: minBatchSize ? parseFloat(minBatchSize) : undefined,
+      optimalBatchSize: optimalBatchSize ? parseFloat(optimalBatchSize) : undefined,
+      inventoryCarryingCostPerUnit: carryingCost ? parseFloat(carryingCost) : undefined,
+      useJIT,
+      obsolescenceRiskPercentage: obsolescenceRisk ? parseFloat(obsolescenceRisk) : undefined,
+    };
+
+    const validationErrors = validateProductionBudgetInputs(inputs);
+    const actualErrors = validationErrors.filter(e => !e.startsWith('WARNING:'));
+
+    if (actualErrors.length > 0) {
+      setProductionErrors(validationErrors);
+      setProductionResult(null);
+      return;
+    }
+
+    const output = calculateProductionBudget(inputs);
+    const formatted = formatProductionBudgetForDisplay(output, inputs);
+    setProductionResult(formatted);
+    setProductionErrors(validationErrors);
+  };
+
   const downloadCSV = () => {
     if (!result) return;
 
@@ -151,6 +206,38 @@ export default function InputPage() {
     const url = URL.createObjectURL(blob);
     link.setAttribute('href', url);
     link.setAttribute('download', `sales-budget-${companyName.replace(/\s+/g, '-').toLowerCase() || 'export'}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const downloadProductionCSV = () => {
+    if (!productionResult) return;
+
+    let csvContent = `${companyName || 'Your Company'} - ${productName || 'Product'}\n`;
+    csvContent += `Schedule 2: Production Budget\n`;
+    csvContent += `For the Year Ending December 31, ${fiscalYear}\n`;
+    csvContent += `\n`;
+
+    // Headers
+    csvContent += productionResult.headers.join(',') + '\n';
+
+    // Rows
+    productionResult.rows.forEach((row: any) => {
+      const cleanQ1 = String(row.q1).replace(/,/g, '');
+      const cleanQ2 = String(row.q2).replace(/,/g, '');
+      const cleanQ3 = String(row.q3).replace(/,/g, '');
+      const cleanQ4 = String(row.q4).replace(/,/g, '');
+      const cleanYearly = String(row.yearly).replace(/,/g, '');
+      csvContent += `"${row.label}",${cleanQ1},${cleanQ2},${cleanQ3},${cleanQ4},${cleanYearly}\n`;
+    });
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `production-budget-${companyName.replace(/\s+/g, '-').toLowerCase() || 'export'}.csv`);
     link.style.visibility = 'hidden';
     document.body.appendChild(link);
     link.click();
@@ -698,6 +785,314 @@ export default function InputPage() {
         </p>
         <p className="text-base leading-relaxed">
           <strong>Formula:</strong> Sales Revenue = Expected Sales Units × Selling Price per Unit
+        </p>
+
+        <hr className={`my-16 ${hrColor}`} />
+
+        {/* SCHEDULE 2: PRODUCTION BUDGET */}
+        <h2 className={`text-4xl font-bold mb-4 ${headingColor}`}>
+          Schedule 2: Production Budget
+        </h2>
+        <p className="text-lg mb-12 leading-relaxed">
+          Determine production volume needed to meet sales demand and maintain inventory levels
+        </p>
+
+        <div className="mb-12">
+          <h3 className={`text-2xl font-semibold mb-6 ${headingColor}`}>Inventory Policy</h3>
+
+          <div className="grid md:grid-cols-2 gap-6 mb-8">
+            <div>
+              <label className={`block text-sm font-medium mb-2 ${headingColor}`}>
+                Beginning Inventory (Units)
+              </label>
+              <input
+                type="number"
+                value={beginningInventory}
+                onChange={(e) => setBeginningInventory(e.target.value)}
+                placeholder="100"
+                className={`w-full px-4 py-3 border ${inputBg} text-base`}
+              />
+              <p className={`text-xs mt-2 ${textColor}`}>
+                Opening inventory at start of year
+              </p>
+            </div>
+
+            <div>
+              <label className={`block text-sm font-medium mb-2 ${headingColor}`}>
+                Desired Ending Inventory Ratio
+              </label>
+              <input
+                type="number"
+                step="0.01"
+                value={endingInventoryRatio}
+                onChange={(e) => setEndingInventoryRatio(e.target.value)}
+                placeholder="0.10"
+                className={`w-full px-4 py-3 border ${inputBg} text-base`}
+              />
+              <p className={`text-xs mt-2 ${textColor}`}>
+                Enter as decimal (e.g., 0.10 for 10% of next quarter's sales)
+              </p>
+            </div>
+          </div>
+
+          <div className="mb-8">
+            <div className="flex items-center mb-4">
+              <input
+                type="checkbox"
+                id="useJIT"
+                checked={useJIT}
+                onChange={(e) => setUseJIT(e.target.checked)}
+                className="mr-3 w-4 h-4"
+              />
+              <label htmlFor="useJIT" className={`text-sm font-medium ${headingColor}`}>
+                Use Just-in-Time (JIT) Manufacturing
+              </label>
+            </div>
+            <p className={`text-xs ${textColor} ml-7`}>
+              Enable JIT to set ending inventory to zero (production = sales)
+            </p>
+          </div>
+
+          <hr className={`my-8 ${hrColor}`} />
+
+          <h3 className={`text-2xl font-semibold mb-6 ${headingColor}`}>Optional Enhancements</h3>
+          <p className={`text-sm mb-6 ${textColor}`}>
+            Add production constraints and cost analysis (all optional)
+          </p>
+
+          <div className="grid md:grid-cols-3 gap-6 mb-6">
+            <div>
+              <label className={`block text-sm font-medium mb-2 ${headingColor}`}>
+                Next Year Q1 Sales Forecast
+              </label>
+              <input
+                type="number"
+                value={nextYearQ1Sales}
+                onChange={(e) => setNextYearQ1Sales(e.target.value)}
+                placeholder="Leave blank to use current Q1"
+                className={`w-full px-4 py-3 border ${inputBg} text-base`}
+              />
+            </div>
+
+            <div>
+              <label className={`block text-sm font-medium mb-2 ${headingColor}`}>
+                Max Production Capacity/Quarter
+              </label>
+              <input
+                type="number"
+                value={maxCapacity}
+                onChange={(e) => setMaxCapacity(e.target.value)}
+                placeholder="Optional"
+                className={`w-full px-4 py-3 border ${inputBg} text-base`}
+              />
+            </div>
+
+            <div>
+              <label className={`block text-sm font-medium mb-2 ${headingColor}`}>
+                Inventory Carrying Cost/Unit
+              </label>
+              <input
+                type="number"
+                step="0.01"
+                value={carryingCost}
+                onChange={(e) => setCarryingCost(e.target.value)}
+                placeholder="Optional"
+                className={`w-full px-4 py-3 border ${inputBg} text-base`}
+              />
+            </div>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-6 mb-8">
+            <div>
+              <label className={`block text-sm font-medium mb-2 ${headingColor}`}>
+                Minimum Batch Size
+              </label>
+              <input
+                type="number"
+                value={minBatchSize}
+                onChange={(e) => setMinBatchSize(e.target.value)}
+                placeholder="Optional"
+                className={`w-full px-4 py-3 border ${inputBg} text-base`}
+              />
+            </div>
+
+            <div>
+              <label className={`block text-sm font-medium mb-2 ${headingColor}`}>
+                Optimal Batch Size
+              </label>
+              <input
+                type="number"
+                value={optimalBatchSize}
+                onChange={(e) => setOptimalBatchSize(e.target.value)}
+                placeholder="Optional"
+                className={`w-full px-4 py-3 border ${inputBg} text-base`}
+              />
+            </div>
+
+            <div>
+              <label className={`block text-sm font-medium mb-2 ${headingColor}`}>
+                Obsolescence Risk (%)
+              </label>
+              <input
+                type="number"
+                step="0.01"
+                value={obsolescenceRisk}
+                onChange={(e) => setObsolescenceRisk(e.target.value)}
+                placeholder="0.05"
+                className={`w-full px-4 py-3 border ${inputBg} text-base`}
+              />
+              <p className={`text-xs mt-2 ${textColor}`}>
+                Enter as decimal (e.g., 0.05 for 5% risk)
+              </p>
+            </div>
+          </div>
+
+          <button
+            onClick={handleCalculateProduction}
+            className={`${buttonBg} font-medium px-8 py-3 text-lg`}
+          >
+            Calculate Production Budget
+          </button>
+
+          {productionErrors.length > 0 && (
+            <div className="mt-6 space-y-3">
+              {productionErrors.filter(e => !e.startsWith('WARNING:')).length > 0 && (
+                <div className={`p-4 ${darkMode ? 'bg-red-900/30 border-red-700' : 'bg-red-50 border-red-200'} border`}>
+                  <p className={`font-semibold text-sm mb-2 ${darkMode ? 'text-red-300' : 'text-red-800'}`}>
+                    Errors:
+                  </p>
+                  <ul className={`list-disc list-inside text-xs space-y-1 ${darkMode ? 'text-red-400' : 'text-red-700'}`}>
+                    {productionErrors.filter(e => !e.startsWith('WARNING:')).map((error, idx) => (
+                      <li key={idx}>{error}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              {productionErrors.filter(e => e.startsWith('WARNING:')).length > 0 && (
+                <div className={`p-4 ${darkMode ? 'bg-yellow-900/30 border-yellow-700' : 'bg-yellow-50 border-yellow-200'} border`}>
+                  <p className={`font-semibold text-sm mb-2 ${darkMode ? 'text-yellow-300' : 'text-yellow-800'}`}>
+                    Warnings:
+                  </p>
+                  <ul className={`list-disc list-inside text-xs space-y-1 ${darkMode ? 'text-yellow-400' : 'text-yellow-700'}`}>
+                    {productionErrors.filter(e => e.startsWith('WARNING:')).map((error, idx) => (
+                      <li key={idx}>{error.replace('WARNING: ', '')}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        <hr className={`my-12 ${hrColor}`} />
+
+        {/* Production Budget Results */}
+        <div>
+          <div className="flex justify-between items-center mb-6">
+            <h3 className={`text-2xl font-semibold ${headingColor}`}>Production Budget Results</h3>
+            {productionResult && (
+              <button
+                onClick={downloadProductionCSV}
+                className={`${buttonBg} font-medium px-6 py-2 text-sm`}
+              >
+                Download CSV
+              </button>
+            )}
+          </div>
+
+          {!productionResult && (
+            <p className="text-lg leading-relaxed">
+              Calculate Sales Budget first, then enter production data and click Calculate Production Budget
+            </p>
+          )}
+
+          {productionResult && (
+            <div>
+              <p className={`text-lg mb-2 ${headingColor}`}>
+                <strong>{companyName || 'Your Company'}</strong> — {productName || 'Product'}
+              </p>
+              <p className={`text-sm mb-6 ${textColor}`}>
+                For the Year Ending December 31, {fiscalYear}
+              </p>
+
+              <div className="overflow-x-auto mb-8">
+                <table className="w-full border-collapse">
+                  <thead>
+                    <tr className={`border-b-2 ${darkMode ? 'border-gray-700' : 'border-gray-300'}`}>
+                      {productionResult.headers.map((header: string, idx: number) => (
+                        <th
+                          key={idx}
+                          className={`py-3 px-4 text-left font-semibold text-sm ${idx === 0 ? '' : 'text-right'} ${headingColor}`}
+                        >
+                          {header}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {productionResult.rows.map((row: any, idx: number) => (
+                      <tr
+                        key={idx}
+                        className={`border-b ${darkMode ? 'border-gray-800' : 'border-gray-200'} ${
+                          idx === productionResult.rows.length - 1 ? 'font-semibold' : ''
+                        }`}
+                      >
+                        <td className={`py-3 px-4 text-sm ${headingColor}`}>{row.label}</td>
+                        <td className="py-3 px-4 text-right text-sm font-mono">{row.q1}</td>
+                        <td className="py-3 px-4 text-right text-sm font-mono">{row.q2}</td>
+                        <td className="py-3 px-4 text-right text-sm font-mono">{row.q3}</td>
+                        <td className="py-3 px-4 text-right text-sm font-mono">{row.q4}</td>
+                        <td className="py-3 px-4 text-right text-sm font-semibold font-mono">{row.yearly}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {productionResult.inventoryCarryingCost && (
+                <div className={`mb-6 p-4 border ${darkMode ? 'border-gray-700 bg-gray-900' : 'border-gray-300 bg-gray-50'}`}>
+                  <h4 className={`text-sm font-semibold mb-2 ${headingColor}`}>Inventory Carrying Cost</h4>
+                  <p className={`text-xs ${textColor}`}>
+                    Q1: {productionResult.inventoryCarryingCost.q1.toFixed(2)} |
+                    Q2: {productionResult.inventoryCarryingCost.q2.toFixed(2)} |
+                    Q3: {productionResult.inventoryCarryingCost.q3.toFixed(2)} |
+                    Q4: {productionResult.inventoryCarryingCost.q4.toFixed(2)} |
+                    Yearly: {productionResult.inventoryCarryingCost.yearly.toFixed(2)}
+                  </p>
+                </div>
+              )}
+
+              {productionResult.obsolescenceCost && (
+                <div className={`mb-6 p-4 border ${darkMode ? 'border-gray-700 bg-gray-900' : 'border-gray-300 bg-gray-50'}`}>
+                  <h4 className={`text-sm font-semibold mb-2 ${headingColor}`}>Obsolescence Cost</h4>
+                  <p className={`text-xs ${textColor}`}>
+                    Q1: {productionResult.obsolescenceCost.q1.toFixed(2)} |
+                    Q2: {productionResult.obsolescenceCost.q2.toFixed(2)} |
+                    Q3: {productionResult.obsolescenceCost.q3.toFixed(2)} |
+                    Q4: {productionResult.obsolescenceCost.q4.toFixed(2)} |
+                    Yearly: {productionResult.obsolescenceCost.yearly.toFixed(2)}
+                  </p>
+                </div>
+              )}
+
+              <p className="text-lg leading-relaxed">
+                ✓ Production Budget calculated successfully
+              </p>
+            </div>
+          )}
+        </div>
+
+        <hr className={`my-12 ${hrColor}`} />
+
+        <h3 className={`text-2xl font-semibold mb-4 ${headingColor}`}>
+          About the Production Budget
+        </h3>
+        <p className="text-lg mb-4 leading-relaxed">
+          The Production Budget determines how many units must be produced to meet sales demand
+          while maintaining desired inventory levels.
+        </p>
+        <p className="text-base leading-relaxed">
+          <strong>Formula:</strong> Units to Produce = Sales + Desired Ending Inventory - Beginning Inventory
         </p>
       </main>
 
