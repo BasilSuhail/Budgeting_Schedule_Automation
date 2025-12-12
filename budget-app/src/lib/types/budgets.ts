@@ -55,12 +55,35 @@ export interface SalesBudgetInputs {
 // ============================================================================
 
 export interface ProductionBudgetInputs {
+  // Sales forecast (from Schedule 1)
+  forecastedSalesUnits: QuarterlyData;
+
   // Inventory policy
   beginningInventory: number;  // Opening inventory (metric tons)
   desiredEndingInventoryRatio: number;  // e.g., 0.10 for 10% of next quarter's sales
 
   // For Q4, ending inventory for next year's Q1
   nextYearQ1ForecastedSales?: number;
+
+  // Production capacity constraints (optional)
+  maxProductionCapacityPerQuarter?: number;
+
+  // Batch size requirements (optional)
+  minimumBatchSize?: number;
+  optimalBatchSize?: number;
+
+  // Lead time adjustments (optional)
+  productionLeadTimeDays?: number;
+
+  // Inventory cost analysis (optional)
+  inventoryCarryingCostPerUnit?: number;  // Cost to hold one unit for one quarter
+
+  // Just-in-Time (JIT) settings (optional)
+  useJIT?: boolean;  // If true, production = sales with minimal inventory
+
+  // Obsolescence risk (optional)
+  productShelfLifeDays?: number;
+  obsolescenceRiskPercentage?: number;  // % of inventory expected to become obsolete
 }
 
 // ============================================================================
@@ -225,10 +248,18 @@ export interface SalesBudgetOutput {
 }
 
 export interface ProductionBudgetOutput {
-  requiredProduction: QuarterlyData;
   salesUnits: QuarterlyData;
+  desiredEndingInventory: QuarterlyData;
+  totalUnitsRequired: QuarterlyData;
   beginningInventory: QuarterlyData;
-  endingInventory: QuarterlyData;
+  requiredProduction: QuarterlyData;
+
+  // Enhanced analytics (optional)
+  capacityUtilization?: QuarterlyData;  // % of max capacity used
+  inventoryCarryingCost?: QuarterlyData;  // Cost to hold inventory
+  batchAdjustments?: QuarterlyData;  // Production adjusted for batch sizes
+  obsolescenceCost?: QuarterlyData;  // Expected cost from obsolescence
+  productionEfficiency?: QuarterlyData;  // Ratio of optimal production
 }
 
 export interface DirectMaterialBudgetOutput {
