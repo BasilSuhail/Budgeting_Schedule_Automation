@@ -1,6 +1,6 @@
 # Budget Automation System
 
-Master Budget Generator for manufacturing companies. Automates the creation of all 13 interconnected budget schedules based on Hilton's Managerial Accounting framework.
+Budget Generator for manufacturing companies. Automates the creation of all 13 interconnected budget schedules based on Hilton's Managerial Accounting framework.
 
 ## Live Demo
 
@@ -33,6 +33,9 @@ Open http://localhost:3000/Budgeting_Schedule_Automation
 ### Deploy Updates
 
 Whenever you make changes:
+
+1. Save your file changes (dev server auto-reloads locally)
+2. Deploy to GitHub Pages:
 
 ```bash
 cd budget-app

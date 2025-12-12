@@ -58,7 +58,7 @@ export default function Home() {
       {/* Content */}
       <main className={`max-w-3xl mx-auto px-6 py-12 ${textColor}`}>
         <h2 className={`text-5xl font-bold mb-8 ${darkMode ? 'text-white' : 'text-black'}`}>
-          Master Budget Generator
+          Budget Generator
         </h2>
 
         <p className="text-xl mb-6 leading-relaxed">
