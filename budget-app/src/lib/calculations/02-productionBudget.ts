@@ -164,13 +164,16 @@ function applyBatchSizeAdjustments(
     return batches * targetBatch;
   };
 
-  return {
+  const adjusted = {
     q1: adjustProduction(production.q1),
     q2: adjustProduction(production.q2),
     q3: adjustProduction(production.q3),
     q4: adjustProduction(production.q4),
     yearly: 0,
   };
+  adjusted.yearly = adjusted.q1 + adjusted.q2 + adjusted.q3 + adjusted.q4;
+
+  return adjusted;
 }
 
 /**
@@ -344,5 +347,8 @@ export function formatProductionBudgetForDisplay(output: ProductionBudgetOutput,
     rows,
     inventoryCarryingCost: output.inventoryCarryingCost,
     obsolescenceCost: output.obsolescenceCost,
+    notes: inputs?.nextYearQ1ForecastedSales
+      ? `Note: Q4 ending inventory is based on next year's Q1 forecasted sales of ${inputs.nextYearQ1ForecastedSales} units.`
+      : 'Note: Q4 ending inventory is based on current year Q1 sales (assuming similar demand pattern next year).',
   };
 }

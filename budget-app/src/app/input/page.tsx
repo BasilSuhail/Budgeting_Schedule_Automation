@@ -1049,6 +1049,12 @@ export default function InputPage() {
                 </table>
               </div>
 
+              {productionResult.notes && (
+                <p className={`text-xs mb-6 ${textColor} italic`}>
+                  * {productionResult.notes}
+                </p>
+              )}
+
               {productionResult.inventoryCarryingCost && (
                 <div className={`mb-6 p-4 border ${darkMode ? 'border-gray-700 bg-gray-900' : 'border-gray-300 bg-gray-50'}`}>
                   <h4 className={`text-sm font-semibold mb-2 ${headingColor}`}>Inventory Carrying Cost</h4>
