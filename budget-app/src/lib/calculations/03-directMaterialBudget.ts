@@ -418,7 +418,7 @@ export function formatDirectMaterialBudgetForDisplay(output: DirectMaterialBudge
         q2: (material.materialRequiredForProduction.q2 / material.productionNeeds.q2 || 0).toFixed(2),
         q3: (material.materialRequiredForProduction.q3 / material.productionNeeds.q3 || 0).toFixed(2),
         q4: (material.materialRequiredForProduction.q4 / material.productionNeeds.q4 || 0).toFixed(2),
-        q5: (material.materialRequiredForProduction.yearly / material.productionNeeds.yearly || 0).toFixed(2),
+        yearly: (material.materialRequiredForProduction.yearly / material.productionNeeds.yearly || 0).toFixed(2),
       },
       {
         label: `Material required for production (${material.unit})`,
@@ -498,14 +498,30 @@ export function formatDirectMaterialBudgetForDisplay(output: DirectMaterialBudge
     yearly: output.totalMaterialPurchaseCost.yearly.toLocaleString('en-US', { minimumFractionDigits: 2 }),
   };
 
-  return {
+  // Format materials with headers for each
+  const materials = materialSections.map(section => ({
+    ...section,
     headers: ['', 'Q1 (Oct-Dec)', 'Q2 (Jan-Mar)', 'Q3 (Apr-Jun)', 'Q4 (Jul-Sep)', 'Yearly Total'],
-    materialSections,
-    totalRow,
-    cashDisbursements: output.cashDisbursements,
-    totalScrapWasteCost: output.totalScrapWasteCost,
-    totalBulkDiscountSavings: output.totalBulkDiscountSavings,
+  }));
+
+  // Format summary section
+  const summary = {
+    headers: ['', 'Q1 (Oct-Dec)', 'Q2 (Jan-Mar)', 'Q3 (Apr-Jun)', 'Q4 (Jul-Sep)', 'Yearly Total'],
+    rows: [totalRow],
+  };
+
+  // Format analytics
+  const analytics = {
     overallInventoryTurnover: output.overallInventoryTurnover,
+    totalScrapWasteCost: output.totalScrapWasteCost?.yearly,
+    totalBulkDiscountSavings: output.totalBulkDiscountSavings?.yearly,
     criticalMaterials: output.criticalMaterials,
+  };
+
+  return {
+    materials,
+    summary,
+    analytics,
+    cashDisbursements: output.cashDisbursements,
   };
 }
