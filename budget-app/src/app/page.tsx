@@ -134,8 +134,13 @@ export default function Home() {
           with inventory management, capacity constraints, batch sizing, JIT mode, and cost analysis.
         </p>
 
+        <p className="text-lg mb-6 leading-relaxed">
+          <strong>Schedule 3: Direct Material Budget</strong> — Fully functional. Multi-material support with scrap/waste
+          allowance, bulk discounts, price inflation, JIT delivery, inventory turnover metrics, and critical material identification.
+        </p>
+
         <p className="text-lg mb-12 leading-relaxed">
-          Schedules 3-14 are coming soon.
+          Schedules 4-14 are coming soon.
         </p>
 
         <hr className={`my-16 ${darkMode ? 'border-gray-700' : 'border-gray-300'}`} />

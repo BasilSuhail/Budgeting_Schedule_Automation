@@ -26,7 +26,19 @@ Budget Generator for manufacturing companies. Automates the creation of all 13 i
 - Production efficiency metrics
 - CSV export
 
-🚧 **Schedules 3-13** - Coming soon
+✅ **Schedule 3: Direct Material Budget** - Fully functional with all enhancements
+- Core material calculations (Production Needs + Ending Inventory - Beginning Inventory)
+- Multi-material support (e.g., fabric, poles, multiple raw materials)
+- Scrap/waste allowance (accounts for normal production losses)
+- Bulk purchase discounts (threshold-based pricing)
+- Quarterly price inflation
+- Just-in-Time (JIT) delivery per material
+- Inventory turnover ratio and days outstanding
+- Cash disbursement scheduling (payment terms)
+- Critical materials identification (low turnover warnings)
+- CSV export
+
+🚧 **Schedules 4-13** - Coming soon
 
 ## Development
 

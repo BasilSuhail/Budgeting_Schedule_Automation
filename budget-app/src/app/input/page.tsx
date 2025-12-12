@@ -4,7 +4,8 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { calculateSalesBudget, validateSalesBudgetInputs, formatSalesBudgetForDisplay } from '@/lib/calculations/01-salesBudget';
 import { calculateProductionBudget, validateProductionBudgetInputs, formatProductionBudgetForDisplay } from '@/lib/calculations/02-productionBudget';
-import type { SalesBudgetInputs, ProductionBudgetInputs } from '@/lib/types/budgets';
+import { calculateDirectMaterialBudget, validateDirectMaterialBudgetInputs, formatDirectMaterialBudgetForDisplay } from '@/lib/calculations/03-directMaterialBudget';
+import type { SalesBudgetInputs, ProductionBudgetInputs, DirectMaterialBudgetInputs, MaterialType } from '@/lib/types/budgets';
 
 export default function InputPage() {
   const [darkMode, setDarkMode] = useState(false);
@@ -62,6 +63,24 @@ export default function InputPage() {
 
   const [productionResult, setProductionResult] = useState<any>(null);
   const [productionErrors, setProductionErrors] = useState<string[]>([]);
+
+  // Schedule 3: Direct Material Budget state
+  const [materials, setMaterials] = useState<MaterialType[]>([
+    {
+      name: '',
+      requiredPerUnit: 0,
+      costPerUnit: 0,
+      beginningInventory: 0,
+      desiredEndingInventoryRatio: 0,
+      unit: '',
+    },
+  ]);
+  const [nextYearQ1Production, setNextYearQ1Production] = useState('');
+  const [percentPaidCurrentQuarter, setPercentPaidCurrentQuarter] = useState('');
+  const [percentPaidNextQuarter, setPercentPaidNextQuarter] = useState('');
+
+  const [materialResult, setMaterialResult] = useState<any>(null);
+  const [materialErrors, setMaterialErrors] = useState<string[]>([]);
 
   // Save preferences to localStorage when they change
   const toggleDarkMode = () => {
@@ -238,6 +257,137 @@ export default function InputPage() {
     const url = URL.createObjectURL(blob);
     link.setAttribute('href', url);
     link.setAttribute('download', `production-budget-${companyName.replace(/\s+/g, '-').toLowerCase() || 'export'}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  // Material management functions
+  const addMaterial = () => {
+    setMaterials([
+      ...materials,
+      {
+        name: '',
+        requiredPerUnit: 0,
+        costPerUnit: 0,
+        beginningInventory: 0,
+        desiredEndingInventoryRatio: 0,
+        unit: '',
+      },
+    ]);
+  };
+
+  const removeMaterial = (index: number) => {
+    if (materials.length === 1) {
+      alert('You must have at least one material');
+      return;
+    }
+    setMaterials(materials.filter((_, i) => i !== index));
+  };
+
+  const updateMaterial = (index: number, field: keyof MaterialType, value: any) => {
+    const newMaterials = [...materials];
+    (newMaterials[index] as any)[field] = value;
+    setMaterials(newMaterials);
+  };
+
+  const handleCalculateMaterial = () => {
+    if (!productionResult) {
+      alert('Please calculate Production Budget first (Schedule 2)');
+      return;
+    }
+
+    const unitsToBeProduced = {
+      q1: parseFloat(q1Sales) || 0,
+      q2: parseFloat(q2Sales) || 0,
+      q3: parseFloat(q3Sales) || 0,
+      q4: parseFloat(q4Sales) || 0,
+      yearly: (parseFloat(q1Sales) || 0) + (parseFloat(q2Sales) || 0) + (parseFloat(q3Sales) || 0) + (parseFloat(q4Sales) || 0),
+    };
+
+    // Use production data from production result
+    if (productionResult?.rows) {
+      const prodRow = productionResult.rows.find((r: any) => r.label === 'Required Production');
+      if (prodRow) {
+        unitsToBeProduced.q1 = parseFloat(String(prodRow.q1).replace(/,/g, '')) || 0;
+        unitsToBeProduced.q2 = parseFloat(String(prodRow.q2).replace(/,/g, '')) || 0;
+        unitsToBeProduced.q3 = parseFloat(String(prodRow.q3).replace(/,/g, '')) || 0;
+        unitsToBeProduced.q4 = parseFloat(String(prodRow.q4).replace(/,/g, '')) || 0;
+        unitsToBeProduced.yearly = parseFloat(String(prodRow.yearly).replace(/,/g, '')) || 0;
+      }
+    }
+
+    const inputs: DirectMaterialBudgetInputs = {
+      unitsToBeProduced,
+      nextYearQ1Production: nextYearQ1Production ? parseFloat(nextYearQ1Production) : undefined,
+      materials: materials.map(m => ({
+        ...m,
+        requiredPerUnit: typeof m.requiredPerUnit === 'string' ? parseFloat(m.requiredPerUnit) || 0 : m.requiredPerUnit,
+        costPerUnit: typeof m.costPerUnit === 'string' ? parseFloat(m.costPerUnit) || 0 : m.costPerUnit,
+        beginningInventory: typeof m.beginningInventory === 'string' ? parseFloat(m.beginningInventory) || 0 : m.beginningInventory,
+        desiredEndingInventoryRatio: typeof m.desiredEndingInventoryRatio === 'string' ? parseFloat(m.desiredEndingInventoryRatio) || 0 : m.desiredEndingInventoryRatio,
+      })),
+      percentPaidInCurrentQuarter: percentPaidCurrentQuarter ? parseFloat(percentPaidCurrentQuarter) : undefined,
+      percentPaidInNextQuarter: percentPaidNextQuarter ? parseFloat(percentPaidNextQuarter) : undefined,
+    };
+
+    const validationErrors = validateDirectMaterialBudgetInputs(inputs);
+    const actualErrors = validationErrors.filter(e => !e.startsWith('WARNING:'));
+
+    if (actualErrors.length > 0) {
+      setMaterialErrors(validationErrors);
+      setMaterialResult(null);
+      return;
+    }
+
+    const output = calculateDirectMaterialBudget(inputs);
+    const formatted = formatDirectMaterialBudgetForDisplay(output);
+    setMaterialResult(formatted);
+    setMaterialErrors(validationErrors);
+  };
+
+  const downloadMaterialCSV = () => {
+    if (!materialResult) return;
+
+    let csvContent = `${companyName || 'Your Company'} - ${productName || 'Product'}\n`;
+    csvContent += `Schedule 3: Direct Material Budget\n`;
+    csvContent += `For the Year Ending December 31, ${fiscalYear}\n\n`;
+
+    // For each material
+    materialResult.materials?.forEach((material: any) => {
+      csvContent += `Material: ${material.name} (${material.unit})\n`;
+      csvContent += material.headers.join(',') + '\n';
+      material.rows.forEach((row: any) => {
+        const cleanQ1 = String(row.q1).replace(/,/g, '');
+        const cleanQ2 = String(row.q2).replace(/,/g, '');
+        const cleanQ3 = String(row.q3).replace(/,/g, '');
+        const cleanQ4 = String(row.q4).replace(/,/g, '');
+        const cleanYearly = String(row.yearly).replace(/,/g, '');
+        csvContent += `"${row.label}",${cleanQ1},${cleanQ2},${cleanQ3},${cleanQ4},${cleanYearly}\n`;
+      });
+      csvContent += '\n';
+    });
+
+    // Total summary
+    if (materialResult.summary) {
+      csvContent += 'Total Material Purchase Cost\n';
+      csvContent += materialResult.summary.headers.join(',') + '\n';
+      materialResult.summary.rows.forEach((row: any) => {
+        const cleanQ1 = String(row.q1).replace(/,/g, '');
+        const cleanQ2 = String(row.q2).replace(/,/g, '');
+        const cleanQ3 = String(row.q3).replace(/,/g, '');
+        const cleanQ4 = String(row.q4).replace(/,/g, '');
+        const cleanYearly = String(row.yearly).replace(/,/g, '');
+        csvContent += `"${row.label}",${cleanQ1},${cleanQ2},${cleanQ3},${cleanQ4},${cleanYearly}\n`;
+      });
+    }
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `direct-material-budget-${companyName.replace(/\s+/g, '-').toLowerCase() || 'export'}.csv`);
     link.style.visibility = 'hidden';
     document.body.appendChild(link);
     link.click();
@@ -1099,6 +1249,510 @@ export default function InputPage() {
         </p>
         <p className="text-base leading-relaxed">
           <strong>Formula:</strong> Units to Produce = Sales + Desired Ending Inventory - Beginning Inventory
+        </p>
+
+        <hr className={`my-16 ${hrColor}`} />
+
+        {/* SCHEDULE 3: DIRECT MATERIAL BUDGET */}
+        <h2 className={`text-4xl font-bold mb-4 ${headingColor}`}>
+          Schedule 3: Direct Material Budget
+        </h2>
+        <p className="text-lg mb-12 leading-relaxed">
+          Calculate raw material requirements and purchase costs for production
+        </p>
+
+        <div className="mb-12">
+          <h3 className={`text-2xl font-semibold mb-6 ${headingColor}`}>Materials</h3>
+          <p className={`text-sm mb-6 ${textColor}`}>
+            Add all raw materials required for production. You can add multiple materials (e.g., fabric, poles, etc.)
+          </p>
+
+          {materials.map((material, index) => (
+            <div key={index} className={`mb-8 p-6 border ${darkMode ? 'border-gray-700 bg-gray-900' : 'border-gray-300 bg-gray-50'}`}>
+              <div className="flex justify-between items-center mb-4">
+                <h4 className={`text-lg font-semibold ${headingColor}`}>
+                  Material {index + 1}
+                </h4>
+                {materials.length > 1 && (
+                  <button
+                    onClick={() => removeMaterial(index)}
+                    className={`text-sm ${darkMode ? 'text-red-400 hover:text-red-300' : 'text-red-600 hover:text-red-700'}`}
+                  >
+                    Remove
+                  </button>
+                )}
+              </div>
+
+              <div className="grid md:grid-cols-3 gap-4 mb-4">
+                <div>
+                  <label className={`block text-sm font-medium mb-2 ${headingColor}`}>
+                    Material Name
+                  </label>
+                  <input
+                    type="text"
+                    value={material.name}
+                    onChange={(e) => updateMaterial(index, 'name', e.target.value)}
+                    placeholder="e.g., Tent Fabric"
+                    className={`w-full px-4 py-3 border ${inputBg} text-base`}
+                  />
+                </div>
+
+                <div>
+                  <label className={`block text-sm font-medium mb-2 ${headingColor}`}>
+                    Unit of Measure
+                  </label>
+                  <input
+                    type="text"
+                    value={material.unit}
+                    onChange={(e) => updateMaterial(index, 'unit', e.target.value)}
+                    placeholder="e.g., yards, kg, liters"
+                    className={`w-full px-4 py-3 border ${inputBg} text-base`}
+                  />
+                </div>
+
+                <div>
+                  <label className={`block text-sm font-medium mb-2 ${headingColor}`}>
+                    Required per Unit Produced
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={material.requiredPerUnit}
+                    onChange={(e) => updateMaterial(index, 'requiredPerUnit', e.target.value)}
+                    placeholder="4.0"
+                    className={`w-full px-4 py-3 border ${inputBg} text-base`}
+                  />
+                </div>
+              </div>
+
+              <div className="grid md:grid-cols-3 gap-4 mb-4">
+                <div>
+                  <label className={`block text-sm font-medium mb-2 ${headingColor}`}>
+                    Cost per Unit ({currency})
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={material.costPerUnit}
+                    onChange={(e) => updateMaterial(index, 'costPerUnit', e.target.value)}
+                    placeholder="5.00"
+                    className={`w-full px-4 py-3 border ${inputBg} text-base`}
+                  />
+                </div>
+
+                <div>
+                  <label className={`block text-sm font-medium mb-2 ${headingColor}`}>
+                    Beginning Inventory
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={material.beginningInventory}
+                    onChange={(e) => updateMaterial(index, 'beginningInventory', e.target.value)}
+                    placeholder="600"
+                    className={`w-full px-4 py-3 border ${inputBg} text-base`}
+                  />
+                </div>
+
+                <div>
+                  <label className={`block text-sm font-medium mb-2 ${headingColor}`}>
+                    Ending Inventory Ratio
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={material.desiredEndingInventoryRatio}
+                    onChange={(e) => updateMaterial(index, 'desiredEndingInventoryRatio', e.target.value)}
+                    placeholder="0.10"
+                    className={`w-full px-4 py-3 border ${inputBg} text-base`}
+                  />
+                  <p className={`text-xs mt-2 ${textColor}`}>
+                    Enter as decimal (e.g., 0.10 for 10% of next quarter's needs)
+                  </p>
+                </div>
+              </div>
+
+              {/* Optional enhancements */}
+              <details className="mt-4">
+                <summary className={`text-sm font-medium cursor-pointer ${headingColor} hover:underline`}>
+                  Optional Enhancements (click to expand)
+                </summary>
+                <div className="grid md:grid-cols-3 gap-4 mt-4">
+                  <div>
+                    <label className={`block text-sm font-medium mb-2 ${headingColor}`}>
+                      Scrap/Waste %
+                    </label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={material.scrapWastePercentage || ''}
+                      onChange={(e) => updateMaterial(index, 'scrapWastePercentage', e.target.value ? parseFloat(e.target.value) : undefined)}
+                      placeholder="0.05"
+                      className={`w-full px-3 py-2 border ${inputBg} text-sm`}
+                    />
+                    <p className={`text-xs mt-1 ${textColor}`}>
+                      e.g., 0.05 for 5% waste
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className={`block text-sm font-medium mb-2 ${headingColor}`}>
+                      Price Inflation Rate
+                    </label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={material.priceInflationRate || ''}
+                      onChange={(e) => updateMaterial(index, 'priceInflationRate', e.target.value ? parseFloat(e.target.value) : undefined)}
+                      placeholder="0.02"
+                      className={`w-full px-3 py-2 border ${inputBg} text-sm`}
+                    />
+                    <p className={`text-xs mt-1 ${textColor}`}>
+                      Quarterly rate (e.g., 0.02 for 2%)
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className={`block text-sm font-medium mb-2 ${headingColor}`}>
+                      Bulk Discount Threshold
+                    </label>
+                    <input
+                      type="number"
+                      value={material.bulkDiscountThreshold || ''}
+                      onChange={(e) => updateMaterial(index, 'bulkDiscountThreshold', e.target.value ? parseFloat(e.target.value) : undefined)}
+                      placeholder="10000"
+                      className={`w-full px-3 py-2 border ${inputBg} text-sm`}
+                    />
+                  </div>
+
+                  <div>
+                    <label className={`block text-sm font-medium mb-2 ${headingColor}`}>
+                      Bulk Discount Rate
+                    </label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={material.bulkDiscountRate || ''}
+                      onChange={(e) => updateMaterial(index, 'bulkDiscountRate', e.target.value ? parseFloat(e.target.value) : undefined)}
+                      placeholder="0.10"
+                      className={`w-full px-3 py-2 border ${inputBg} text-sm`}
+                    />
+                    <p className={`text-xs mt-1 ${textColor}`}>
+                      e.g., 0.10 for 10% discount
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className={`block text-sm font-medium mb-2 ${headingColor}`}>
+                      Supplier Lead Time (days)
+                    </label>
+                    <input
+                      type="number"
+                      value={material.supplierLeadTimeDays || ''}
+                      onChange={(e) => updateMaterial(index, 'supplierLeadTimeDays', e.target.value ? parseInt(e.target.value) : undefined)}
+                      placeholder="30"
+                      className={`w-full px-3 py-2 border ${inputBg} text-sm`}
+                    />
+                  </div>
+
+                  <div className="flex items-center pt-6">
+                    <input
+                      type="checkbox"
+                      id={`jit-${index}`}
+                      checked={material.useJIT || false}
+                      onChange={(e) => updateMaterial(index, 'useJIT', e.target.checked)}
+                      className="mr-2 w-4 h-4"
+                    />
+                    <label htmlFor={`jit-${index}`} className={`text-sm ${headingColor}`}>
+                      Use JIT (no ending inventory)
+                    </label>
+                  </div>
+                </div>
+              </details>
+            </div>
+          ))}
+
+          <button
+            onClick={addMaterial}
+            className={`${darkMode ? 'bg-gray-800 text-white hover:bg-gray-700' : 'bg-gray-200 text-black hover:bg-gray-300'} font-medium px-6 py-2 text-sm mb-8`}
+          >
+            + Add Another Material
+          </button>
+
+          <hr className={`my-8 ${hrColor}`} />
+
+          <h3 className={`text-2xl font-semibold mb-6 ${headingColor}`}>Payment Terms (Optional)</h3>
+          <p className={`text-sm mb-4 ${textColor}`}>
+            Specify when material purchases are paid (used for cash disbursement calculations)
+          </p>
+
+          <div className="grid md:grid-cols-3 gap-6 mb-8">
+            <div>
+              <label className={`block text-sm font-medium mb-2 ${headingColor}`}>
+                Next Year Q1 Production
+              </label>
+              <input
+                type="number"
+                value={nextYearQ1Production}
+                onChange={(e) => setNextYearQ1Production(e.target.value)}
+                placeholder="Leave blank to use current Q1"
+                className={`w-full px-4 py-3 border ${inputBg} text-base`}
+              />
+              <p className={`text-xs mt-2 ${textColor}`}>
+                For Q4 ending inventory calculation
+              </p>
+            </div>
+
+            <div>
+              <label className={`block text-sm font-medium mb-2 ${headingColor}`}>
+                % Paid in Current Quarter
+              </label>
+              <input
+                type="number"
+                step="0.01"
+                value={percentPaidCurrentQuarter}
+                onChange={(e) => setPercentPaidCurrentQuarter(e.target.value)}
+                placeholder="0.60"
+                className={`w-full px-4 py-3 border ${inputBg} text-base`}
+              />
+              <p className={`text-xs mt-2 ${textColor}`}>
+                e.g., 0.60 for 60% paid immediately
+              </p>
+            </div>
+
+            <div>
+              <label className={`block text-sm font-medium mb-2 ${headingColor}`}>
+                % Paid in Next Quarter
+              </label>
+              <input
+                type="number"
+                step="0.01"
+                value={percentPaidNextQuarter}
+                onChange={(e) => setPercentPaidNextQuarter(e.target.value)}
+                placeholder="0.40"
+                className={`w-full px-4 py-3 border ${inputBg} text-base`}
+              />
+              <p className={`text-xs mt-2 ${textColor}`}>
+                e.g., 0.40 for 40% paid next quarter
+              </p>
+            </div>
+          </div>
+
+          <button
+            onClick={handleCalculateMaterial}
+            className={`${buttonBg} font-medium px-8 py-3 text-lg`}
+          >
+            Calculate Material Budget
+          </button>
+
+          {materialErrors.length > 0 && (
+            <div className="mt-6 space-y-3">
+              {materialErrors.filter(e => !e.startsWith('WARNING:')).length > 0 && (
+                <div className={`p-4 ${darkMode ? 'bg-red-900/30 border-red-700' : 'bg-red-50 border-red-200'} border`}>
+                  <p className={`font-semibold text-sm mb-2 ${darkMode ? 'text-red-300' : 'text-red-800'}`}>
+                    Errors:
+                  </p>
+                  <ul className={`list-disc list-inside text-xs space-y-1 ${darkMode ? 'text-red-400' : 'text-red-700'}`}>
+                    {materialErrors.filter(e => !e.startsWith('WARNING:')).map((error, idx) => (
+                      <li key={idx}>{error}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              {materialErrors.filter(e => e.startsWith('WARNING:')).length > 0 && (
+                <div className={`p-4 ${darkMode ? 'bg-yellow-900/30 border-yellow-700' : 'bg-yellow-50 border-yellow-200'} border`}>
+                  <p className={`font-semibold text-sm mb-2 ${darkMode ? 'text-yellow-300' : 'text-yellow-800'}`}>
+                    Warnings:
+                  </p>
+                  <ul className={`list-disc list-inside text-xs space-y-1 ${darkMode ? 'text-yellow-400' : 'text-yellow-700'}`}>
+                    {materialErrors.filter(e => e.startsWith('WARNING:')).map((error, idx) => (
+                      <li key={idx}>{error.replace('WARNING: ', '')}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        <hr className={`my-12 ${hrColor}`} />
+
+        {/* Material Budget Results */}
+        <div>
+          <div className="flex justify-between items-center mb-6">
+            <h3 className={`text-2xl font-semibold ${headingColor}`}>Material Budget Results</h3>
+            {materialResult && (
+              <button
+                onClick={downloadMaterialCSV}
+                className={`${buttonBg} font-medium px-6 py-2 text-sm`}
+              >
+                Download CSV
+              </button>
+            )}
+          </div>
+
+          {!materialResult && (
+            <p className="text-lg leading-relaxed">
+              Calculate Production Budget first, then enter material data and click Calculate Material Budget
+            </p>
+          )}
+
+          {materialResult && (
+            <div>
+              <p className={`text-lg mb-2 ${headingColor}`}>
+                <strong>{companyName || 'Your Company'}</strong> — {productName || 'Product'}
+              </p>
+              <p className={`text-sm mb-6 ${textColor}`}>
+                For the Year Ending December 31, {fiscalYear}
+              </p>
+
+              {/* Display each material */}
+              {materialResult.materials?.map((mat: any, idx: number) => (
+                <div key={idx} className="mb-8">
+                  <h4 className={`text-xl font-semibold mb-4 ${headingColor}`}>
+                    {mat.name} ({mat.unit})
+                  </h4>
+
+                  <div className="overflow-x-auto mb-4">
+                    <table className="w-full border-collapse">
+                      <thead>
+                        <tr className={`border-b-2 ${darkMode ? 'border-gray-700' : 'border-gray-300'}`}>
+                          {mat.headers.map((header: string, hidx: number) => (
+                            <th
+                              key={hidx}
+                              className={`py-3 px-4 text-left font-semibold text-sm ${hidx === 0 ? '' : 'text-right'} ${headingColor}`}
+                            >
+                              {header}
+                            </th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {mat.rows.map((row: any, ridx: number) => (
+                          <tr
+                            key={ridx}
+                            className={`border-b ${darkMode ? 'border-gray-800' : 'border-gray-200'}`}
+                          >
+                            <td className={`py-3 px-4 text-sm ${headingColor}`}>{row.label}</td>
+                            <td className="py-3 px-4 text-right text-sm font-mono">{row.q1}</td>
+                            <td className="py-3 px-4 text-right text-sm font-mono">{row.q2}</td>
+                            <td className="py-3 px-4 text-right text-sm font-mono">{row.q3}</td>
+                            <td className="py-3 px-4 text-right text-sm font-mono">{row.q4}</td>
+                            <td className="py-3 px-4 text-right text-sm font-semibold font-mono">{row.yearly}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* Material-specific metrics */}
+                  {(mat.inventoryTurnoverRatio || mat.daysInventoryOutstanding) && (
+                    <div className={`p-3 border ${darkMode ? 'border-gray-700 bg-gray-900' : 'border-gray-300 bg-gray-50'} text-sm mb-4`}>
+                      {mat.inventoryTurnoverRatio && (
+                        <p className={textColor}>
+                          <strong>Inventory Turnover:</strong> {mat.inventoryTurnoverRatio.toFixed(2)}x annually
+                        </p>
+                      )}
+                      {mat.daysInventoryOutstanding && (
+                        <p className={textColor}>
+                          <strong>Days Inventory Outstanding:</strong> {mat.daysInventoryOutstanding.toFixed(0)} days
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </div>
+              ))}
+
+              {/* Total Summary */}
+              {materialResult.summary && (
+                <div className="mb-8">
+                  <h4 className={`text-xl font-semibold mb-4 ${headingColor}`}>
+                    Total Material Purchase Cost
+                  </h4>
+
+                  <div className="overflow-x-auto mb-4">
+                    <table className="w-full border-collapse">
+                      <thead>
+                        <tr className={`border-b-2 ${darkMode ? 'border-gray-700' : 'border-gray-300'}`}>
+                          {materialResult.summary.headers.map((header: string, idx: number) => (
+                            <th
+                              key={idx}
+                              className={`py-3 px-4 text-left font-semibold text-sm ${idx === 0 ? '' : 'text-right'} ${headingColor}`}
+                            >
+                              {header}
+                            </th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {materialResult.summary.rows.map((row: any, idx: number) => (
+                          <tr
+                            key={idx}
+                            className={`border-b ${darkMode ? 'border-gray-800' : 'border-gray-200'} font-semibold`}
+                          >
+                            <td className={`py-3 px-4 text-sm ${headingColor}`}>{row.label}</td>
+                            <td className="py-3 px-4 text-right text-sm font-mono">{row.q1}</td>
+                            <td className="py-3 px-4 text-right text-sm font-mono">{row.q2}</td>
+                            <td className="py-3 px-4 text-right text-sm font-mono">{row.q3}</td>
+                            <td className="py-3 px-4 text-right text-sm font-mono">{row.q4}</td>
+                            <td className="py-3 px-4 text-right text-sm font-mono">{row.yearly}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
+              {/* Analytics */}
+              {materialResult.analytics && (
+                <div className={`p-4 border ${darkMode ? 'border-gray-700 bg-gray-900' : 'border-gray-300 bg-gray-50'} mb-6`}>
+                  <h4 className={`text-sm font-semibold mb-3 ${headingColor}`}>Analytics</h4>
+
+                  {materialResult.analytics.overallInventoryTurnover && (
+                    <p className={`text-sm mb-2 ${textColor}`}>
+                      <strong>Overall Inventory Turnover:</strong> {materialResult.analytics.overallInventoryTurnover.toFixed(2)}x annually
+                    </p>
+                  )}
+
+                  {materialResult.analytics.totalScrapWasteCost && (
+                    <p className={`text-sm mb-2 ${textColor}`}>
+                      <strong>Total Scrap/Waste Cost:</strong> {currency} {materialResult.analytics.totalScrapWasteCost.toFixed(2)}
+                    </p>
+                  )}
+
+                  {materialResult.analytics.totalBulkDiscountSavings && (
+                    <p className={`text-sm mb-2 ${textColor}`}>
+                      <strong>Total Bulk Discount Savings:</strong> {currency} {materialResult.analytics.totalBulkDiscountSavings.toFixed(2)}
+                    </p>
+                  )}
+
+                  {materialResult.analytics.criticalMaterials && materialResult.analytics.criticalMaterials.length > 0 && (
+                    <p className={`text-sm ${darkMode ? 'text-yellow-400' : 'text-yellow-700'}`}>
+                      <strong>⚠ Critical Materials (low turnover):</strong> {materialResult.analytics.criticalMaterials.join(', ')}
+                    </p>
+                  )}
+                </div>
+              )}
+
+              <p className="text-lg leading-relaxed">
+                ✓ Direct Material Budget calculated successfully
+              </p>
+            </div>
+          )}
+        </div>
+
+        <hr className={`my-12 ${hrColor}`} />
+
+        <h3 className={`text-2xl font-semibold mb-4 ${headingColor}`}>
+          About the Direct Material Budget
+        </h3>
+        <p className="text-lg mb-4 leading-relaxed">
+          The Direct Material Budget calculates the quantity and cost of raw materials needed for production.
+          It ensures adequate materials are available while managing inventory costs.
+        </p>
+        <p className="text-base leading-relaxed">
+          <strong>Formula:</strong> Material to Purchase = (Production Needs × Material per Unit + Desired Ending Inventory) - Beginning Inventory
         </p>
       </main>
 
