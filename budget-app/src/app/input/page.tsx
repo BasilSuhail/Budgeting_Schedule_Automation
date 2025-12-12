@@ -9,14 +9,11 @@ import type { SalesBudgetInputs, ProductionBudgetInputs, DirectMaterialBudgetInp
 
 export default function InputPage() {
   const [darkMode, setDarkMode] = useState(false);
-  const [highContrast, setHighContrast] = useState(false);
 
   // Load preferences from localStorage on mount
   useEffect(() => {
     const savedDarkMode = localStorage.getItem('darkMode') === 'true';
-    const savedHighContrast = localStorage.getItem('highContrast') === 'true';
     setDarkMode(savedDarkMode);
-    setHighContrast(savedHighContrast);
   }, []);
 
   const [companyName, setCompanyName] = useState('');
@@ -87,12 +84,6 @@ export default function InputPage() {
     const newValue = !darkMode;
     setDarkMode(newValue);
     localStorage.setItem('darkMode', String(newValue));
-  };
-
-  const toggleHighContrast = () => {
-    const newValue = !highContrast;
-    setHighContrast(newValue);
-    localStorage.setItem('highContrast', String(newValue));
   };
 
   const applyGrowthRate = () => {
@@ -400,7 +391,6 @@ export default function InputPage() {
   const inputBg = darkMode ? 'bg-[#222] border-gray-700 text-white' : 'bg-white border-gray-300 text-black';
   const buttonBg = darkMode ? 'bg-white text-black hover:bg-gray-200' : 'bg-black text-white hover:bg-gray-800';
   const hrColor = darkMode ? 'border-gray-800' : 'border-gray-200';
-  const contrastText = highContrast ? (darkMode ? 'text-white' : 'text-black') : textColor;
 
   return (
     <div className={`min-h-screen ${bgColor} ${textColor}`}>
@@ -412,23 +402,20 @@ export default function InputPage() {
         <h1 className={`text-xl font-semibold ${headingColor}`}>
           Budget Input
         </h1>
-        <div className="flex gap-4 text-sm">
-          <button
-            onClick={toggleHighContrast}
-            className={`hover:underline ${darkMode ? 'text-gray-300' : 'text-[#454545]'}`}
-          >
-            {highContrast ? 'Less contrast' : 'More contrast'}
-          </button>
+        <div className="flex items-center gap-4">
+          <span className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+            Inverted Mode
+          </span>
           <button
             onClick={toggleDarkMode}
-            className={`hover:underline ${darkMode ? 'text-gray-300' : 'text-[#454545]'}`}
+            className={`text-sm hover:underline ${darkMode ? 'text-gray-300' : 'text-[#454545]'}`}
           >
-            {darkMode ? 'Light mode' : 'Dark mode'}
+            {darkMode ? 'Light' : 'Dark'}
           </button>
         </div>
       </header>
 
-      <main className={`max-w-5xl mx-auto px-6 py-12 ${contrastText}`}>
+      <main className={`max-w-5xl mx-auto px-6 py-12 ${textColor}`}>
         <h2 className={`text-4xl font-bold mb-4 ${headingColor}`}>
           Schedule 1: Sales Budget
         </h2>

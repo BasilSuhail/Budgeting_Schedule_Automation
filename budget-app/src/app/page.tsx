@@ -2,17 +2,15 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { siteConfig, shouldShowSection } from '@/lib/config/siteConfig';
 
 export default function Home() {
   const [darkMode, setDarkMode] = useState(false);
-  const [highContrast, setHighContrast] = useState(false);
 
   // Load preferences from localStorage on mount
   useEffect(() => {
     const savedDarkMode = localStorage.getItem('darkMode') === 'true';
-    const savedHighContrast = localStorage.getItem('highContrast') === 'true';
     setDarkMode(savedDarkMode);
-    setHighContrast(savedHighContrast);
   }, []);
 
   // Save preferences to localStorage when they change
@@ -22,15 +20,7 @@ export default function Home() {
     localStorage.setItem('darkMode', String(newValue));
   };
 
-  const toggleHighContrast = () => {
-    const newValue = !highContrast;
-    setHighContrast(newValue);
-    localStorage.setItem('highContrast', String(newValue));
-  };
-
-  const textColor = highContrast
-    ? (darkMode ? 'text-white' : 'text-black')
-    : (darkMode ? 'text-gray-100' : 'text-[#454545]');
+  const textColor = darkMode ? 'text-gray-100' : 'text-[#454545]';
 
   return (
     <div className={`min-h-screen ${darkMode ? 'bg-[#111] text-gray-100' : 'bg-white text-[#454545]'}`}>
@@ -39,18 +29,15 @@ export default function Home() {
         <h1 className={`text-xl font-semibold ${darkMode ? 'text-white' : 'text-black'}`}>
           Budget Automation
         </h1>
-        <div className="flex gap-4 text-sm">
-          <button
-            onClick={toggleHighContrast}
-            className={`hover:underline ${darkMode ? 'text-gray-300' : 'text-[#454545]'}`}
-          >
-            {highContrast ? 'Less contrast' : 'More contrast'}
-          </button>
+        <div className="flex items-center gap-4">
+          <span className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+            Inverted Mode
+          </span>
           <button
             onClick={toggleDarkMode}
-            className={`hover:underline ${darkMode ? 'text-gray-300' : 'text-[#454545]'}`}
+            className={`text-sm hover:underline ${darkMode ? 'text-gray-300' : 'text-[#454545]'}`}
           >
-            {darkMode ? 'Light mode' : 'Dark mode'}
+            {darkMode ? 'Light' : 'Dark'}
           </button>
         </div>
       </header>
@@ -166,6 +153,172 @@ export default function Home() {
         >
           Try it now
         </Link>
+
+        {/* Dynamic Sections - Only show if enabled and have content */}
+
+        {/* Projects Section */}
+        {shouldShowSection('projects') && (
+          <>
+            <hr className={`my-16 ${darkMode ? 'border-gray-700' : 'border-gray-300'}`} />
+            <h3 className={`text-3xl font-semibold mb-6 ${darkMode ? 'text-white' : 'text-black'}`}>
+              {siteConfig.sections.projects.title}
+            </h3>
+            {siteConfig.sections.projects.description && (
+              <p className="text-lg mb-8 leading-relaxed">
+                {siteConfig.sections.projects.description}
+              </p>
+            )}
+            <div className="grid md:grid-cols-2 gap-6 mb-16">
+              {siteConfig.sections.projects.items?.map((project: any, idx: number) => (
+                <div key={idx} className={`p-6 border ${darkMode ? 'border-gray-700 bg-gray-900' : 'border-gray-300 bg-gray-50'} hover:shadow-lg transition-shadow`}>
+                  <h4 className={`text-xl font-semibold mb-3 ${darkMode ? 'text-white' : 'text-black'}`}>
+                    {project.title}
+                  </h4>
+                  <p className="text-sm mb-4 leading-relaxed">
+                    {project.description}
+                  </p>
+                  {project.tags && (
+                    <div className="flex flex-wrap gap-2 mb-4">
+                      {project.tags.map((tag: string, tagIdx: number) => (
+                        <span key={tagIdx} className={`text-xs px-2 py-1 border ${darkMode ? 'border-gray-700' : 'border-gray-300'}`}>
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                  <Link
+                    href={project.link}
+                    className={`text-sm ${darkMode ? 'text-white hover:text-gray-300' : 'text-black hover:text-gray-600'} underline`}
+                  >
+                    View Project →
+                  </Link>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
+
+        {/* Experience Section */}
+        {shouldShowSection('experience') && (
+          <>
+            <hr className={`my-16 ${darkMode ? 'border-gray-700' : 'border-gray-300'}`} />
+            <h3 className={`text-3xl font-semibold mb-6 ${darkMode ? 'text-white' : 'text-black'}`}>
+              {siteConfig.sections.experience.title}
+            </h3>
+            {siteConfig.sections.experience.description && (
+              <p className="text-lg mb-8 leading-relaxed">
+                {siteConfig.sections.experience.description}
+              </p>
+            )}
+            <div className="space-y-6 mb-16">
+              {siteConfig.sections.experience.items?.map((exp: any, idx: number) => (
+                <div key={idx} className={`p-6 border ${darkMode ? 'border-gray-700 bg-gray-900' : 'border-gray-300 bg-gray-50'}`}>
+                  <h4 className={`text-xl font-semibold mb-2 ${darkMode ? 'text-white' : 'text-black'}`}>
+                    {exp.position}
+                  </h4>
+                  <p className={`text-sm mb-2 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                    {exp.company} • {exp.period}
+                  </p>
+                  <p className="text-base leading-relaxed">
+                    {exp.description}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
+
+        {/* Tech Stack Section */}
+        {shouldShowSection('techStack') && (
+          <>
+            <hr className={`my-16 ${darkMode ? 'border-gray-700' : 'border-gray-300'}`} />
+            <h3 className={`text-3xl font-semibold mb-6 ${darkMode ? 'text-white' : 'text-black'}`}>
+              {siteConfig.sections.techStack.title}
+            </h3>
+            {siteConfig.sections.techStack.description && (
+              <p className="text-lg mb-8 leading-relaxed">
+                {siteConfig.sections.techStack.description}
+              </p>
+            )}
+            <div className="flex flex-wrap gap-3 mb-16">
+              {siteConfig.sections.techStack.items?.map((tech: string, idx: number) => (
+                <span key={idx} className={`px-4 py-2 border ${darkMode ? 'border-gray-700 bg-gray-900' : 'border-gray-300 bg-gray-50'} text-sm`}>
+                  {tech}
+                </span>
+              ))}
+            </div>
+          </>
+        )}
+
+        {/* Writing Section */}
+        {shouldShowSection('writing') && (
+          <>
+            <hr className={`my-16 ${darkMode ? 'border-gray-700' : 'border-gray-300'}`} />
+            <h3 className={`text-3xl font-semibold mb-6 ${darkMode ? 'text-white' : 'text-black'}`}>
+              {siteConfig.sections.writing.title}
+            </h3>
+            {siteConfig.sections.writing.description && (
+              <p className="text-lg mb-8 leading-relaxed">
+                {siteConfig.sections.writing.description}
+              </p>
+            )}
+            <div className="space-y-4 mb-16">
+              {siteConfig.sections.writing.items?.map((article: any, idx: number) => (
+                <a
+                  key={idx}
+                  href={article.link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={`block p-6 border ${darkMode ? 'border-gray-700 bg-gray-900 hover:bg-gray-800' : 'border-gray-300 bg-gray-50 hover:bg-gray-100'} transition-colors`}
+                >
+                  <h4 className={`text-xl font-semibold mb-2 ${darkMode ? 'text-white' : 'text-black'}`}>
+                    {article.title}
+                  </h4>
+                  {article.date && (
+                    <p className={`text-xs mb-2 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                      {new Date(article.date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+                    </p>
+                  )}
+                  <p className="text-base leading-relaxed">
+                    {article.description}
+                  </p>
+                </a>
+              ))}
+            </div>
+          </>
+        )}
+
+        {/* Testimonials Section */}
+        {shouldShowSection('testimonials') && (
+          <>
+            <hr className={`my-16 ${darkMode ? 'border-gray-700' : 'border-gray-300'}`} />
+            <h3 className={`text-3xl font-semibold mb-6 ${darkMode ? 'text-white' : 'text-black'}`}>
+              {siteConfig.sections.testimonials.title}
+            </h3>
+            {siteConfig.sections.testimonials.description && (
+              <p className="text-lg mb-8 leading-relaxed">
+                {siteConfig.sections.testimonials.description}
+              </p>
+            )}
+            <div className="grid md:grid-cols-2 gap-6 mb-16">
+              {siteConfig.sections.testimonials.items?.map((testimonial: any, idx: number) => (
+                <div key={idx} className={`p-6 border ${darkMode ? 'border-gray-700 bg-gray-900' : 'border-gray-300 bg-gray-50'}`}>
+                  <p className="text-base leading-relaxed mb-4 italic">
+                    "{testimonial.text}"
+                  </p>
+                  <div>
+                    <p className={`font-semibold ${darkMode ? 'text-white' : 'text-black'}`}>
+                      {testimonial.name}
+                    </p>
+                    <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                      {testimonial.position} at {testimonial.company}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
       </main>
 
       {/* Footer */}
