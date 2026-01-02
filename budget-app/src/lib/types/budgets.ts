@@ -129,46 +129,234 @@ export interface DirectMaterialBudgetInputs {
 // 4. DIRECT LABOUR BUDGET INPUTS
 // ============================================================================
 
-export interface DirectLabourBudgetInputs {
-  // Labour requirements
-  labourHoursPerUnit: number;  // Hours needed per unit of production
+export interface LaborCategory {
+  name: string;  // e.g., "Assembly", "Finishing", "Quality Control"
+  hoursPerUnit: number;  // Hours needed per unit for this category
+  wageRatePerHour: number;  // Wage rate for this category
+  includesFringeBenefits?: boolean;  // If rate already includes benefits
+}
 
-  // Labour rates
-  wageRatePerHour: number;  // Wage per hour
-  wageInflationRate?: number;
+export interface DirectLabourBudgetInputs {
+  // Production requirements (from Schedule 2)
+  unitsToBeProduced: QuarterlyData;
+
+  // Simple single-category approach
+  directLaborHoursPerUnit?: number;  // Total hours per unit (all categories combined)
+  hourlyWageRate?: number;  // Average wage rate per hour
+
+  // Advanced multi-category approach
+  laborCategories?: LaborCategory[];  // Multiple labor types with different rates
+
+  // Optional enhancements
+  wageInflationRate?: number;  // Quarterly wage increase (e.g., 0.01 for 1%)
+  overtimeThreshold?: number;  // Hours per quarter before overtime kicks in
+  overtimeMultiplier?: number;  // e.g., 1.5 for time-and-a-half
+
+  fringeBenefitRate?: number;  // % of wages (e.g., 0.25 for 25% for health, FICA, etc.)
+  productivityEfficiencyRate?: number;  // % efficiency (e.g., 0.95 for 95% efficiency)
+
+  turnoverRate?: number;  // Annual turnover rate (e.g., 0.15 for 15%)
+  trainingCostPerEmployee?: number;  // Cost to train new employees
+  averageHoursPerEmployee?: number;  // For workforce planning
 }
 
 // ============================================================================
 // 5. MANUFACTURING OVERHEAD BUDGET INPUTS
 // ============================================================================
 
+export interface OverheadCostCategory {
+  name: string;  // e.g., "Utilities", "Maintenance", "Quality Control"
+  costType: 'variable' | 'fixed';  // Variable or fixed cost
+  amount: number;  // Cost amount (per unit for variable, per quarter for fixed)
+  costDriver?: 'units' | 'labor-hours' | 'machine-hours';  // For variable costs
+  isNonCash?: boolean;  // For depreciation, amortization
+}
+
 export interface ManufacturingOverheadInputs {
-  // Variable overhead
+  // Production requirements (from Schedule 2)
+  unitsToBeProduced: QuarterlyData;
+
+  // Labor hours (from Schedule 4) - for overhead allocation
+  directLaborHours?: QuarterlyData;
+
+  // Simple approach - single variable and fixed rates
   variableOverheadRatePerUnit?: number;  // Variable OH per unit produced
-  variableOverheadRatePerLabourHour?: number;  // Variable OH per DL hour
+  variableOverheadRatePerLaborHour?: number;  // Variable OH per DL hour
+  fixedOverheadPerQuarter?: number;  // Fixed OH per quarter
+  depreciationPerQuarter?: number;  // Non-cash depreciation
 
-  // Fixed overhead (quarterly amounts)
-  fixedOverheadPerQuarter: number;
+  // Advanced approach - detailed cost categories
+  overheadCategories?: OverheadCostCategory[];  // Detailed breakdown by cost type
 
-  // Depreciation (non-cash expense)
-  depreciationPerQuarter: number;
+  // Activity-Based Costing (ABC) approach
+  useActivityBasedCosting?: boolean;
+  numberOfProductionRuns?: QuarterlyData;  // Batch-level costs
+  costPerProductionRun?: number;  // Setup costs per batch
+  numberOfInspections?: QuarterlyData;  // Quality control inspections
+  costPerInspection?: number;  // Cost per inspection
+  machineHours?: QuarterlyData;  // For machine-hour based allocation
+  costPerMachineHour?: number;  // Variable cost per machine hour
+
+  // Facility-level costs (quarterly)
+  facilityRent?: number;
+  facilityInsurance?: number;
+  propertyTaxes?: number;
+  utilities?: number;  // Can be variable or fixed
+  utilitiesIsVariable?: boolean;  // If true, allocate based on production
+
+  // Supervisory and support labor (indirect labor)
+  supervisorySalaries?: number;  // Per quarter
+  supportStaffSalaries?: number;  // Per quarter
+
+  // Supplies and indirect materials
+  indirectMaterialsPerUnit?: number;  // Consumables per unit
+  shopSuppliesPerQuarter?: number;  // Fixed supplies
+
+  // Maintenance
+  plannedMaintenancePerQuarter?: number;  // Scheduled maintenance
+  maintenancePerMachineHour?: number;  // Variable maintenance
+
+  // Quality control
+  qualityControlPerUnit?: number;  // Inspection per unit
+  qualityControlLabor?: number;  // Fixed QC labor per quarter
+
+  // Other overhead items
+  technologyCosts?: number;  // Software, IT per quarter
+  warehouseCosts?: number;  // Storage, handling per quarter
+  environmentalComplianceCosts?: number;  // Permits, testing per quarter
+
+  // Overhead allocation method
+  allocationBase?: 'units' | 'labor-hours' | 'machine-hours';  // For predetermined rate
 }
 
 // ============================================================================
 // 6. SELLING & ADMINISTRATIVE EXPENSE BUDGET INPUTS
 // ============================================================================
 
+export interface SalesPersonnelCategory {
+  name: string;  // e.g., "Field Sales", "Inside Sales", "Account Managers"
+  numberOfPersonnel: number;
+  baseSalaryPerPerson: number;  // Quarterly salary
+  benefitRate?: number;  // % of salary for benefits
+  commissionRate?: number;  // % of sales or per-unit commission
+  commissionType?: 'revenue' | 'units';  // Commission based on revenue or units sold
+}
+
+export interface DistributionChannel {
+  name: string;  // e.g., "Direct", "Retail", "Online", "Wholesale"
+  variableCostPerUnit?: number;  // Shipping, handling per unit
+  fixedCostPerQuarter?: number;  // Channel maintenance costs
+  percentOfSales?: number;  // % of total sales through this channel
+}
+
+export interface DepartmentBudget {
+  name: string;  // e.g., "Sales", "Marketing", "IT", "HR", "Finance"
+  salaries: number;  // Quarterly salaries
+  supplies: number;  // Office supplies, materials
+  otherCosts: number;  // Department-specific costs
+}
+
 export interface SellingAdminExpenseInputs {
-  // Variable expenses (as % of sales or per unit)
-  variableSellingExpenseRate?: number;  // e.g., 0.05 for 5% of sales
-  variableAdminExpenseRate?: number;
+  // Sales data (from Schedule 1)
+  salesRevenue?: QuarterlyData;  // Total sales revenue
+  salesUnits?: QuarterlyData;  // Units sold
 
-  // Fixed expenses (quarterly)
-  fixedSellingExpensePerQuarter: number;
-  fixedAdminExpensePerQuarter: number;
+  // SALES EXPENSES
+  // Sales personnel (detailed breakdown)
+  salesPersonnelCategories?: SalesPersonnelCategory[];
 
-  // Distribution costs
-  distributionCostPerUnit?: number;
+  // Simple commission approach (if not using personnel categories)
+  commissionRate?: number;  // % of revenue (e.g., 0.05 for 5%)
+  commissionPerUnit?: number;  // Fixed amount per unit sold
+
+  // Distribution channels
+  distributionChannels?: DistributionChannel[];
+
+  // Simple distribution approach
+  distributionCostPerUnit?: number;  // Variable cost per unit
+  distributionFixedCostPerQuarter?: number;  // Fixed distribution costs
+
+  // Customer service
+  customerServiceSalaries?: number;  // Per quarter
+  warrantyExpensePerUnit?: number;  // Variable warranty cost
+  returnProcessingPerUnit?: number;  // Cost to process returns
+
+  // MARKETING EXPENSES
+  advertisingBudgetPerQuarter?: number;  // Media, digital ads
+  brandDevelopmentPerQuarter?: number;  // Brand building, PR
+  marketingCampaignsPerQuarter?: number;  // Specific campaigns
+  marketResearchPerQuarter?: number;  // Customer research, surveys
+  tradeshowsEventsPerQuarter?: number;  // Trade shows, events
+  contentCreationPerQuarter?: number;  // Content marketing, social media
+
+  // Customer acquisition
+  customerAcquisitionCostPerCustomer?: number;  // Cost to gain new customer
+  newCustomersPerQuarter?: QuarterlyData;  // Number of new customers
+
+  // ADMINISTRATIVE EXPENSES
+  // Fixed administrative salaries
+  executiveSalaries?: number;  // Per quarter (CEO, CFO, etc.)
+  financeSalaries?: number;  // Accounting, finance team
+  hrSalaries?: number;  // Human resources team
+  itSalaries?: number;  // IT and systems team
+  legalComplianceSalaries?: number;  // Legal, compliance staff
+  generalAdminSalaries?: number;  // Reception, admin support
+
+  // Department budgets (alternative to individual salaries)
+  departmentBudgets?: DepartmentBudget[];
+
+  // Occupancy costs
+  officeRentPerQuarter?: number;  // Office space rental
+  warehouseRentPerQuarter?: number;  // Warehouse/storage rental
+  utilitiesPerQuarter?: number;  // Power, water, gas
+  buildingInsurancePerQuarter?: number;  // Property insurance
+  propertyTaxesPerQuarter?: number;  // Real estate taxes
+  maintenancePerQuarter?: number;  // Building maintenance
+
+  // Technology costs
+  softwareLicensesPerQuarter?: number;  // SaaS, enterprise software
+  cloudServicesPerQuarter?: number;  // AWS, Azure, cloud hosting
+  telecommunicationsPerQuarter?: number;  // Phone, internet, video conferencing
+  itSupportPerQuarter?: number;  // IT maintenance, support
+
+  // Office operations
+  officeSuppliesPerQuarter?: number;  // General supplies
+  postageShippingPerQuarter?: number;  // Mail, packages
+  printingPerQuarter?: number;  // Printing, copying
+
+  // Professional services
+  legalFeesPerQuarter?: number;  // Legal counsel
+  auditFeesPerQuarter?: number;  // External audit
+  consultingFeesPerQuarter?: number;  // Business consultants
+
+  // Professional development
+  trainingPerQuarter?: number;  // Employee training
+  certificationPerQuarter?: number;  // Professional certifications
+  conferencesPerQuarter?: number;  // Industry conferences
+
+  // Travel and entertainment
+  salesTravelPerQuarter?: number;  // Sales travel
+  executiveTravelPerQuarter?: number;  // Executive travel
+  mealsEntertainmentPerQuarter?: number;  // Client entertainment
+
+  // Regulatory and compliance
+  licensesPermitsPerQuarter?: number;  // Business licenses
+  complianceCostsPerQuarter?: number;  // Regulatory compliance
+  insuranceGeneralPerQuarter?: number;  // General liability, D&O
+
+  // Bad debt
+  badDebtRate?: number;  // % of sales (e.g., 0.02 for 2%)
+
+  // Depreciation (non-cash)
+  depreciationOfficeEquipment?: number;  // Per quarter
+  depreciationFurnitureFixtures?: number;  // Per quarter
+
+  // Optional: Simple approach toggle
+  useSimpleApproach?: boolean;  // If true, use basic variable/fixed rates
+  variableSellingExpenseRate?: number;  // % of sales (simple approach)
+  variableAdminExpenseRate?: number;  // % of sales (simple approach)
+  fixedSellingExpensePerQuarter?: number;  // Simple approach
+  fixedAdminExpensePerQuarter?: number;  // Simple approach
 }
 
 // ============================================================================
@@ -311,25 +499,201 @@ export interface DirectMaterialBudgetOutput {
   criticalMaterials?: string[];  // Materials at risk of shortage
 }
 
+export interface LaborCategoryDetail {
+  name: string;
+  hoursRequired: QuarterlyData;
+  wageRate: QuarterlyData;
+  laborCost: QuarterlyData;
+  regularHours?: QuarterlyData;
+  overtimeHours?: QuarterlyData;
+  overtimeCost?: QuarterlyData;
+}
+
 export interface DirectLabourBudgetOutput {
   productionUnits: QuarterlyData;
-  labourHoursRequired: QuarterlyData;
-  labourRate: QuarterlyData;
-  labourCost: QuarterlyData;
+  totalLaborHoursRequired: QuarterlyData;
+  averageLaborRate: QuarterlyData;
+  totalLaborCost: QuarterlyData;
+
+  // Multiple categories (if applicable)
+  laborCategories?: LaborCategoryDetail[];
+
+  // Optional enhancements
+  regularHours?: QuarterlyData;
+  overtimeHours?: QuarterlyData;
+  overtimeCost?: QuarterlyData;
+  fringeBenefitCost?: QuarterlyData;
+  totalCostIncludingBenefits?: QuarterlyData;
+
+  // Workforce planning
+  averageEmployeesNeeded?: QuarterlyData;
+  turnoverCost?: QuarterlyData;
+  trainingCost?: QuarterlyData;
+
+  // Efficiency metrics
+  laborCostPerUnit?: QuarterlyData;
+  productivityRate?: QuarterlyData;
+  laborCapacityUtilization?: QuarterlyData;
+}
+
+export interface OverheadCategoryDetail {
+  name: string;
+  costType: 'variable' | 'fixed';
+  cost: QuarterlyData;
+  costDriver?: string;
+  isNonCash?: boolean;
 }
 
 export interface ManufacturingOverheadOutput {
+  // Production base
+  productionUnits: QuarterlyData;
+  directLaborHours?: QuarterlyData;
+
+  // Basic overhead breakdown
   variableOverhead: QuarterlyData;
   fixedOverhead: QuarterlyData;
   totalOverhead: QuarterlyData;
   depreciation: QuarterlyData;
-  cashDisbursements: QuarterlyData;  // Total OH minus depreciation
+  cashDisbursements: QuarterlyData;  // Total OH minus non-cash items
+
+  // Detailed category breakdown (if using categories)
+  overheadCategories?: OverheadCategoryDetail[];
+
+  // Activity-Based Costing (ABC) breakdown
+  unitLevelCosts?: QuarterlyData;  // Costs that vary with units
+  batchLevelCosts?: QuarterlyData;  // Setup and production run costs
+  productLevelCosts?: QuarterlyData;  // Product-sustaining costs
+  facilityLevelCosts?: QuarterlyData;  // Facility and capacity costs
+
+  // Predetermined overhead rate (for absorption costing)
+  predeterminedOverheadRate?: number;  // Rate per cost driver unit
+  appliedOverhead?: QuarterlyData;  // Overhead applied to production
+  overheadVariance?: QuarterlyData;  // Under/over applied
+
+  // Cost breakdowns
+  indirectLaborCost?: QuarterlyData;  // Supervisory and support
+  indirectMaterialsCost?: QuarterlyData;  // Supplies and consumables
+  facilityCosts?: QuarterlyData;  // Rent, insurance, taxes
+  utilitiesCost?: QuarterlyData;  // Power, water, gas
+  maintenanceCost?: QuarterlyData;  // Equipment maintenance
+  qualityControlCost?: QuarterlyData;  // Inspection and testing
+
+  // Unit cost metrics
+  overheadPerUnit?: QuarterlyData;  // Total overhead ÷ units
+  variableOverheadPerUnit?: QuarterlyData;  // Variable portion per unit
+  fixedOverheadPerUnit?: QuarterlyData;  // Fixed portion per unit
+
+  // Capacity analysis
+  budgetedCapacity?: number;  // Planned production capacity
+  actualCapacity?: QuarterlyData;  // Actual production
+  capacityUtilization?: QuarterlyData;  // Actual ÷ Budgeted (%)
+  idleCapacityCost?: QuarterlyData;  // Cost of unused capacity
+
+  // Absorption metrics
+  overAbsorbed?: QuarterlyData;  // When applied > actual
+  underAbsorbed?: QuarterlyData;  // When applied < actual
+}
+
+export interface SalesPersonnelDetail {
+  name: string;
+  numberOfPersonnel: number;
+  baseSalaries: QuarterlyData;
+  benefits: QuarterlyData;
+  commissions: QuarterlyData;
+  totalCost: QuarterlyData;
+}
+
+export interface DistributionChannelDetail {
+  name: string;
+  variableCosts: QuarterlyData;
+  fixedCosts: QuarterlyData;
+  totalCost: QuarterlyData;
+}
+
+export interface DepartmentBudgetDetail {
+  name: string;
+  salaries: QuarterlyData;
+  supplies: QuarterlyData;
+  otherCosts: QuarterlyData;
+  totalCost: QuarterlyData;
 }
 
 export interface SellingAdminExpenseOutput {
-  variableExpenses: QuarterlyData;
-  fixedExpenses: QuarterlyData;
-  totalExpenses: QuarterlyData;
+  // Sales data reference
+  salesRevenue?: QuarterlyData;
+  salesUnits?: QuarterlyData;
+
+  // SELLING EXPENSES BREAKDOWN
+  salesPersonnelCosts?: SalesPersonnelDetail[];  // Detailed personnel breakdown
+  salesCommissions?: QuarterlyData;  // Total commissions
+  salesSalariesAndBenefits?: QuarterlyData;  // Total salaries + benefits
+  totalSalesPersonnelCosts?: QuarterlyData;  // Combined personnel costs
+
+  distributionChannelCosts?: DistributionChannelDetail[];  // By channel
+  distributionVariableCosts?: QuarterlyData;  // Total variable distribution
+  distributionFixedCosts?: QuarterlyData;  // Total fixed distribution
+  totalDistributionCosts?: QuarterlyData;  // Combined distribution
+
+  customerServiceCosts?: QuarterlyData;  // Service, warranty, returns
+  customerAcquisitionCosts?: QuarterlyData;  // New customer acquisition
+
+  totalVariableSellingExpenses?: QuarterlyData;  // All variable selling
+  totalFixedSellingExpenses?: QuarterlyData;  // All fixed selling
+  totalSellingExpenses?: QuarterlyData;  // Total selling expenses
+
+  // MARKETING EXPENSES BREAKDOWN
+  advertisingCosts?: QuarterlyData;
+  brandDevelopmentCosts?: QuarterlyData;
+  marketingCampaignCosts?: QuarterlyData;
+  marketResearchCosts?: QuarterlyData;
+  tradeshowsEventsCosts?: QuarterlyData;
+  contentCreationCosts?: QuarterlyData;
+  totalMarketingExpenses?: QuarterlyData;
+
+  // ADMINISTRATIVE EXPENSES BREAKDOWN
+  executiveCosts?: QuarterlyData;  // Executive salaries
+  financeCosts?: QuarterlyData;  // Finance department
+  hrCosts?: QuarterlyData;  // HR department
+  itCosts?: QuarterlyData;  // IT department
+  legalComplianceCosts?: QuarterlyData;  // Legal/compliance
+  generalAdminCosts?: QuarterlyData;  // General admin
+
+  departmentBudgetCosts?: DepartmentBudgetDetail[];  // Detailed department breakdown
+  totalAdministrativeSalaries?: QuarterlyData;
+
+  occupancyCosts?: QuarterlyData;  // Rent, utilities, insurance
+  technologyCosts?: QuarterlyData;  // Software, cloud, telecom
+  officeOperationsCosts?: QuarterlyData;  // Supplies, postage, printing
+  professionalServicesCosts?: QuarterlyData;  // Legal, audit, consulting
+  professionalDevelopmentCosts?: QuarterlyData;  // Training, conferences
+  travelEntertainmentCosts?: QuarterlyData;  // Travel, meals
+  regulatoryComplianceCosts?: QuarterlyData;  // Licenses, compliance, insurance
+
+  badDebtExpense?: QuarterlyData;  // Uncollectible accounts
+  depreciationExpense?: QuarterlyData;  // Office equipment depreciation
+
+  totalFixedAdminExpenses?: QuarterlyData;  // All fixed admin
+  totalAdministrativeExpenses?: QuarterlyData;  // Total admin expenses
+
+  // OVERALL TOTALS
+  totalVariableExpenses: QuarterlyData;  // All variable SG&A
+  totalFixedExpenses: QuarterlyData;  // All fixed SG&A
+  totalSGAExpenses: QuarterlyData;  // Total SG&A
+  cashDisbursementsForSGA?: QuarterlyData;  // Total minus depreciation
+
+  // METRICS AND ANALYTICS
+  sgaAsPercentOfSales?: QuarterlyData;  // SG&A ÷ Sales Revenue
+  variableSGAPerUnit?: QuarterlyData;  // Variable SG&A ÷ Units
+  fixedSGAPerUnit?: QuarterlyData;  // Fixed SG&A ÷ Units
+  totalSGAPerUnit?: QuarterlyData;  // Total SG&A ÷ Units
+
+  // Marketing effectiveness
+  marketingAsPercentOfSales?: QuarterlyData;  // Marketing ÷ Sales
+  costPerNewCustomer?: QuarterlyData;  // If customer acquisition tracked
+
+  // Department efficiency
+  salesExpenseRatio?: QuarterlyData;  // Selling expenses ÷ Sales revenue
+  adminExpenseRatio?: QuarterlyData;  // Admin expenses ÷ Sales revenue
 }
 
 export interface CashReceiptsOutput {

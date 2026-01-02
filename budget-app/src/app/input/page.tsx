@@ -5,7 +5,10 @@ import Link from 'next/link';
 import { calculateSalesBudget, validateSalesBudgetInputs, formatSalesBudgetForDisplay } from '@/lib/calculations/01-salesBudget';
 import { calculateProductionBudget, validateProductionBudgetInputs, formatProductionBudgetForDisplay } from '@/lib/calculations/02-productionBudget';
 import { calculateDirectMaterialBudget, validateDirectMaterialBudgetInputs, formatDirectMaterialBudgetForDisplay } from '@/lib/calculations/03-directMaterialBudget';
-import type { SalesBudgetInputs, ProductionBudgetInputs, DirectMaterialBudgetInputs, MaterialType } from '@/lib/types/budgets';
+import { calculateDirectLaborBudget, validateDirectLaborBudgetInputs, formatDirectLaborBudgetForDisplay } from '@/lib/calculations/04-directLaborBudget';
+import { calculateManufacturingOverheadBudget, validateManufacturingOverheadInputs, formatManufacturingOverheadBudgetForDisplay } from '@/lib/calculations/05-manufacturingOverheadBudget';
+import { calculateSellingAdminExpenseBudget, validateSellingAdminExpenseInputs, formatSellingAdminExpenseBudgetForDisplay } from '@/lib/calculations/06-sellingAdminExpenseBudget';
+import type { SalesBudgetInputs, ProductionBudgetInputs, DirectMaterialBudgetInputs, DirectLabourBudgetInputs, ManufacturingOverheadInputs, SellingAdminExpenseInputs, MaterialType, LaborCategory, OverheadCostCategory, SalesPersonnelCategory, DistributionChannel, DepartmentBudget } from '@/lib/types/budgets';
 
 export default function InputPage() {
   const [darkMode, setDarkMode] = useState(false);
@@ -78,6 +81,144 @@ export default function InputPage() {
 
   const [materialResult, setMaterialResult] = useState<any>(null);
   const [materialErrors, setMaterialErrors] = useState<string[]>([]);
+
+  // Schedule 4: Direct Labor Budget state
+  const [useSimpleLaborInput, setUseSimpleLaborInput] = useState(true);
+  const [directLaborHoursPerUnit, setDirectLaborHoursPerUnit] = useState('');
+  const [hourlyWageRate, setHourlyWageRate] = useState('');
+  const [laborCategories, setLaborCategories] = useState<LaborCategory[]>([
+    {
+      name: '',
+      hoursPerUnit: 0,
+      wageRatePerHour: 0,
+    },
+  ]);
+  const [wageInflationRate, setWageInflationRate] = useState('');
+  const [overtimeThreshold, setOvertimeThreshold] = useState('');
+  const [overtimeMultiplier, setOvertimeMultiplier] = useState('1.5');
+  const [fringeBenefitRate, setFringeBenefitRate] = useState('');
+  const [productivityEfficiencyRate, setProductivityEfficiencyRate] = useState('');
+  const [turnoverRate, setTurnoverRate] = useState('');
+  const [trainingCostPerEmployee, setTrainingCostPerEmployee] = useState('');
+  const [averageHoursPerEmployee, setAverageHoursPerEmployee] = useState('');
+
+  const [laborResult, setLaborResult] = useState<any>(null);
+  const [laborErrors, setLaborErrors] = useState<string[]>([]);
+
+  // Schedule 5: Manufacturing Overhead Budget state
+  const [overheadApproach, setOverheadApproach] = useState<'simple' | 'detailed' | 'abc'>('simple');
+
+  // Simple approach fields
+  const [variableOverheadRatePerUnit, setVariableOverheadRatePerUnit] = useState('');
+  const [variableOverheadRatePerLaborHour, setVariableOverheadRatePerLaborHour] = useState('');
+  const [fixedOverheadPerQuarter, setFixedOverheadPerQuarter] = useState('');
+  const [depreciationPerQuarter, setDepreciationPerQuarter] = useState('');
+  const [allocationBase, setAllocationBase] = useState<'units' | 'labor-hours' | 'machine-hours'>('units');
+
+  // Detailed categories approach
+  const [overheadCategories, setOverheadCategories] = useState<OverheadCostCategory[]>([
+    {
+      name: '',
+      costType: 'variable',
+      amount: 0,
+      costDriver: 'units',
+    },
+  ]);
+
+  // ABC approach fields
+  const [useActivityBasedCosting, setUseActivityBasedCosting] = useState(false);
+  const [productionRunsQ1, setProductionRunsQ1] = useState('');
+  const [productionRunsQ2, setProductionRunsQ2] = useState('');
+  const [productionRunsQ3, setProductionRunsQ3] = useState('');
+  const [productionRunsQ4, setProductionRunsQ4] = useState('');
+  const [costPerProductionRun, setCostPerProductionRun] = useState('');
+  const [inspectionsQ1, setInspectionsQ1] = useState('');
+  const [inspectionsQ2, setInspectionsQ2] = useState('');
+  const [inspectionsQ3, setInspectionsQ3] = useState('');
+  const [inspectionsQ4, setInspectionsQ4] = useState('');
+  const [costPerInspection, setCostPerInspection] = useState('');
+  const [machineHoursQ1, setMachineHoursQ1] = useState('');
+  const [machineHoursQ2, setMachineHoursQ2] = useState('');
+  const [machineHoursQ3, setMachineHoursQ3] = useState('');
+  const [machineHoursQ4, setMachineHoursQ4] = useState('');
+  const [costPerMachineHour, setCostPerMachineHour] = useState('');
+
+  // Facility costs
+  const [facilityRent, setFacilityRent] = useState('');
+  const [facilityInsurance, setFacilityInsurance] = useState('');
+  const [propertyTaxes, setPropertyTaxes] = useState('');
+  const [utilities, setUtilities] = useState('');
+  const [utilitiesIsVariable, setUtilitiesIsVariable] = useState(false);
+
+  // Indirect labor
+  const [supervisorySalaries, setSupervisorySalaries] = useState('');
+  const [supportStaffSalaries, setSupportStaffSalaries] = useState('');
+
+  // Supplies and materials
+  const [indirectMaterialsPerUnit, setIndirectMaterialsPerUnit] = useState('');
+  const [shopSuppliesPerQuarter, setShopSuppliesPerQuarter] = useState('');
+
+  // Maintenance
+  const [plannedMaintenancePerQuarter, setPlannedMaintenancePerQuarter] = useState('');
+  const [maintenancePerMachineHour, setMaintenancePerMachineHour] = useState('');
+
+  // Quality control
+  const [qualityControlPerUnit, setQualityControlPerUnit] = useState('');
+  const [qualityControlLabor, setQualityControlLabor] = useState('');
+
+  // Other costs
+  const [technologyCosts, setTechnologyCosts] = useState('');
+  const [warehouseCosts, setWarehouseCosts] = useState('');
+  const [environmentalComplianceCosts, setEnvironmentalComplianceCosts] = useState('');
+
+  const [overheadResult, setOverheadResult] = useState<any>(null);
+  const [overheadErrors, setOverheadErrors] = useState<string[]>([]);
+
+  // Schedule 6: SG&A Expense Budget state
+  const [sgaApproach, setSgaApproach] = useState<'simple' | 'detailed'>('simple');
+
+  // Simple approach
+  const [useSimpleSGA, setUseSimpleSGA] = useState(true);
+  const [variableSellingExpenseRate, setVariableSellingExpenseRate] = useState('');
+  const [variableAdminExpenseRate, setVariableAdminExpenseRate] = useState('');
+  const [fixedSellingExpensePerQuarter, setFixedSellingExpensePerQuarter] = useState('');
+  const [fixedAdminExpensePerQuarter, setFixedAdminExpensePerQuarter] = useState('');
+
+  // Detailed approach - Selling Expenses
+  const [commissionRate, setCommissionRate] = useState('');
+  const [commissionPerUnit, setCommissionPerUnit] = useState('');
+  const [distributionCostPerUnit, setDistributionCostPerUnit] = useState('');
+  const [distributionFixedCostPerQuarter, setDistributionFixedCostPerQuarter] = useState('');
+  const [customerServiceSalaries, setCustomerServiceSalaries] = useState('');
+  const [warrantyExpensePerUnit, setWarrantyExpensePerUnit] = useState('');
+
+  // Marketing Expenses
+  const [advertisingBudgetPerQuarter, setAdvertisingBudgetPerQuarter] = useState('');
+  const [brandDevelopmentPerQuarter, setBrandDevelopmentPerQuarter] = useState('');
+  const [marketingCampaignsPerQuarter, setMarketingCampaignsPerQuarter] = useState('');
+
+  // Administrative Expenses
+  const [executiveSalaries, setExecutiveSalaries] = useState('');
+  const [financeSalaries, setFinanceSalaries] = useState('');
+  const [hrSalaries, setHrSalaries] = useState('');
+  const [itSalaries, setItSalaries] = useState('');
+
+  // Occupancy costs
+  const [officeRentPerQuarter, setOfficeRentPerQuarter] = useState('');
+  const [utilitiesPerQuarter, setUtilitiesPerQuarter] = useState('');
+
+  // Technology costs
+  const [softwareLicensesPerQuarter, setSoftwareLicensesPerQuarter] = useState('');
+  const [telecommunicationsPerQuarter, setTelecommunicationsPerQuarter] = useState('');
+
+  // Other admin costs
+  const [officeSuppliesPerQuarter, setOfficeSuppliesPerQuarter] = useState('');
+  const [legalFeesPerQuarter, setLegalFeesPerQuarter] = useState('');
+  const [badDebtRate, setBadDebtRate] = useState('');
+  const [depreciationOfficeEquipment, setDepreciationOfficeEquipment] = useState('');
+
+  const [sgaResult, setSgaResult] = useState<any>(null);
+  const [sgaErrors, setSgaErrors] = useState<string[]>([]);
 
   // Save preferences to localStorage when they change
   const toggleDarkMode = () => {
@@ -379,6 +520,410 @@ export default function InputPage() {
     const url = URL.createObjectURL(blob);
     link.setAttribute('href', url);
     link.setAttribute('download', `direct-material-budget-${companyName.replace(/\s+/g, '-').toLowerCase() || 'export'}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  // Labor category management functions
+  const addLaborCategory = () => {
+    setLaborCategories([
+      ...laborCategories,
+      {
+        name: '',
+        hoursPerUnit: 0,
+        wageRatePerHour: 0,
+      },
+    ]);
+  };
+
+  const removeLaborCategory = (index: number) => {
+    if (laborCategories.length === 1) {
+      alert('You must have at least one labor category');
+      return;
+    }
+    setLaborCategories(laborCategories.filter((_, i) => i !== index));
+  };
+
+  const updateLaborCategory = (index: number, field: keyof LaborCategory, value: any) => {
+    const newCategories = [...laborCategories];
+    (newCategories[index] as any)[field] = value;
+    setLaborCategories(newCategories);
+  };
+
+  const handleCalculateLabor = () => {
+    if (!productionResult) {
+      alert('Please calculate Production Budget first (Schedule 2)');
+      return;
+    }
+
+    const unitsToBeProduced = {
+      q1: parseFloat(q1Sales) || 0,
+      q2: parseFloat(q2Sales) || 0,
+      q3: parseFloat(q3Sales) || 0,
+      q4: parseFloat(q4Sales) || 0,
+      yearly: (parseFloat(q1Sales) || 0) + (parseFloat(q2Sales) || 0) + (parseFloat(q3Sales) || 0) + (parseFloat(q4Sales) || 0),
+    };
+
+    // Use production data from production result
+    if (productionResult?.rows) {
+      const prodRow = productionResult.rows.find((r: any) => r.label === 'Required Production');
+      if (prodRow) {
+        unitsToBeProduced.q1 = parseFloat(String(prodRow.q1).replace(/,/g, '')) || 0;
+        unitsToBeProduced.q2 = parseFloat(String(prodRow.q2).replace(/,/g, '')) || 0;
+        unitsToBeProduced.q3 = parseFloat(String(prodRow.q3).replace(/,/g, '')) || 0;
+        unitsToBeProduced.q4 = parseFloat(String(prodRow.q4).replace(/,/g, '')) || 0;
+        unitsToBeProduced.yearly = parseFloat(String(prodRow.yearly).replace(/,/g, '')) || 0;
+      }
+    }
+
+    const inputs: DirectLabourBudgetInputs = {
+      unitsToBeProduced,
+      directLaborHoursPerUnit: useSimpleLaborInput && directLaborHoursPerUnit ? parseFloat(directLaborHoursPerUnit) : undefined,
+      hourlyWageRate: useSimpleLaborInput && hourlyWageRate ? parseFloat(hourlyWageRate) : undefined,
+      laborCategories: !useSimpleLaborInput ? laborCategories.map(cat => ({
+        ...cat,
+        hoursPerUnit: typeof cat.hoursPerUnit === 'string' ? parseFloat(cat.hoursPerUnit) || 0 : cat.hoursPerUnit,
+        wageRatePerHour: typeof cat.wageRatePerHour === 'string' ? parseFloat(cat.wageRatePerHour) || 0 : cat.wageRatePerHour,
+      })) : undefined,
+      wageInflationRate: wageInflationRate ? parseFloat(wageInflationRate) : undefined,
+      overtimeThreshold: overtimeThreshold ? parseFloat(overtimeThreshold) : undefined,
+      overtimeMultiplier: overtimeMultiplier ? parseFloat(overtimeMultiplier) : undefined,
+      fringeBenefitRate: fringeBenefitRate ? parseFloat(fringeBenefitRate) : undefined,
+      productivityEfficiencyRate: productivityEfficiencyRate ? parseFloat(productivityEfficiencyRate) : undefined,
+      turnoverRate: turnoverRate ? parseFloat(turnoverRate) : undefined,
+      trainingCostPerEmployee: trainingCostPerEmployee ? parseFloat(trainingCostPerEmployee) : undefined,
+      averageHoursPerEmployee: averageHoursPerEmployee ? parseFloat(averageHoursPerEmployee) : undefined,
+    };
+
+    const validationErrors = validateDirectLaborBudgetInputs(inputs);
+    const actualErrors = validationErrors.filter(e => !e.startsWith('WARNING:'));
+
+    if (actualErrors.length > 0) {
+      setLaborErrors(validationErrors);
+      setLaborResult(null);
+      return;
+    }
+
+    const output = calculateDirectLaborBudget(inputs);
+    const formatted = formatDirectLaborBudgetForDisplay(output);
+    setLaborResult(formatted);
+    setLaborErrors(validationErrors);
+  };
+
+  const downloadLaborCSV = () => {
+    if (!laborResult) return;
+
+    let csvContent = `${companyName || 'Your Company'} - ${productName || 'Product'}\n`;
+    csvContent += `Schedule 4: Direct Labor Budget\n`;
+    csvContent += `For the Year Ending December 31, ${fiscalYear}\n\n`;
+
+    // If multi-category, include each category
+    if (laborResult.categoryTables) {
+      laborResult.categoryTables.forEach((cat: any) => {
+        csvContent += `Labor Category: ${cat.categoryName}\n`;
+        csvContent += cat.headers.join(',') + '\n';
+        cat.rows.forEach((row: any) => {
+          const cleanQ1 = String(row.q1).replace(/,/g, '');
+          const cleanQ2 = String(row.q2).replace(/,/g, '');
+          const cleanQ3 = String(row.q3).replace(/,/g, '');
+          const cleanQ4 = String(row.q4).replace(/,/g, '');
+          const cleanYearly = String(row.yearly).replace(/,/g, '');
+          csvContent += `"${row.label}",${cleanQ1},${cleanQ2},${cleanQ3},${cleanQ4},${cleanYearly}\n`;
+        });
+        csvContent += '\n';
+      });
+
+      // Summary
+      csvContent += 'Summary - Total Direct Labor\n';
+      csvContent += laborResult.headers.join(',') + '\n';
+      laborResult.summaryRows.forEach((row: any) => {
+        const cleanQ1 = String(row.q1).replace(/,/g, '');
+        const cleanQ2 = String(row.q2).replace(/,/g, '');
+        const cleanQ3 = String(row.q3).replace(/,/g, '');
+        const cleanQ4 = String(row.q4).replace(/,/g, '');
+        const cleanYearly = String(row.yearly).replace(/,/g, '');
+        csvContent += `"${row.label}",${cleanQ1},${cleanQ2},${cleanQ3},${cleanQ4},${cleanYearly}\n`;
+      });
+    } else {
+      // Simple single-category
+      csvContent += laborResult.headers.join(',') + '\n';
+      laborResult.rows.forEach((row: any) => {
+        const cleanQ1 = String(row.q1).replace(/,/g, '');
+        const cleanQ2 = String(row.q2).replace(/,/g, '');
+        const cleanQ3 = String(row.q3).replace(/,/g, '');
+        const cleanQ4 = String(row.q4).replace(/,/g, '');
+        const cleanYearly = String(row.yearly).replace(/,/g, '');
+        csvContent += `"${row.label}",${cleanQ1},${cleanQ2},${cleanQ3},${cleanQ4},${cleanYearly}\n`;
+      });
+    }
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `direct-labor-budget-${companyName.replace(/\s+/g, '-').toLowerCase() || 'export'}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  // Overhead category management functions
+  const addOverheadCategory = () => {
+    setOverheadCategories([
+      ...overheadCategories,
+      {
+        name: '',
+        costType: 'variable',
+        amount: 0,
+        costDriver: 'units',
+      },
+    ]);
+  };
+
+  const removeOverheadCategory = (index: number) => {
+    if (overheadCategories.length === 1) {
+      alert('You must have at least one overhead category');
+      return;
+    }
+    setOverheadCategories(overheadCategories.filter((_, i) => i !== index));
+  };
+
+  const updateOverheadCategory = (index: number, field: keyof OverheadCostCategory, value: any) => {
+    const newCategories = [...overheadCategories];
+    (newCategories[index] as any)[field] = value;
+    setOverheadCategories(newCategories);
+  };
+
+  const handleCalculateOverhead = () => {
+    if (!productionResult) {
+      alert('Please calculate Production Budget first (Schedule 2)');
+      return;
+    }
+
+    const unitsToBeProduced = {
+      q1: parseFloat(q1Sales) || 0,
+      q2: parseFloat(q2Sales) || 0,
+      q3: parseFloat(q3Sales) || 0,
+      q4: parseFloat(q4Sales) || 0,
+      yearly: (parseFloat(q1Sales) || 0) + (parseFloat(q2Sales) || 0) + (parseFloat(q3Sales) || 0) + (parseFloat(q4Sales) || 0),
+    };
+
+    // Use production data from production result
+    if (productionResult?.rows) {
+      const prodRow = productionResult.rows.find((r: any) => r.label === 'Required Production');
+      if (prodRow) {
+        unitsToBeProduced.q1 = parseFloat(String(prodRow.q1).replace(/,/g, '')) || 0;
+        unitsToBeProduced.q2 = parseFloat(String(prodRow.q2).replace(/,/g, '')) || 0;
+        unitsToBeProduced.q3 = parseFloat(String(prodRow.q3).replace(/,/g, '')) || 0;
+        unitsToBeProduced.q4 = parseFloat(String(prodRow.q4).replace(/,/g, '')) || 0;
+        unitsToBeProduced.yearly = parseFloat(String(prodRow.yearly).replace(/,/g, '')) || 0;
+      }
+    }
+
+    // Get labor hours if available
+    let directLaborHours = undefined;
+    if (laborResult?.totalLaborHoursRequired) {
+      directLaborHours = laborResult.totalLaborHoursRequired;
+    }
+
+    const inputs: ManufacturingOverheadInputs = {
+      unitsToBeProduced,
+      directLaborHours,
+      variableOverheadRatePerUnit: variableOverheadRatePerUnit ? parseFloat(variableOverheadRatePerUnit) : undefined,
+      variableOverheadRatePerLaborHour: variableOverheadRatePerLaborHour ? parseFloat(variableOverheadRatePerLaborHour) : undefined,
+      fixedOverheadPerQuarter: fixedOverheadPerQuarter ? parseFloat(fixedOverheadPerQuarter) : undefined,
+      depreciationPerQuarter: depreciationPerQuarter ? parseFloat(depreciationPerQuarter) : undefined,
+      allocationBase,
+      overheadCategories: overheadApproach === 'detailed' ? overheadCategories.map(cat => ({
+        ...cat,
+        amount: typeof cat.amount === 'string' ? parseFloat(cat.amount) || 0 : cat.amount,
+      })) : undefined,
+      useActivityBasedCosting: overheadApproach === 'abc',
+      numberOfProductionRuns: overheadApproach === 'abc' && (productionRunsQ1 || productionRunsQ2 || productionRunsQ3 || productionRunsQ4) ? {
+        q1: parseFloat(productionRunsQ1) || 0,
+        q2: parseFloat(productionRunsQ2) || 0,
+        q3: parseFloat(productionRunsQ3) || 0,
+        q4: parseFloat(productionRunsQ4) || 0,
+        yearly: (parseFloat(productionRunsQ1) || 0) + (parseFloat(productionRunsQ2) || 0) + (parseFloat(productionRunsQ3) || 0) + (parseFloat(productionRunsQ4) || 0),
+      } : undefined,
+      costPerProductionRun: costPerProductionRun ? parseFloat(costPerProductionRun) : undefined,
+      numberOfInspections: overheadApproach === 'abc' && (inspectionsQ1 || inspectionsQ2 || inspectionsQ3 || inspectionsQ4) ? {
+        q1: parseFloat(inspectionsQ1) || 0,
+        q2: parseFloat(inspectionsQ2) || 0,
+        q3: parseFloat(inspectionsQ3) || 0,
+        q4: parseFloat(inspectionsQ4) || 0,
+        yearly: (parseFloat(inspectionsQ1) || 0) + (parseFloat(inspectionsQ2) || 0) + (parseFloat(inspectionsQ3) || 0) + (parseFloat(inspectionsQ4) || 0),
+      } : undefined,
+      costPerInspection: costPerInspection ? parseFloat(costPerInspection) : undefined,
+      machineHours: overheadApproach === 'abc' && (machineHoursQ1 || machineHoursQ2 || machineHoursQ3 || machineHoursQ4) ? {
+        q1: parseFloat(machineHoursQ1) || 0,
+        q2: parseFloat(machineHoursQ2) || 0,
+        q3: parseFloat(machineHoursQ3) || 0,
+        q4: parseFloat(machineHoursQ4) || 0,
+        yearly: (parseFloat(machineHoursQ1) || 0) + (parseFloat(machineHoursQ2) || 0) + (parseFloat(machineHoursQ3) || 0) + (parseFloat(machineHoursQ4) || 0),
+      } : undefined,
+      costPerMachineHour: costPerMachineHour ? parseFloat(costPerMachineHour) : undefined,
+      facilityRent: facilityRent ? parseFloat(facilityRent) : undefined,
+      facilityInsurance: facilityInsurance ? parseFloat(facilityInsurance) : undefined,
+      propertyTaxes: propertyTaxes ? parseFloat(propertyTaxes) : undefined,
+      utilities: utilities ? parseFloat(utilities) : undefined,
+      utilitiesIsVariable,
+      supervisorySalaries: supervisorySalaries ? parseFloat(supervisorySalaries) : undefined,
+      supportStaffSalaries: supportStaffSalaries ? parseFloat(supportStaffSalaries) : undefined,
+      indirectMaterialsPerUnit: indirectMaterialsPerUnit ? parseFloat(indirectMaterialsPerUnit) : undefined,
+      shopSuppliesPerQuarter: shopSuppliesPerQuarter ? parseFloat(shopSuppliesPerQuarter) : undefined,
+      plannedMaintenancePerQuarter: plannedMaintenancePerQuarter ? parseFloat(plannedMaintenancePerQuarter) : undefined,
+      maintenancePerMachineHour: maintenancePerMachineHour ? parseFloat(maintenancePerMachineHour) : undefined,
+      qualityControlPerUnit: qualityControlPerUnit ? parseFloat(qualityControlPerUnit) : undefined,
+      qualityControlLabor: qualityControlLabor ? parseFloat(qualityControlLabor) : undefined,
+      technologyCosts: technologyCosts ? parseFloat(technologyCosts) : undefined,
+      warehouseCosts: warehouseCosts ? parseFloat(warehouseCosts) : undefined,
+      environmentalComplianceCosts: environmentalComplianceCosts ? parseFloat(environmentalComplianceCosts) : undefined,
+    };
+
+    const validationErrors = validateManufacturingOverheadInputs(inputs);
+    const actualErrors = validationErrors.filter(e => !e.startsWith('WARNING:'));
+
+    if (actualErrors.length > 0) {
+      setOverheadErrors(validationErrors);
+      setOverheadResult(null);
+      return;
+    }
+
+    const output = calculateManufacturingOverheadBudget(inputs);
+    const formatted = formatManufacturingOverheadBudgetForDisplay(output);
+    setOverheadResult(formatted);
+    setOverheadErrors(validationErrors);
+  };
+
+  const downloadOverheadCSV = () => {
+    if (!overheadResult) return;
+
+    let csvContent = `${companyName || 'Your Company'} - ${productName || 'Product'}\n`;
+    csvContent += `Schedule 5: Manufacturing Overhead Budget\n`;
+    csvContent += `For the Year Ending December 31, ${fiscalYear}\n\n`;
+
+    csvContent += overheadResult.headers.join(',') + '\n';
+    overheadResult.rows.forEach((row: any) => {
+      const cleanQ1 = String(row.q1).replace(/,/g, '');
+      const cleanQ2 = String(row.q2).replace(/,/g, '');
+      const cleanQ3 = String(row.q3).replace(/,/g, '');
+      const cleanQ4 = String(row.q4).replace(/,/g, '');
+      const cleanYearly = String(row.yearly).replace(/,/g, '');
+      csvContent += `"${row.label}",${cleanQ1},${cleanQ2},${cleanQ3},${cleanQ4},${cleanYearly}\n`;
+    });
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `manufacturing-overhead-budget-${companyName.replace(/\s+/g, '-').toLowerCase() || 'export'}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const handleCalculateSGA = () => {
+    if (!result) {
+      alert('Please calculate Sales Budget first (Schedule 1)');
+      return;
+    }
+
+    // Get sales data from Schedule 1
+    const salesRevenue = {
+      q1: result.totalRevenue?.q1 || 0,
+      q2: result.totalRevenue?.q2 || 0,
+      q3: result.totalRevenue?.q3 || 0,
+      q4: result.totalRevenue?.q4 || 0,
+      yearly: result.totalRevenue?.yearly || 0,
+    };
+
+    const salesUnits = {
+      q1: result.unitsSold?.q1 || 0,
+      q2: result.unitsSold?.q2 || 0,
+      q3: result.unitsSold?.q3 || 0,
+      q4: result.unitsSold?.q4 || 0,
+      yearly: result.unitsSold?.yearly || 0,
+    };
+
+    const inputs: SellingAdminExpenseInputs = {
+      salesRevenue,
+      salesUnits,
+      useSimpleApproach: sgaApproach === 'simple',
+
+      // Simple approach
+      variableSellingExpenseRate: variableSellingExpenseRate ? parseFloat(variableSellingExpenseRate) : undefined,
+      variableAdminExpenseRate: variableAdminExpenseRate ? parseFloat(variableAdminExpenseRate) : undefined,
+      fixedSellingExpensePerQuarter: fixedSellingExpensePerQuarter ? parseFloat(fixedSellingExpensePerQuarter) : undefined,
+      fixedAdminExpensePerQuarter: fixedAdminExpensePerQuarter ? parseFloat(fixedAdminExpensePerQuarter) : undefined,
+
+      // Detailed approach - Selling Expenses
+      commissionRate: commissionRate ? parseFloat(commissionRate) : undefined,
+      commissionPerUnit: commissionPerUnit ? parseFloat(commissionPerUnit) : undefined,
+      distributionCostPerUnit: distributionCostPerUnit ? parseFloat(distributionCostPerUnit) : undefined,
+      distributionFixedCostPerQuarter: distributionFixedCostPerQuarter ? parseFloat(distributionFixedCostPerQuarter) : undefined,
+      customerServiceSalaries: customerServiceSalaries ? parseFloat(customerServiceSalaries) : undefined,
+      warrantyExpensePerUnit: warrantyExpensePerUnit ? parseFloat(warrantyExpensePerUnit) : undefined,
+
+      // Marketing Expenses
+      advertisingBudgetPerQuarter: advertisingBudgetPerQuarter ? parseFloat(advertisingBudgetPerQuarter) : undefined,
+      brandDevelopmentPerQuarter: brandDevelopmentPerQuarter ? parseFloat(brandDevelopmentPerQuarter) : undefined,
+      marketingCampaignsPerQuarter: marketingCampaignsPerQuarter ? parseFloat(marketingCampaignsPerQuarter) : undefined,
+
+      // Administrative Expenses
+      executiveSalaries: executiveSalaries ? parseFloat(executiveSalaries) : undefined,
+      financeSalaries: financeSalaries ? parseFloat(financeSalaries) : undefined,
+      hrSalaries: hrSalaries ? parseFloat(hrSalaries) : undefined,
+      itSalaries: itSalaries ? parseFloat(itSalaries) : undefined,
+
+      // Occupancy costs
+      officeRentPerQuarter: officeRentPerQuarter ? parseFloat(officeRentPerQuarter) : undefined,
+      utilitiesPerQuarter: utilitiesPerQuarter ? parseFloat(utilitiesPerQuarter) : undefined,
+
+      // Technology costs
+      softwareLicensesPerQuarter: softwareLicensesPerQuarter ? parseFloat(softwareLicensesPerQuarter) : undefined,
+      telecommunicationsPerQuarter: telecommunicationsPerQuarter ? parseFloat(telecommunicationsPerQuarter) : undefined,
+
+      // Other admin costs
+      officeSuppliesPerQuarter: officeSuppliesPerQuarter ? parseFloat(officeSuppliesPerQuarter) : undefined,
+      legalFeesPerQuarter: legalFeesPerQuarter ? parseFloat(legalFeesPerQuarter) : undefined,
+      badDebtRate: badDebtRate ? parseFloat(badDebtRate) : undefined,
+      depreciationOfficeEquipment: depreciationOfficeEquipment ? parseFloat(depreciationOfficeEquipment) : undefined,
+    };
+
+    const validationErrors = validateSellingAdminExpenseInputs(inputs);
+    const output = calculateSellingAdminExpenseBudget(inputs);
+    const formatted = formatSellingAdminExpenseBudgetForDisplay(output);
+    setSgaResult(formatted);
+    setSgaErrors(validationErrors);
+  };
+
+  const downloadSGACSV = () => {
+    if (!sgaResult) return;
+
+    let csvContent = `${companyName || 'Your Company'} - ${productName || 'Product'}\n`;
+    csvContent += `Schedule 6: Selling, General & Administrative Expense Budget\n`;
+    csvContent += `For the Year Ending December 31, ${fiscalYear}\n\n`;
+
+    csvContent += sgaResult.headers.join(',') + '\n';
+    sgaResult.rows.forEach((row: any) => {
+      const cleanQ1 = String(row.q1).replace(/,/g, '');
+      const cleanQ2 = String(row.q2).replace(/,/g, '');
+      const cleanQ3 = String(row.q3).replace(/,/g, '');
+      const cleanQ4 = String(row.q4).replace(/,/g, '');
+      const cleanYearly = String(row.yearly).replace(/,/g, '');
+      csvContent += `"${row.label}",${cleanQ1},${cleanQ2},${cleanQ3},${cleanQ4},${cleanYearly}\n`;
+    });
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `sga-expense-budget-${companyName.replace(/\s+/g, '-').toLowerCase() || 'export'}.csv`);
     link.style.visibility = 'hidden';
     document.body.appendChild(link);
     link.click();
@@ -1740,6 +2285,1563 @@ export default function InputPage() {
         </p>
         <p className="text-base leading-relaxed">
           <strong>Formula:</strong> Material to Purchase = (Production Needs × Material per Unit + Desired Ending Inventory) - Beginning Inventory
+        </p>
+
+        <hr className={`my-16 ${hrColor}`} />
+
+        {/* SCHEDULE 4: DIRECT LABOR BUDGET */}
+        <h2 className={`text-4xl font-bold mb-4 ${headingColor}`}>
+          Schedule 4: Direct Labor Budget
+        </h2>
+        <p className="text-lg mb-12 leading-relaxed">
+          Calculate direct labor hours and costs required for production
+        </p>
+
+        <div className="mb-12">
+          <h3 className={`text-2xl font-semibold mb-6 ${headingColor}`}>Labor Input Method</h3>
+          <p className={`text-sm mb-4 ${textColor}`}>
+            Choose between simple single-category input or multi-category labor types
+          </p>
+
+          <div className="flex gap-6 mb-8">
+            <label className="flex items-center cursor-pointer">
+              <input
+                type="radio"
+                name="laborInputMethod"
+                checked={useSimpleLaborInput}
+                onChange={() => setUseSimpleLaborInput(true)}
+                className="mr-2"
+              />
+              <span className={`text-sm ${textColor}`}>Simple (Single labor rate)</span>
+            </label>
+            <label className="flex items-center cursor-pointer">
+              <input
+                type="radio"
+                name="laborInputMethod"
+                checked={!useSimpleLaborInput}
+                onChange={() => setUseSimpleLaborInput(false)}
+                className="mr-2"
+              />
+              <span className={`text-sm ${textColor}`}>Multi-Category (Different labor types)</span>
+            </label>
+          </div>
+
+          {useSimpleLaborInput ? (
+            <>
+              <h3 className={`text-2xl font-semibold mb-6 ${headingColor}`}>Labor Requirements</h3>
+              <div className="grid md:grid-cols-2 gap-6 mb-8">
+                <div>
+                  <label className={`block text-sm font-medium mb-2 ${headingColor}`}>
+                    Direct Labor Hours per Unit
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={directLaborHoursPerUnit}
+                    onChange={(e) => setDirectLaborHoursPerUnit(e.target.value)}
+                    placeholder="2.5"
+                    className={`w-full px-4 py-3 border ${inputBg} text-base`}
+                  />
+                  <p className={`text-xs mt-2 ${textColor}`}>
+                    Hours of direct labor required to produce one unit
+                  </p>
+                </div>
+
+                <div>
+                  <label className={`block text-sm font-medium mb-2 ${headingColor}`}>
+                    Hourly Wage Rate ({currency})
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={hourlyWageRate}
+                    onChange={(e) => setHourlyWageRate(e.target.value)}
+                    placeholder="25.00"
+                    className={`w-full px-4 py-3 border ${inputBg} text-base`}
+                  />
+                  <p className={`text-xs mt-2 ${textColor}`}>
+                    Average wage rate per hour
+                  </p>
+                </div>
+              </div>
+            </>
+          ) : (
+            <>
+              <h3 className={`text-2xl font-semibold mb-6 ${headingColor}`}>Labor Categories</h3>
+              <p className={`text-sm mb-6 ${textColor}`}>
+                Add different labor categories with their own hourly requirements and wage rates
+              </p>
+
+              {laborCategories.map((category, index) => (
+                <div key={index} className={`mb-8 p-6 border ${darkMode ? 'border-gray-700 bg-gray-900' : 'border-gray-300 bg-gray-50'}`}>
+                  <div className="flex justify-between items-center mb-4">
+                    <h4 className={`text-lg font-semibold ${headingColor}`}>
+                      Labor Category {index + 1}
+                    </h4>
+                    {laborCategories.length > 1 && (
+                      <button
+                        onClick={() => removeLaborCategory(index)}
+                        className={`text-sm ${darkMode ? 'text-red-400 hover:text-red-300' : 'text-red-600 hover:text-red-700'}`}
+                      >
+                        Remove
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="grid md:grid-cols-3 gap-4">
+                    <div>
+                      <label className={`block text-sm font-medium mb-2 ${headingColor}`}>
+                        Category Name
+                      </label>
+                      <input
+                        type="text"
+                        value={category.name}
+                        onChange={(e) => updateLaborCategory(index, 'name', e.target.value)}
+                        placeholder="e.g., Assembly, Finishing"
+                        className={`w-full px-4 py-3 border ${inputBg} text-base`}
+                      />
+                    </div>
+
+                    <div>
+                      <label className={`block text-sm font-medium mb-2 ${headingColor}`}>
+                        Hours per Unit
+                      </label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={category.hoursPerUnit}
+                        onChange={(e) => updateLaborCategory(index, 'hoursPerUnit', e.target.value)}
+                        placeholder="1.5"
+                        className={`w-full px-4 py-3 border ${inputBg} text-base`}
+                      />
+                    </div>
+
+                    <div>
+                      <label className={`block text-sm font-medium mb-2 ${headingColor}`}>
+                        Wage Rate per Hour ({currency})
+                      </label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={category.wageRatePerHour}
+                        onChange={(e) => updateLaborCategory(index, 'wageRatePerHour', e.target.value)}
+                        placeholder="30.00"
+                        className={`w-full px-4 py-3 border ${inputBg} text-base`}
+                      />
+                    </div>
+                  </div>
+                </div>
+              ))}
+
+              <button
+                onClick={addLaborCategory}
+                className={`${darkMode ? 'bg-gray-800 text-white hover:bg-gray-700' : 'bg-gray-200 text-black hover:bg-gray-300'} font-medium px-6 py-2 text-sm mb-8`}
+              >
+                + Add Another Labor Category
+              </button>
+            </>
+          )}
+
+          <hr className={`my-8 ${hrColor}`} />
+
+          <h3 className={`text-2xl font-semibold mb-6 ${headingColor}`}>Optional Enhancements</h3>
+          <p className={`text-sm mb-6 ${textColor}`}>
+            Add wage inflation, overtime, fringe benefits, and workforce planning metrics (all optional)
+          </p>
+
+          <div className="grid md:grid-cols-3 gap-6 mb-6">
+            <div>
+              <label className={`block text-sm font-medium mb-2 ${headingColor}`}>
+                Wage Inflation Rate (Quarterly)
+              </label>
+              <input
+                type="number"
+                step="0.001"
+                value={wageInflationRate}
+                onChange={(e) => setWageInflationRate(e.target.value)}
+                placeholder="0.01"
+                className={`w-full px-4 py-3 border ${inputBg} text-base`}
+              />
+              <p className={`text-xs mt-2 ${textColor}`}>
+                e.g., 0.01 for 1% per quarter
+              </p>
+            </div>
+
+            <div>
+              <label className={`block text-sm font-medium mb-2 ${headingColor}`}>
+                Fringe Benefit Rate
+              </label>
+              <input
+                type="number"
+                step="0.01"
+                value={fringeBenefitRate}
+                onChange={(e) => setFringeBenefitRate(e.target.value)}
+                placeholder="0.25"
+                className={`w-full px-4 py-3 border ${inputBg} text-base`}
+              />
+              <p className={`text-xs mt-2 ${textColor}`}>
+                e.g., 0.25 for 25% (health, FICA, etc.)
+              </p>
+            </div>
+
+            <div>
+              <label className={`block text-sm font-medium mb-2 ${headingColor}`}>
+                Productivity Efficiency Rate
+              </label>
+              <input
+                type="number"
+                step="0.01"
+                value={productivityEfficiencyRate}
+                onChange={(e) => setProductivityEfficiencyRate(e.target.value)}
+                placeholder="0.95"
+                className={`w-full px-4 py-3 border ${inputBg} text-base`}
+              />
+              <p className={`text-xs mt-2 ${textColor}`}>
+                e.g., 0.95 for 95% efficiency
+              </p>
+            </div>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-6 mb-8">
+            <div>
+              <label className={`block text-sm font-medium mb-2 ${headingColor}`}>
+                Overtime Threshold (Hours/Quarter)
+              </label>
+              <input
+                type="number"
+                value={overtimeThreshold}
+                onChange={(e) => setOvertimeThreshold(e.target.value)}
+                placeholder="Leave blank for no overtime"
+                className={`w-full px-4 py-3 border ${inputBg} text-base`}
+              />
+              <p className={`text-xs mt-2 ${textColor}`}>
+                Maximum regular hours before overtime
+              </p>
+            </div>
+
+            <div>
+              <label className={`block text-sm font-medium mb-2 ${headingColor}`}>
+                Overtime Multiplier
+              </label>
+              <input
+                type="number"
+                step="0.1"
+                value={overtimeMultiplier}
+                onChange={(e) => setOvertimeMultiplier(e.target.value)}
+                placeholder="1.5"
+                className={`w-full px-4 py-3 border ${inputBg} text-base`}
+              />
+              <p className={`text-xs mt-2 ${textColor}`}>
+                e.g., 1.5 for time-and-a-half
+              </p>
+            </div>
+          </div>
+
+          <details className="mb-8">
+            <summary className={`text-lg font-semibold cursor-pointer ${headingColor} hover:underline mb-4`}>
+              Workforce Planning (click to expand)
+            </summary>
+
+            <div className="grid md:grid-cols-3 gap-6 mt-4">
+              <div>
+                <label className={`block text-sm font-medium mb-2 ${headingColor}`}>
+                  Average Hours per Employee (Quarterly)
+                </label>
+                <input
+                  type="number"
+                  value={averageHoursPerEmployee}
+                  onChange={(e) => setAverageHoursPerEmployee(e.target.value)}
+                  placeholder="480"
+                  className={`w-full px-3 py-2 border ${inputBg} text-sm`}
+                />
+                <p className={`text-xs mt-1 ${textColor}`}>
+                  For calculating FTE needed
+                </p>
+              </div>
+
+              <div>
+                <label className={`block text-sm font-medium mb-2 ${headingColor}`}>
+                  Annual Turnover Rate
+                </label>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={turnoverRate}
+                  onChange={(e) => setTurnoverRate(e.target.value)}
+                  placeholder="0.15"
+                  className={`w-full px-3 py-2 border ${inputBg} text-sm`}
+                />
+                <p className={`text-xs mt-1 ${textColor}`}>
+                  e.g., 0.15 for 15% turnover
+                </p>
+              </div>
+
+              <div>
+                <label className={`block text-sm font-medium mb-2 ${headingColor}`}>
+                  Training Cost per Employee ({currency})
+                </label>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={trainingCostPerEmployee}
+                  onChange={(e) => setTrainingCostPerEmployee(e.target.value)}
+                  placeholder="2000"
+                  className={`w-full px-3 py-2 border ${inputBg} text-sm`}
+                />
+              </div>
+            </div>
+          </details>
+
+          <button
+            onClick={handleCalculateLabor}
+            className={`${buttonBg} font-medium px-8 py-3 text-lg`}
+          >
+            Calculate Labor Budget
+          </button>
+
+          {laborErrors.length > 0 && (
+            <div className="mt-6 space-y-3">
+              {laborErrors.filter(e => !e.startsWith('WARNING:')).length > 0 && (
+                <div className={`p-4 ${darkMode ? 'bg-red-900/30 border-red-700' : 'bg-red-50 border-red-200'} border`}>
+                  <p className={`font-semibold text-sm mb-2 ${darkMode ? 'text-red-300' : 'text-red-800'}`}>
+                    Errors:
+                  </p>
+                  <ul className={`list-disc list-inside text-xs space-y-1 ${darkMode ? 'text-red-400' : 'text-red-700'}`}>
+                    {laborErrors.filter(e => !e.startsWith('WARNING:')).map((error, idx) => (
+                      <li key={idx}>{error}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              {laborErrors.filter(e => e.startsWith('WARNING:')).length > 0 && (
+                <div className={`p-4 ${darkMode ? 'bg-yellow-900/30 border-yellow-700' : 'bg-yellow-50 border-yellow-200'} border`}>
+                  <p className={`font-semibold text-sm mb-2 ${darkMode ? 'text-yellow-300' : 'text-yellow-800'}`}>
+                    Warnings:
+                  </p>
+                  <ul className={`list-disc list-inside text-xs space-y-1 ${darkMode ? 'text-yellow-400' : 'text-yellow-700'}`}>
+                    {laborErrors.filter(e => e.startsWith('WARNING:')).map((error, idx) => (
+                      <li key={idx}>{error.replace('WARNING: ', '')}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        <hr className={`my-12 ${hrColor}`} />
+
+        {/* Labor Budget Results */}
+        <div>
+          <div className="flex justify-between items-center mb-6">
+            <h3 className={`text-2xl font-semibold ${headingColor}`}>Labor Budget Results</h3>
+            {laborResult && (
+              <button
+                onClick={downloadLaborCSV}
+                className={`${buttonBg} font-medium px-6 py-2 text-sm`}
+              >
+                Download CSV
+              </button>
+            )}
+          </div>
+
+          {!laborResult && (
+            <p className="text-lg leading-relaxed">
+              Calculate Production Budget first, then enter labor data and click Calculate Labor Budget
+            </p>
+          )}
+
+          {laborResult && (
+            <div>
+              <p className={`text-lg mb-2 ${headingColor}`}>
+                <strong>{companyName || 'Your Company'}</strong> — {productName || 'Product'}
+              </p>
+              <p className={`text-sm mb-6 ${textColor}`}>
+                For the Year Ending December 31, {fiscalYear}
+              </p>
+
+              {/* Display multi-category tables if applicable */}
+              {laborResult.categoryTables && laborResult.categoryTables.map((cat: any, idx: number) => (
+                <div key={idx} className="mb-8">
+                  <h4 className={`text-xl font-semibold mb-4 ${headingColor}`}>
+                    {cat.categoryName}
+                  </h4>
+
+                  <div className="overflow-x-auto mb-4">
+                    <table className="w-full border-collapse">
+                      <thead>
+                        <tr className={`border-b-2 ${darkMode ? 'border-gray-700' : 'border-gray-300'}`}>
+                          {cat.headers.map((header: string, hidx: number) => (
+                            <th
+                              key={hidx}
+                              className={`py-3 px-4 text-left font-semibold text-sm ${hidx === 0 ? '' : 'text-right'} ${headingColor}`}
+                            >
+                              {header}
+                            </th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {cat.rows.map((row: any, ridx: number) => (
+                          <tr
+                            key={ridx}
+                            className={`border-b ${darkMode ? 'border-gray-800' : 'border-gray-200'}`}
+                          >
+                            <td className={`py-3 px-4 text-sm ${headingColor}`}>{row.label}</td>
+                            <td className="py-3 px-4 text-right text-sm font-mono">{row.q1}</td>
+                            <td className="py-3 px-4 text-right text-sm font-mono">{row.q2}</td>
+                            <td className="py-3 px-4 text-right text-sm font-mono">{row.q3}</td>
+                            <td className="py-3 px-4 text-right text-sm font-mono">{row.q4}</td>
+                            <td className="py-3 px-4 text-right text-sm font-semibold font-mono">{row.yearly}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              ))}
+
+              {/* Summary table for multi-category OR main table for simple */}
+              {laborResult.summaryRows && (
+                <div className="mb-8">
+                  <h4 className={`text-xl font-semibold mb-4 ${headingColor}`}>
+                    Summary - Total Direct Labor
+                  </h4>
+
+                  <div className="overflow-x-auto mb-4">
+                    <table className="w-full border-collapse">
+                      <thead>
+                        <tr className={`border-b-2 ${darkMode ? 'border-gray-700' : 'border-gray-300'}`}>
+                          {laborResult.headers.map((header: string, idx: number) => (
+                            <th
+                              key={idx}
+                              className={`py-3 px-4 text-left font-semibold text-sm ${idx === 0 ? '' : 'text-right'} ${headingColor}`}
+                            >
+                              {header}
+                            </th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {laborResult.summaryRows.map((row: any, idx: number) => (
+                          <tr
+                            key={idx}
+                            className={`border-b ${darkMode ? 'border-gray-800' : 'border-gray-200'}`}
+                          >
+                            <td className={`py-3 px-4 text-sm ${headingColor}`}>{row.label}</td>
+                            <td className="py-3 px-4 text-right text-sm font-mono">{row.q1}</td>
+                            <td className="py-3 px-4 text-right text-sm font-mono">{row.q2}</td>
+                            <td className="py-3 px-4 text-right text-sm font-mono">{row.q3}</td>
+                            <td className="py-3 px-4 text-right text-sm font-mono">{row.q4}</td>
+                            <td className="py-3 px-4 text-right text-sm font-semibold font-mono">{row.yearly}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
+              {/* Simple single-category main table */}
+              {!laborResult.summaryRows && laborResult.rows && (
+                <div className="overflow-x-auto mb-8">
+                  <table className="w-full border-collapse">
+                    <thead>
+                      <tr className={`border-b-2 ${darkMode ? 'border-gray-700' : 'border-gray-300'}`}>
+                        {laborResult.headers.map((header: string, idx: number) => (
+                          <th
+                            key={idx}
+                            className={`py-3 px-4 text-left font-semibold text-sm ${idx === 0 ? '' : 'text-right'} ${headingColor}`}
+                          >
+                            {header}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {laborResult.rows.map((row: any, idx: number) => (
+                        <tr
+                          key={idx}
+                          className={`border-b ${darkMode ? 'border-gray-800' : 'border-gray-200'}`}
+                        >
+                          <td className={`py-3 px-4 text-sm ${headingColor}`}>{row.label}</td>
+                          <td className="py-3 px-4 text-right text-sm font-mono">{row.q1}</td>
+                          <td className="py-3 px-4 text-right text-sm font-mono">{row.q2}</td>
+                          <td className="py-3 px-4 text-right text-sm font-mono">{row.q3}</td>
+                          <td className="py-3 px-4 text-right text-sm font-mono">{row.q4}</td>
+                          <td className="py-3 px-4 text-right text-sm font-semibold font-mono">{row.yearly}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+
+              {/* Additional Metrics */}
+              {(laborResult.laborCostPerUnit || laborResult.averageEmployeesNeeded) && (
+                <div className={`p-4 border ${darkMode ? 'border-gray-700 bg-gray-900' : 'border-gray-300 bg-gray-50'} mb-6`}>
+                  <h4 className={`text-sm font-semibold mb-3 ${headingColor}`}>Analytics</h4>
+
+                  {laborResult.laborCostPerUnit && (
+                    <p className={`text-sm mb-2 ${textColor}`}>
+                      <strong>Labor Cost per Unit:</strong> {currency} {laborResult.laborCostPerUnit.yearly.toFixed(2)}
+                    </p>
+                  )}
+
+                  {laborResult.averageEmployeesNeeded && (
+                    <p className={`text-sm mb-2 ${textColor}`}>
+                      <strong>Average Employees Needed:</strong> {laborResult.averageEmployeesNeeded.yearly.toFixed(1)} FTE
+                    </p>
+                  )}
+
+                  {laborResult.turnoverCost && (
+                    <p className={`text-sm mb-2 ${textColor}`}>
+                      <strong>Annual Turnover & Training Cost:</strong> {currency} {laborResult.turnoverCost.yearly.toFixed(2)}
+                    </p>
+                  )}
+
+                  {laborResult.productivityRate && (
+                    <p className={`text-sm ${textColor}`}>
+                      <strong>Productivity Efficiency:</strong> {(laborResult.productivityRate.yearly * 100).toFixed(1)}%
+                    </p>
+                  )}
+                </div>
+              )}
+
+              <p className="text-lg leading-relaxed">
+                ✓ Direct Labor Budget calculated successfully
+              </p>
+            </div>
+          )}
+        </div>
+
+        <hr className={`my-12 ${hrColor}`} />
+
+        <h3 className={`text-2xl font-semibold mb-4 ${headingColor}`}>
+          About the Direct Labor Budget
+        </h3>
+        <p className="text-lg mb-4 leading-relaxed">
+          The Direct Labor Budget calculates the hours and costs for direct labor needed to complete the production plan.
+        </p>
+        <p className="text-base leading-relaxed">
+          <strong>Formula:</strong> Total Direct-Labor Cost = (Units to Produce × Hours per Unit) × Hourly Wage Rate
+        </p>
+
+        <hr className={`my-16 ${hrColor}`} />
+
+        {/* SCHEDULE 5: MANUFACTURING OVERHEAD BUDGET */}
+        <h2 className={`text-4xl font-bold mb-4 ${headingColor}`}>
+          Schedule 5: Manufacturing Overhead Budget
+        </h2>
+        <p className="text-lg mb-12 leading-relaxed">
+          Calculate all manufacturing costs other than direct materials and direct labor
+        </p>
+
+        <div className="mb-12">
+          <h3 className={`text-2xl font-semibold mb-6 ${headingColor}`}>Overhead Approach</h3>
+          <p className={`text-sm mb-4 ${textColor}`}>
+            Choose your overhead calculation method
+          </p>
+
+          <div className="flex gap-6 mb-8 flex-wrap">
+            <label className="flex items-center cursor-pointer">
+              <input
+                type="radio"
+                name="overheadApproach"
+                checked={overheadApproach === 'simple'}
+                onChange={() => setOverheadApproach('simple')}
+                className="mr-2"
+              />
+              <span className={`text-sm ${textColor}`}>Simple (Traditional costing)</span>
+            </label>
+            <label className="flex items-center cursor-pointer">
+              <input
+                type="radio"
+                name="overheadApproach"
+                checked={overheadApproach === 'abc'}
+                onChange={() => setOverheadApproach('abc')}
+                className="mr-2"
+              />
+              <span className={`text-sm ${textColor}`}>Activity-Based Costing (ABC)</span>
+            </label>
+          </div>
+
+          {overheadApproach === 'simple' && (
+            <>
+              <h3 className={`text-2xl font-semibold mb-6 ${headingColor}`}>Variable & Fixed Overhead</h3>
+              <div className="grid md:grid-cols-2 gap-6 mb-8">
+                <div>
+                  <label className={`block text-sm font-medium mb-2 ${headingColor}`}>
+                    Variable Overhead Rate per Unit ({currency})
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={variableOverheadRatePerUnit}
+                    onChange={(e) => setVariableOverheadRatePerUnit(e.target.value)}
+                    placeholder="5.00"
+                    className={`w-full px-4 py-3 border ${inputBg} text-base`}
+                  />
+                  <p className={`text-xs mt-2 ${textColor}`}>
+                    Variable overhead cost per unit produced
+                  </p>
+                </div>
+
+                <div>
+                  <label className={`block text-sm font-medium mb-2 ${headingColor}`}>
+                    Variable Overhead Rate per Labor Hour ({currency})
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={variableOverheadRatePerLaborHour}
+                    onChange={(e) => setVariableOverheadRatePerLaborHour(e.target.value)}
+                    placeholder="3.00"
+                    className={`w-full px-4 py-3 border ${inputBg} text-base`}
+                  />
+                  <p className={`text-xs mt-2 ${textColor}`}>
+                    Variable overhead per direct labor hour (requires Schedule 4)
+                  </p>
+                </div>
+
+                <div>
+                  <label className={`block text-sm font-medium mb-2 ${headingColor}`}>
+                    Fixed Overhead per Quarter ({currency})
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={fixedOverheadPerQuarter}
+                    onChange={(e) => setFixedOverheadPerQuarter(e.target.value)}
+                    placeholder="50000"
+                    className={`w-full px-4 py-3 border ${inputBg} text-base`}
+                  />
+                  <p className={`text-xs mt-2 ${textColor}`}>
+                    Fixed overhead costs per quarter
+                  </p>
+                </div>
+
+                <div>
+                  <label className={`block text-sm font-medium mb-2 ${headingColor}`}>
+                    Depreciation per Quarter ({currency})
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={depreciationPerQuarter}
+                    onChange={(e) => setDepreciationPerQuarter(e.target.value)}
+                    placeholder="10000"
+                    className={`w-full px-4 py-3 border ${inputBg} text-base`}
+                  />
+                  <p className={`text-xs mt-2 ${textColor}`}>
+                    Non-cash depreciation expense
+                  </p>
+                </div>
+              </div>
+
+              <div className="mb-8">
+                <label className={`block text-sm font-medium mb-2 ${headingColor}`}>
+                  Allocation Base (for predetermined overhead rate)
+                </label>
+                <select
+                  value={allocationBase}
+                  onChange={(e) => setAllocationBase(e.target.value as any)}
+                  className={`w-full px-4 py-3 border ${inputBg} text-base`}
+                >
+                  <option value="units">Units Produced</option>
+                  <option value="labor-hours">Direct Labor Hours</option>
+                  <option value="machine-hours">Machine Hours</option>
+                </select>
+              </div>
+            </>
+          )}
+
+          {overheadApproach === 'abc' && (
+            <>
+              <h3 className={`text-2xl font-semibold mb-6 ${headingColor}`}>Activity-Based Costing Data</h3>
+              <p className={`text-sm mb-6 ${textColor}`}>
+                Enter cost driver data for ABC analysis (Unit-level, Batch-level, Facility-level)
+              </p>
+
+              <div className="mb-8">
+                <h4 className={`text-lg font-semibold mb-4 ${headingColor}`}>Batch-Level Costs (Production Runs)</h4>
+                <div className="grid md:grid-cols-5 gap-4 mb-4">
+                  <div>
+                    <label className={`block text-xs font-medium mb-2 ${headingColor}`}>Q1 Runs</label>
+                    <input
+                      type="number"
+                      value={productionRunsQ1}
+                      onChange={(e) => setProductionRunsQ1(e.target.value)}
+                      placeholder="10"
+                      className={`w-full px-3 py-2 border ${inputBg} text-sm`}
+                    />
+                  </div>
+                  <div>
+                    <label className={`block text-xs font-medium mb-2 ${headingColor}`}>Q2 Runs</label>
+                    <input
+                      type="number"
+                      value={productionRunsQ2}
+                      onChange={(e) => setProductionRunsQ2(e.target.value)}
+                      placeholder="12"
+                      className={`w-full px-3 py-2 border ${inputBg} text-sm`}
+                    />
+                  </div>
+                  <div>
+                    <label className={`block text-xs font-medium mb-2 ${headingColor}`}>Q3 Runs</label>
+                    <input
+                      type="number"
+                      value={productionRunsQ3}
+                      onChange={(e) => setProductionRunsQ3(e.target.value)}
+                      placeholder="15"
+                      className={`w-full px-3 py-2 border ${inputBg} text-sm`}
+                    />
+                  </div>
+                  <div>
+                    <label className={`block text-xs font-medium mb-2 ${headingColor}`}>Q4 Runs</label>
+                    <input
+                      type="number"
+                      value={productionRunsQ4}
+                      onChange={(e) => setProductionRunsQ4(e.target.value)}
+                      placeholder="13"
+                      className={`w-full px-3 py-2 border ${inputBg} text-sm`}
+                    />
+                  </div>
+                  <div>
+                    <label className={`block text-xs font-medium mb-2 ${headingColor}`}>Cost per Run</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={costPerProductionRun}
+                      onChange={(e) => setCostPerProductionRun(e.target.value)}
+                      placeholder="1000"
+                      className={`w-full px-3 py-2 border ${inputBg} text-sm`}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <details className="mb-8">
+                <summary className={`text-lg font-semibold cursor-pointer ${headingColor} hover:underline mb-4`}>
+                  Advanced ABC Inputs (click to expand)
+                </summary>
+
+                <div className="space-y-6 mt-4">
+                  <div>
+                    <h4 className={`text-base font-semibold mb-3 ${headingColor}`}>Product-Level Costs (Inspections)</h4>
+                    <div className="grid md:grid-cols-5 gap-4">
+                      <div>
+                        <label className={`block text-xs font-medium mb-2 ${headingColor}`}>Q1</label>
+                        <input
+                          type="number"
+                          value={inspectionsQ1}
+                          onChange={(e) => setInspectionsQ1(e.target.value)}
+                          placeholder="5"
+                          className={`w-full px-3 py-2 border ${inputBg} text-sm`}
+                        />
+                      </div>
+                      <div>
+                        <label className={`block text-xs font-medium mb-2 ${headingColor}`}>Q2</label>
+                        <input
+                          type="number"
+                          value={inspectionsQ2}
+                          onChange={(e) => setInspectionsQ2(e.target.value)}
+                          placeholder="6"
+                          className={`w-full px-3 py-2 border ${inputBg} text-sm`}
+                        />
+                      </div>
+                      <div>
+                        <label className={`block text-xs font-medium mb-2 ${headingColor}`}>Q3</label>
+                        <input
+                          type="number"
+                          value={inspectionsQ3}
+                          onChange={(e) => setInspectionsQ3(e.target.value)}
+                          placeholder="7"
+                          className={`w-full px-3 py-2 border ${inputBg} text-sm`}
+                        />
+                      </div>
+                      <div>
+                        <label className={`block text-xs font-medium mb-2 ${headingColor}`}>Q4</label>
+                        <input
+                          type="number"
+                          value={inspectionsQ4}
+                          onChange={(e) => setInspectionsQ4(e.target.value)}
+                          placeholder="6"
+                          className={`w-full px-3 py-2 border ${inputBg} text-sm`}
+                        />
+                      </div>
+                      <div>
+                        <label className={`block text-xs font-medium mb-2 ${headingColor}`}>Cost/Inspection</label>
+                        <input
+                          type="number"
+                          step="0.01"
+                          value={costPerInspection}
+                          onChange={(e) => setCostPerInspection(e.target.value)}
+                          placeholder="500"
+                          className={`w-full px-3 py-2 border ${inputBg} text-sm`}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <h4 className={`text-base font-semibold mb-3 ${headingColor}`}>Facility-Level Costs (Quarterly)</h4>
+                    <div className="grid md:grid-cols-3 gap-4">
+                      <div>
+                        <label className={`block text-xs font-medium mb-2 ${headingColor}`}>Facility Rent</label>
+                        <input
+                          type="number"
+                          step="0.01"
+                          value={facilityRent}
+                          onChange={(e) => setFacilityRent(e.target.value)}
+                          placeholder="20000"
+                          className={`w-full px-3 py-2 border ${inputBg} text-sm`}
+                        />
+                      </div>
+                      <div>
+                        <label className={`block text-xs font-medium mb-2 ${headingColor}`}>Facility Insurance</label>
+                        <input
+                          type="number"
+                          step="0.01"
+                          value={facilityInsurance}
+                          onChange={(e) => setFacilityInsurance(e.target.value)}
+                          placeholder="5000"
+                          className={`w-full px-3 py-2 border ${inputBg} text-sm`}
+                        />
+                      </div>
+                      <div>
+                        <label className={`block text-xs font-medium mb-2 ${headingColor}`}>Property Taxes</label>
+                        <input
+                          type="number"
+                          step="0.01"
+                          value={propertyTaxes}
+                          onChange={(e) => setPropertyTaxes(e.target.value)}
+                          placeholder="3000"
+                          className={`w-full px-3 py-2 border ${inputBg} text-sm`}
+                        />
+                      </div>
+                      <div>
+                        <label className={`block text-xs font-medium mb-2 ${headingColor}`}>Supervisory Salaries</label>
+                        <input
+                          type="number"
+                          step="0.01"
+                          value={supervisorySalaries}
+                          onChange={(e) => setSupervisorySalaries(e.target.value)}
+                          placeholder="15000"
+                          className={`w-full px-3 py-2 border ${inputBg} text-sm`}
+                        />
+                      </div>
+                      <div>
+                        <label className={`block text-xs font-medium mb-2 ${headingColor}`}>Support Staff</label>
+                        <input
+                          type="number"
+                          step="0.01"
+                          value={supportStaffSalaries}
+                          onChange={(e) => setSupportStaffSalaries(e.target.value)}
+                          placeholder="10000"
+                          className={`w-full px-3 py-2 border ${inputBg} text-sm`}
+                        />
+                      </div>
+                      <div>
+                        <label className={`block text-xs font-medium mb-2 ${headingColor}`}>Depreciation</label>
+                        <input
+                          type="number"
+                          step="0.01"
+                          value={depreciationPerQuarter}
+                          onChange={(e) => setDepreciationPerQuarter(e.target.value)}
+                          placeholder="10000"
+                          className={`w-full px-3 py-2 border ${inputBg} text-sm`}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <h4 className={`text-base font-semibold mb-3 ${headingColor}`}>Unit-Level Costs</h4>
+                    <div className="grid md:grid-cols-2 gap-4">
+                      <div>
+                        <label className={`block text-xs font-medium mb-2 ${headingColor}`}>Indirect Materials per Unit</label>
+                        <input
+                          type="number"
+                          step="0.01"
+                          value={indirectMaterialsPerUnit}
+                          onChange={(e) => setIndirectMaterialsPerUnit(e.target.value)}
+                          placeholder="2.50"
+                          className={`w-full px-3 py-2 border ${inputBg} text-sm`}
+                        />
+                      </div>
+                      <div>
+                        <label className={`block text-xs font-medium mb-2 ${headingColor}`}>Quality Control per Unit</label>
+                        <input
+                          type="number"
+                          step="0.01"
+                          value={qualityControlPerUnit}
+                          onChange={(e) => setQualityControlPerUnit(e.target.value)}
+                          placeholder="1.50"
+                          className={`w-full px-3 py-2 border ${inputBg} text-sm`}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </details>
+            </>
+          )}
+
+          <button
+            onClick={handleCalculateOverhead}
+            className={`${buttonBg} font-medium px-8 py-3 text-lg mt-4`}
+          >
+            Calculate Manufacturing Overhead
+          </button>
+
+          {overheadErrors.length > 0 && (
+            <div className="mt-6 space-y-3">
+              {overheadErrors.filter(e => !e.startsWith('WARNING:')).length > 0 && (
+                <div className={`p-4 ${darkMode ? 'bg-red-900/30 border-red-700' : 'bg-red-50 border-red-200'} border`}>
+                  <p className={`font-semibold text-sm mb-2 ${darkMode ? 'text-red-300' : 'text-red-800'}`}>
+                    Errors:
+                  </p>
+                  <ul className={`list-disc list-inside text-xs space-y-1 ${darkMode ? 'text-red-400' : 'text-red-700'}`}>
+                    {overheadErrors.filter(e => !e.startsWith('WARNING:')).map((error, idx) => (
+                      <li key={idx}>{error}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        <hr className={`my-12 ${hrColor}`} />
+
+        {/* Overhead Budget Results */}
+        <div>
+          <div className="flex justify-between items-center mb-6">
+            <h3 className={`text-2xl font-semibold ${headingColor}`}>Manufacturing Overhead Results</h3>
+            {overheadResult && (
+              <button
+                onClick={downloadOverheadCSV}
+                className={`${buttonBg} font-medium px-6 py-2 text-sm`}
+              >
+                Download CSV
+              </button>
+            )}
+          </div>
+
+          {!overheadResult && (
+            <p className="text-lg leading-relaxed">
+              Calculate Production Budget first, then enter overhead data and click Calculate Manufacturing Overhead
+            </p>
+          )}
+
+          {overheadResult && (
+            <div>
+              <p className={`text-lg mb-2 ${headingColor}`}>
+                <strong>{companyName || 'Your Company'}</strong> — {productName || 'Product'}
+              </p>
+              <p className={`text-sm mb-6 ${textColor}`}>
+                For the Year Ending December 31, {fiscalYear}
+              </p>
+
+              <div className="overflow-x-auto mb-8">
+                <table className="w-full border-collapse">
+                  <thead>
+                    <tr className={`border-b-2 ${darkMode ? 'border-gray-700' : 'border-gray-300'}`}>
+                      {overheadResult.headers.map((header: string, idx: number) => (
+                        <th
+                          key={idx}
+                          className={`py-3 px-4 text-left font-semibold text-sm ${idx === 0 ? '' : 'text-right'} ${headingColor}`}
+                        >
+                          {header}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {overheadResult.rows.map((row: any, idx: number) => (
+                      <tr
+                        key={idx}
+                        className={`border-b ${darkMode ? 'border-gray-800' : 'border-gray-200'}`}
+                      >
+                        <td className={`py-3 px-4 text-sm ${headingColor}`}>{row.label}</td>
+                        <td className="py-3 px-4 text-right text-sm font-mono">{row.q1}</td>
+                        <td className="py-3 px-4 text-right text-sm font-mono">{row.q2}</td>
+                        <td className="py-3 px-4 text-right text-sm font-mono">{row.q3}</td>
+                        <td className="py-3 px-4 text-right text-sm font-mono">{row.q4}</td>
+                        <td className="py-3 px-4 text-right text-sm font-semibold font-mono">{row.yearly}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {overheadResult.overheadPerUnit && (
+                <div className={`p-4 border ${darkMode ? 'border-gray-700 bg-gray-900' : 'border-gray-300 bg-gray-50'} mb-6`}>
+                  <h4 className={`text-sm font-semibold mb-3 ${headingColor}`}>Cost Metrics</h4>
+                  <p className={`text-sm mb-2 ${textColor}`}>
+                    <strong>Overhead per Unit:</strong> {currency} {overheadResult.overheadPerUnit.yearly.toFixed(2)}
+                  </p>
+                  {overheadResult.predeterminedRate && (
+                    <p className={`text-sm ${textColor}`}>
+                      <strong>Predetermined Overhead Rate:</strong> {currency} {overheadResult.predeterminedRate.toFixed(2)} per {allocationBase === 'units' ? 'unit' : allocationBase === 'labor-hours' ? 'labor hour' : 'machine hour'}
+                    </p>
+                  )}
+                </div>
+              )}
+
+              <p className="text-lg leading-relaxed">
+                ✓ Manufacturing Overhead Budget calculated successfully
+              </p>
+            </div>
+          )}
+        </div>
+
+        <hr className={`my-12 ${hrColor}`} />
+
+        <h3 className={`text-2xl font-semibold mb-4 ${headingColor}`}>
+          About the Manufacturing Overhead Budget
+        </h3>
+        <p className="text-lg mb-4 leading-relaxed">
+          The Manufacturing Overhead Budget calculates all manufacturing costs other than direct materials and direct labor, including indirect materials, indirect labor, utilities, depreciation, and facility costs.
+        </p>
+        <p className="text-base leading-relaxed">
+          <strong>Formula:</strong> Total Manufacturing Overhead = Variable Overhead + Fixed Overhead; Cash Disbursements = Total Overhead − Depreciation
+        </p>
+
+        <hr className={`my-12 ${hrColor}`} />
+
+        {/* ============================================ */}
+        {/* SCHEDULE 6: SG&A EXPENSE BUDGET */}
+        {/* ============================================ */}
+
+        <h2 className={`text-4xl font-bold mb-4 ${headingColor}`}>
+          Schedule 6: Selling, General & Administrative (SG&A) Expense Budget
+        </h2>
+        <p className="text-lg mb-8 leading-relaxed">
+          The SG&A Expense Budget plans all non-manufacturing operating expenses including sales commissions, marketing, distribution, and administrative costs.
+        </p>
+
+        {/* Approach Selection */}
+        <div className="mb-8">
+          <h4 className={`text-lg font-semibold mb-4 ${headingColor}`}>Select Approach</h4>
+          <div className="flex gap-6 mb-4 flex-wrap">
+            <label className="flex items-center cursor-pointer">
+              <input
+                type="radio"
+                name="sgaApproach"
+                checked={sgaApproach === 'simple'}
+                onChange={() => setSgaApproach('simple')}
+                className="mr-2"
+              />
+              <span>Simple (Percentage-based)</span>
+            </label>
+            <label className="flex items-center cursor-pointer">
+              <input
+                type="radio"
+                name="sgaApproach"
+                checked={sgaApproach === 'detailed'}
+                onChange={() => setSgaApproach('detailed')}
+                className="mr-2"
+              />
+              <span>Detailed (Line-by-line)</span>
+            </label>
+          </div>
+        </div>
+
+        {/* Simple Approach Form */}
+        {sgaApproach === 'simple' && (
+          <div className="mb-8">
+            <h4 className={`text-lg font-semibold mb-4 ${headingColor}`}>Simple Approach Inputs</h4>
+            <div className="grid md:grid-cols-2 gap-6 mb-6">
+              <div>
+                <label className={`block text-sm font-medium mb-2 ${headingColor}`}>
+                  Variable Selling Expense Rate (% of sales)
+                </label>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={variableSellingExpenseRate}
+                  onChange={(e) => setVariableSellingExpenseRate(e.target.value)}
+                  placeholder="0.05 (5%)"
+                  className={`w-full px-4 py-2 border ${inputBg}`}
+                />
+              </div>
+
+              <div>
+                <label className={`block text-sm font-medium mb-2 ${headingColor}`}>
+                  Variable Admin Expense Rate (% of sales)
+                </label>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={variableAdminExpenseRate}
+                  onChange={(e) => setVariableAdminExpenseRate(e.target.value)}
+                  placeholder="0.03 (3%)"
+                  className={`w-full px-4 py-2 border ${inputBg}`}
+                />
+              </div>
+
+              <div>
+                <label className={`block text-sm font-medium mb-2 ${headingColor}`}>
+                  Fixed Selling Expense per Quarter ($)
+                </label>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={fixedSellingExpensePerQuarter}
+                  onChange={(e) => setFixedSellingExpensePerQuarter(e.target.value)}
+                  placeholder="50000"
+                  className={`w-full px-4 py-2 border ${inputBg}`}
+                />
+              </div>
+
+              <div>
+                <label className={`block text-sm font-medium mb-2 ${headingColor}`}>
+                  Fixed Admin Expense per Quarter ($)
+                </label>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={fixedAdminExpensePerQuarter}
+                  onChange={(e) => setFixedAdminExpensePerQuarter(e.target.value)}
+                  placeholder="75000"
+                  className={`w-full px-4 py-2 border ${inputBg}`}
+                />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Detailed Approach Form */}
+        {sgaApproach === 'detailed' && (
+          <div className="mb-8">
+            <h4 className={`text-lg font-semibold mb-4 ${headingColor}`}>Selling Expenses</h4>
+            <div className="grid md:grid-cols-2 gap-6 mb-8">
+              <div>
+                <label className={`block text-sm font-medium mb-2 ${headingColor}`}>
+                  Commission Rate (% of revenue)
+                </label>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={commissionRate}
+                  onChange={(e) => setCommissionRate(e.target.value)}
+                  placeholder="0.05 (5%)"
+                  className={`w-full px-4 py-2 border ${inputBg}`}
+                />
+              </div>
+
+              <div>
+                <label className={`block text-sm font-medium mb-2 ${headingColor}`}>
+                  Distribution Cost per Unit ($)
+                </label>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={distributionCostPerUnit}
+                  onChange={(e) => setDistributionCostPerUnit(e.target.value)}
+                  placeholder="2.50"
+                  className={`w-full px-4 py-2 border ${inputBg}`}
+                />
+              </div>
+
+              <div>
+                <label className={`block text-sm font-medium mb-2 ${headingColor}`}>
+                  Distribution Fixed Cost per Quarter ($)
+                </label>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={distributionFixedCostPerQuarter}
+                  onChange={(e) => setDistributionFixedCostPerQuarter(e.target.value)}
+                  placeholder="15000"
+                  className={`w-full px-4 py-2 border ${inputBg}`}
+                />
+              </div>
+
+              <div>
+                <label className={`block text-sm font-medium mb-2 ${headingColor}`}>
+                  Customer Service Salaries per Quarter ($)
+                </label>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={customerServiceSalaries}
+                  onChange={(e) => setCustomerServiceSalaries(e.target.value)}
+                  placeholder="25000"
+                  className={`w-full px-4 py-2 border ${inputBg}`}
+                />
+              </div>
+
+              <div>
+                <label className={`block text-sm font-medium mb-2 ${headingColor}`}>
+                  Warranty Expense per Unit ($)
+                </label>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={warrantyExpensePerUnit}
+                  onChange={(e) => setWarrantyExpensePerUnit(e.target.value)}
+                  placeholder="1.00"
+                  className={`w-full px-4 py-2 border ${inputBg}`}
+                />
+              </div>
+            </div>
+
+            <h4 className={`text-lg font-semibold mb-4 ${headingColor}`}>Marketing Expenses (per Quarter)</h4>
+            <div className="grid md:grid-cols-3 gap-6 mb-8">
+              <div>
+                <label className={`block text-sm font-medium mb-2 ${headingColor}`}>
+                  Advertising Budget ($)
+                </label>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={advertisingBudgetPerQuarter}
+                  onChange={(e) => setAdvertisingBudgetPerQuarter(e.target.value)}
+                  placeholder="20000"
+                  className={`w-full px-4 py-2 border ${inputBg}`}
+                />
+              </div>
+
+              <div>
+                <label className={`block text-sm font-medium mb-2 ${headingColor}`}>
+                  Brand Development ($)
+                </label>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={brandDevelopmentPerQuarter}
+                  onChange={(e) => setBrandDevelopmentPerQuarter(e.target.value)}
+                  placeholder="10000"
+                  className={`w-full px-4 py-2 border ${inputBg}`}
+                />
+              </div>
+
+              <div>
+                <label className={`block text-sm font-medium mb-2 ${headingColor}`}>
+                  Marketing Campaigns ($)
+                </label>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={marketingCampaignsPerQuarter}
+                  onChange={(e) => setMarketingCampaignsPerQuarter(e.target.value)}
+                  placeholder="15000"
+                  className={`w-full px-4 py-2 border ${inputBg}`}
+                />
+              </div>
+            </div>
+
+            <h4 className={`text-lg font-semibold mb-4 ${headingColor}`}>Administrative Expenses (per Quarter)</h4>
+            <div className="grid md:grid-cols-2 gap-6 mb-8">
+              <div>
+                <label className={`block text-sm font-medium mb-2 ${headingColor}`}>
+                  Executive Salaries ($)
+                </label>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={executiveSalaries}
+                  onChange={(e) => setExecutiveSalaries(e.target.value)}
+                  placeholder="150000"
+                  className={`w-full px-4 py-2 border ${inputBg}`}
+                />
+              </div>
+
+              <div>
+                <label className={`block text-sm font-medium mb-2 ${headingColor}`}>
+                  Finance Salaries ($)
+                </label>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={financeSalaries}
+                  onChange={(e) => setFinanceSalaries(e.target.value)}
+                  placeholder="50000"
+                  className={`w-full px-4 py-2 border ${inputBg}`}
+                />
+              </div>
+
+              <div>
+                <label className={`block text-sm font-medium mb-2 ${headingColor}`}>
+                  HR Salaries ($)
+                </label>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={hrSalaries}
+                  onChange={(e) => setHrSalaries(e.target.value)}
+                  placeholder="40000"
+                  className={`w-full px-4 py-2 border ${inputBg}`}
+                />
+              </div>
+
+              <div>
+                <label className={`block text-sm font-medium mb-2 ${headingColor}`}>
+                  IT Salaries ($)
+                </label>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={itSalaries}
+                  onChange={(e) => setItSalaries(e.target.value)}
+                  placeholder="60000"
+                  className={`w-full px-4 py-2 border ${inputBg}`}
+                />
+              </div>
+
+              <div>
+                <label className={`block text-sm font-medium mb-2 ${headingColor}`}>
+                  Office Rent ($)
+                </label>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={officeRentPerQuarter}
+                  onChange={(e) => setOfficeRentPerQuarter(e.target.value)}
+                  placeholder="30000"
+                  className={`w-full px-4 py-2 border ${inputBg}`}
+                />
+              </div>
+
+              <div>
+                <label className={`block text-sm font-medium mb-2 ${headingColor}`}>
+                  Utilities ($)
+                </label>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={utilitiesPerQuarter}
+                  onChange={(e) => setUtilitiesPerQuarter(e.target.value)}
+                  placeholder="5000"
+                  className={`w-full px-4 py-2 border ${inputBg}`}
+                />
+              </div>
+
+              <div>
+                <label className={`block text-sm font-medium mb-2 ${headingColor}`}>
+                  Software Licenses ($)
+                </label>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={softwareLicensesPerQuarter}
+                  onChange={(e) => setSoftwareLicensesPerQuarter(e.target.value)}
+                  placeholder="10000"
+                  className={`w-full px-4 py-2 border ${inputBg}`}
+                />
+              </div>
+
+              <div>
+                <label className={`block text-sm font-medium mb-2 ${headingColor}`}>
+                  Telecommunications ($)
+                </label>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={telecommunicationsPerQuarter}
+                  onChange={(e) => setTelecommunicationsPerQuarter(e.target.value)}
+                  placeholder="3000"
+                  className={`w-full px-4 py-2 border ${inputBg}`}
+                />
+              </div>
+
+              <div>
+                <label className={`block text-sm font-medium mb-2 ${headingColor}`}>
+                  Office Supplies ($)
+                </label>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={officeSuppliesPerQuarter}
+                  onChange={(e) => setOfficeSuppliesPerQuarter(e.target.value)}
+                  placeholder="2000"
+                  className={`w-full px-4 py-2 border ${inputBg}`}
+                />
+              </div>
+
+              <div>
+                <label className={`block text-sm font-medium mb-2 ${headingColor}`}>
+                  Legal Fees ($)
+                </label>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={legalFeesPerQuarter}
+                  onChange={(e) => setLegalFeesPerQuarter(e.target.value)}
+                  placeholder="8000"
+                  className={`w-full px-4 py-2 border ${inputBg}`}
+                />
+              </div>
+
+              <div>
+                <label className={`block text-sm font-medium mb-2 ${headingColor}`}>
+                  Bad Debt Rate (% of sales)
+                </label>
+                <input
+                  type="number"
+                  step="0.001"
+                  value={badDebtRate}
+                  onChange={(e) => setBadDebtRate(e.target.value)}
+                  placeholder="0.02 (2%)"
+                  className={`w-full px-4 py-2 border ${inputBg}`}
+                />
+              </div>
+
+              <div>
+                <label className={`block text-sm font-medium mb-2 ${headingColor}`}>
+                  Depreciation - Office Equipment ($)
+                </label>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={depreciationOfficeEquipment}
+                  onChange={(e) => setDepreciationOfficeEquipment(e.target.value)}
+                  placeholder="5000"
+                  className={`w-full px-4 py-2 border ${inputBg}`}
+                />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Calculate Button */}
+        <button
+          onClick={handleCalculateSGA}
+          className={`${buttonBg} font-medium px-6 py-3 mb-6`}
+        >
+          Calculate SG&A Expenses
+        </button>
+
+        {/* Error Display */}
+        {sgaErrors.length > 0 && (
+          <div className="mt-6 space-y-3">
+            {sgaErrors.filter(e => !e.startsWith('WARNING:')).length > 0 && (
+              <div className={`p-4 ${darkMode ? 'bg-red-900/30 border-red-700' : 'bg-red-50 border-red-200'} border`}>
+                <p className={`font-semibold text-sm mb-2 ${darkMode ? 'text-red-300' : 'text-red-800'}`}>
+                  Errors:
+                </p>
+                <ul className={`list-disc list-inside text-xs space-y-1 ${darkMode ? 'text-red-400' : 'text-red-700'}`}>
+                  {sgaErrors.filter(e => !e.startsWith('WARNING:')).map((error, idx) => (
+                    <li key={idx}>{error}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {sgaErrors.filter(e => e.startsWith('WARNING:')).length > 0 && (
+              <div className={`p-4 ${darkMode ? 'bg-yellow-900/30 border-yellow-700' : 'bg-yellow-50 border-yellow-200'} border`}>
+                <p className={`font-semibold text-sm mb-2 ${darkMode ? 'text-yellow-300' : 'text-yellow-800'}`}>
+                  Warnings:
+                </p>
+                <ul className={`list-disc list-inside text-xs space-y-1 ${darkMode ? 'text-yellow-400' : 'text-yellow-700'}`}>
+                  {sgaErrors.filter(e => e.startsWith('WARNING:')).map((warning, idx) => (
+                    <li key={idx}>{warning.replace('WARNING: ', '')}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* SGA Results */}
+        <div>
+          <div className="flex justify-between items-center mb-6">
+            <h3 className={`text-2xl font-semibold ${headingColor}`}>SG&A Expense Results</h3>
+            {sgaResult && (
+              <button
+                onClick={downloadSGACSV}
+                className={`${buttonBg} font-medium px-6 py-2 text-sm`}
+              >
+                Download CSV
+              </button>
+            )}
+          </div>
+
+          {!sgaResult && (
+            <p className="text-lg leading-relaxed">
+              Calculate Sales Budget first, then enter SG&A data and click Calculate SG&A Expenses
+            </p>
+          )}
+
+          {sgaResult && (
+            <div>
+              <p className={`text-lg mb-2 ${headingColor}`}>
+                <strong>{companyName || 'Your Company'}</strong> — {productName || 'Product'}
+              </p>
+              <p className={`text-sm mb-6 ${textColor}`}>
+                For the Year Ending December 31, {fiscalYear}
+              </p>
+
+              <div className="overflow-x-auto mb-8">
+                <table className="w-full border-collapse">
+                  <thead>
+                    <tr className={`border-b-2 ${darkMode ? 'border-gray-700' : 'border-gray-300'}`}>
+                      {sgaResult.headers.map((header: string, idx: number) => (
+                        <th
+                          key={idx}
+                          className={`py-3 px-4 text-left font-semibold text-sm ${idx === 0 ? '' : 'text-right'} ${headingColor}`}
+                        >
+                          {header}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {sgaResult.rows.map((row: any, idx: number) => (
+                      <tr
+                        key={idx}
+                        className={`border-b ${darkMode ? 'border-gray-800' : 'border-gray-200'}`}
+                      >
+                        <td className={`py-3 px-4 text-sm ${headingColor}`}>{row.label}</td>
+                        <td className="py-3 px-4 text-sm text-right">{row.q1}</td>
+                        <td className="py-3 px-4 text-sm text-right">{row.q2}</td>
+                        <td className="py-3 px-4 text-sm text-right">{row.q3}</td>
+                        <td className="py-3 px-4 text-sm text-right">{row.q4}</td>
+                        <td className="py-3 px-4 text-sm text-right font-medium">{row.yearly}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {sgaResult.sgaAsPercentOfSales && (
+                <div className={`p-4 border ${darkMode ? 'border-gray-700 bg-gray-900' : 'border-gray-300 bg-gray-50'} mb-6`}>
+                  <h4 className={`text-sm font-semibold mb-3 ${headingColor}`}>SG&A Metrics</h4>
+                  <p className={`text-sm mb-2 ${textColor}`}>
+                    <strong>SG&A as % of Sales (Yearly):</strong> {(sgaResult.sgaAsPercentOfSales.yearly * 100).toFixed(2)}%
+                  </p>
+                  {sgaResult.variableSGAPerUnit && (
+                    <p className={`text-sm mb-2 ${textColor}`}>
+                      <strong>Variable SG&A per Unit:</strong> {currency} {sgaResult.variableSGAPerUnit.yearly.toFixed(2)}
+                    </p>
+                  )}
+                  {sgaResult.totalSGAPerUnit && (
+                    <p className={`text-sm ${textColor}`}>
+                      <strong>Total SG&A per Unit:</strong> {currency} {sgaResult.totalSGAPerUnit.yearly.toFixed(2)}
+                    </p>
+                  )}
+                </div>
+              )}
+
+              <p className="text-lg leading-relaxed">
+                ✓ SG&A Expense Budget calculated successfully
+              </p>
+            </div>
+          )}
+        </div>
+
+        <hr className={`my-12 ${hrColor}`} />
+
+        <h3 className={`text-2xl font-semibold mb-4 ${headingColor}`}>
+          About the SG&A Expense Budget
+        </h3>
+        <p className="text-lg mb-4 leading-relaxed">
+          The Selling, General & Administrative Expense Budget plans all non-manufacturing operating expenses including sales commissions, marketing, distribution, and administrative overhead.
+        </p>
+        <p className="text-base leading-relaxed">
+          <strong>Formula:</strong> Total SG&A = Variable Expenses + Fixed Expenses; Variable includes commissions and distribution; Fixed includes salaries, rent, and utilities
         </p>
       </main>
 
