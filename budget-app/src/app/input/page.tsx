@@ -245,6 +245,219 @@ export default function InputPage() {
     setQ4Sales(String(Math.round(priorQ4 * (1 + growth))));
   };
 
+  const insertTestingFigures = () => {
+    // Company Information
+    setCompanyName('Acme Manufacturing Inc.');
+    setProductName('Premium Widget');
+    setCurrency('USD');
+    setFiscalYear('2026');
+    setAssumptions('Conservative growth forecast with moderate inflation expectations');
+
+    // Schedule 1: Sales Budget
+    setPriorQ1Sales('10000');
+    setPriorQ2Sales('12000');
+    setPriorQ3Sales('15000');
+    setPriorQ4Sales('13000');
+    setQ1Sales('11000');
+    setQ2Sales('13500');
+    setQ3Sales('16500');
+    setQ4Sales('14500');
+    setSellingPrice('50');
+    setInflationRate('2');
+    setPriceAdjustment('inflation');
+    setCashSalesPercentage('30');
+    setCreditSalesPercentage('70');
+    setGrowthRate('10');
+
+    // Schedule 2: Production Budget
+    setBeginningInventory('2000');
+    setEndingInventoryRatio('0.15');
+    setNextYearQ1Sales('12000');
+    setMaxCapacity('20000');
+    setMinBatchSize('1000');
+    setOptimalBatchSize('5000');
+    setCarryingCost('2.5');
+    setUseJIT(false);
+    setObsolescenceRisk('0.02');
+
+    // Schedule 3: Direct Material Budget
+    setMaterials([
+      {
+        name: 'Steel Sheet',
+        requiredPerUnit: 2.5,
+        costPerUnit: 8,
+        beginningInventory: 5000,
+        desiredEndingInventoryRatio: 0.1,
+        unit: 'kg',
+        scrapWastePercentage: 0.05,
+        bulkDiscountThreshold: 10000,
+        bulkDiscountRate: 0.1,
+        priceInflationRate: 0.015,
+        useJIT: false,
+      },
+      {
+        name: 'Aluminum Rod',
+        requiredPerUnit: 1.2,
+        costPerUnit: 12,
+        beginningInventory: 3000,
+        desiredEndingInventoryRatio: 0.12,
+        unit: 'meters',
+        scrapWastePercentage: 0.03,
+        bulkDiscountThreshold: 5000,
+        bulkDiscountRate: 0.08,
+        priceInflationRate: 0.02,
+        useJIT: false,
+      },
+      {
+        name: 'Plastic Components',
+        requiredPerUnit: 5,
+        costPerUnit: 3.5,
+        beginningInventory: 8000,
+        desiredEndingInventoryRatio: 0.15,
+        unit: 'pieces',
+        scrapWastePercentage: 0.02,
+        bulkDiscountThreshold: 15000,
+        bulkDiscountRate: 0.12,
+        priceInflationRate: 0.01,
+        useJIT: true,
+      },
+    ]);
+    setNextYearQ1Production('13000');
+    setPercentPaidCurrentQuarter('60');
+    setPercentPaidNextQuarter('40');
+
+    // Schedule 4: Direct Labor Budget
+    setUseSimpleLaborInput(false);
+    setDirectLaborHoursPerUnit('3');
+    setHourlyWageRate('25');
+    setLaborCategories([
+      {
+        name: 'Assembly Line Workers',
+        hoursPerUnit: 2,
+        wageRatePerHour: 22,
+      },
+      {
+        name: 'Quality Control',
+        hoursPerUnit: 0.5,
+        wageRatePerHour: 28,
+      },
+      {
+        name: 'Finishing & Packaging',
+        hoursPerUnit: 0.5,
+        wageRatePerHour: 20,
+      },
+    ]);
+    setWageInflationRate('1.5');
+    setOvertimeThreshold('2000');
+    setOvertimeMultiplier('1.5');
+    setFringeBenefitRate('25');
+    setProductivityEfficiencyRate('95');
+    setTurnoverRate('15');
+    setTrainingCostPerEmployee('1500');
+    setAverageHoursPerEmployee('500');
+
+    // Schedule 5: Manufacturing Overhead Budget
+    setOverheadApproach('abc');
+    setUseActivityBasedCosting(true);
+
+    // Simple approach fields (filled in case user switches)
+    setVariableOverheadRatePerUnit('5');
+    setVariableOverheadRatePerLaborHour('3');
+    setFixedOverheadPerQuarter('25000');
+    setDepreciationPerQuarter('8000');
+    setAllocationBase('labor-hours');
+
+    // ABC fields
+    setProductionRunsQ1('15');
+    setProductionRunsQ2('18');
+    setProductionRunsQ3('22');
+    setProductionRunsQ4('20');
+    setCostPerProductionRun('800');
+    setInspectionsQ1('25');
+    setInspectionsQ2('30');
+    setInspectionsQ3('35');
+    setInspectionsQ4('32');
+    setCostPerInspection('150');
+    setMachineHoursQ1('1200');
+    setMachineHoursQ2('1400');
+    setMachineHoursQ3('1600');
+    setMachineHoursQ4('1500');
+    setCostPerMachineHour('15');
+
+    // Facility costs
+    setFacilityRent('12000');
+    setFacilityInsurance('2500');
+    setPropertyTaxes('1800');
+    setUtilities('3500');
+    setUtilitiesIsVariable(true);
+
+    // Indirect labor
+    setSupervisorySalaries('18000');
+    setSupportStaffSalaries('12000');
+
+    // Supplies and materials
+    setIndirectMaterialsPerUnit('2.5');
+    setShopSuppliesPerQuarter('1500');
+
+    // Maintenance
+    setPlannedMaintenancePerQuarter('4000');
+    setMaintenancePerMachineHour('5');
+
+    // Quality control
+    setQualityControlPerUnit('1.2');
+    setQualityControlLabor('6000');
+
+    // Other costs
+    setTechnologyCosts('2000');
+    setWarehouseCosts('3000');
+    setEnvironmentalComplianceCosts('1200');
+
+    // Schedule 6: SG&A Expense Budget
+    setSgaApproach('detailed');
+    setUseSimpleSGA(false);
+
+    // Simple approach fields (filled in case user switches)
+    setVariableSellingExpenseRate('8');
+    setVariableAdminExpenseRate('5');
+    setFixedSellingExpensePerQuarter('35000');
+    setFixedAdminExpensePerQuarter('45000');
+
+    // Detailed approach - Selling Expenses
+    setCommissionRate('5');
+    setCommissionPerUnit('');
+    setDistributionCostPerUnit('3.5');
+    setDistributionFixedCostPerQuarter('8000');
+    setCustomerServiceSalaries('15000');
+    setWarrantyExpensePerUnit('1.5');
+
+    // Marketing Expenses
+    setAdvertisingBudgetPerQuarter('12000');
+    setBrandDevelopmentPerQuarter('8000');
+    setMarketingCampaignsPerQuarter('10000');
+
+    // Administrative Expenses
+    setExecutiveSalaries('35000');
+    setFinanceSalaries('20000');
+    setHrSalaries('15000');
+    setItSalaries('18000');
+
+    // Occupancy costs
+    setOfficeRentPerQuarter('10000');
+    setUtilitiesPerQuarter('2500');
+
+    // Technology costs
+    setSoftwareLicensesPerQuarter('4000');
+    setTelecommunicationsPerQuarter('1500');
+
+    // Other admin costs
+    setOfficeSuppliesPerQuarter('1200');
+    setLegalFeesPerQuarter('5000');
+    setBadDebtRate('2');
+    setDepreciationOfficeEquipment('3000');
+
+    alert('Testing figures inserted! All schedules have been populated with realistic sample data.');
+  };
+
   const handleCalculate = () => {
     const priorYearTotal = (parseFloat(priorQ1Sales) || 0) + (parseFloat(priorQ2Sales) || 0) + (parseFloat(priorQ3Sales) || 0) + (parseFloat(priorQ4Sales) || 0);
     const hasPriorYearData = priorYearTotal > 0;
@@ -948,6 +1161,12 @@ export default function InputPage() {
           Budget Input
         </h1>
         <div className="flex items-center gap-4">
+          <button
+            onClick={insertTestingFigures}
+            className={`text-sm px-4 py-2 border ${darkMode ? 'border-gray-600 bg-gray-800 text-gray-200 hover:bg-gray-700' : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50'} transition-colors`}
+          >
+            Insert Testing Figures
+          </button>
           <span className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
             Inverted Mode
           </span>

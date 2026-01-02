@@ -38,7 +38,35 @@ Budget Generator for manufacturing companies. Automates the creation of all 13 i
 - Critical materials identification (low turnover warnings)
 - CSV export
 
-🚧 **Schedules 4-13** - Coming soon
+✅ **Schedule 4: Direct Labor Budget** - Fully functional with all enhancements
+- Core labor calculations (Hours per Unit × Units to Produce)
+- Simple single-category or multi-category labor tracking
+- Wage inflation (quarterly compounding)
+- Overtime calculations (threshold-based with premium pay)
+- Fringe benefits tracking (health, FICA, workers comp)
+- Productivity efficiency adjustments
+- Workforce planning (FTE calculations, turnover costs)
+- CSV export
+
+✅ **Schedule 5: Manufacturing Overhead Budget** - Fully functional with all enhancements
+- Traditional costing (variable/fixed overhead allocation)
+- Activity-Based Costing (ABC) with four-level cost hierarchy
+- Unit-level, batch-level, product-level, and facility-level costs
+- Predetermined overhead rate calculations
+- Cash disbursements (excludes depreciation)
+- Flexible allocation base (units/labor hours/machine hours)
+- CSV export
+
+✅ **Schedule 6: Selling & Administrative Expense Budget** - Fully functional with all enhancements
+- Simple percentage-based or detailed line-by-line tracking
+- Sales expenses (commissions, distribution, customer service)
+- Marketing expenses (advertising, campaigns, brand development)
+- Administrative expenses (salaries by department, occupancy, technology)
+- Bad debt allowance calculations
+- Performance metrics (SG&A as % of sales, expense ratios)
+- CSV export
+
+🚧 **Schedules 7-13** - Coming soon
 
 ## Development
 
@@ -54,17 +82,15 @@ Open http://localhost:3000/Budgeting_Schedule_Automation
 
 ### Deploy Updates
 
-Whenever you make changes:
-
-1. Save your file changes (dev server auto-reloads locally)
-2. Deploy to GitHub Pages:
+**Automatic deployment is configured!** Every time you push to the main branch, GitHub Actions automatically builds and deploys to GitHub Pages.
 
 ```bash
-cd budget-app
-npm run deploy
+git add .
+git commit -m "Your commit message"
+git push origin main
 ```
 
-This automatically builds and deploys your app to GitHub Pages. Changes go live within 2-3 minutes.
+Changes go live within 1-2 minutes. You can watch the deployment progress in the Actions tab of your repository.
 
 ## Tech Stack
 

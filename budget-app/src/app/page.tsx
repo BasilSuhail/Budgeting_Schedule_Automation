@@ -126,8 +126,23 @@ export default function Home() {
           allowance, bulk discounts, price inflation, JIT delivery, inventory turnover metrics, and critical material identification.
         </p>
 
+        <p className="text-lg mb-6 leading-relaxed">
+          <strong>Schedule 4: Direct Labor Budget</strong> — Fully functional. Single or multi-category labor tracking,
+          wage inflation, overtime calculations, fringe benefits, and workforce planning metrics.
+        </p>
+
+        <p className="text-lg mb-6 leading-relaxed">
+          <strong>Schedule 5: Manufacturing Overhead Budget</strong> — Fully functional. Traditional costing and Activity-Based
+          Costing (ABC) with four-level cost hierarchy, predetermined overhead rates, and flexible allocation bases.
+        </p>
+
+        <p className="text-lg mb-6 leading-relaxed">
+          <strong>Schedule 6: Selling & Administrative Expense Budget</strong> — Fully functional. Track sales, marketing,
+          and administrative expenses with detailed breakdowns by category and performance metrics.
+        </p>
+
         <p className="text-lg mb-12 leading-relaxed">
-          Schedules 4-14 are coming soon.
+          Schedules 7-14 are coming soon.
         </p>
 
         <hr className={`my-16 ${darkMode ? 'border-gray-700' : 'border-gray-300'}`} />
