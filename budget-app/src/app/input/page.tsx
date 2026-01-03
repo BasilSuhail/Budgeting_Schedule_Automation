@@ -8,7 +8,8 @@ import { calculateDirectMaterialBudget, validateDirectMaterialBudgetInputs, form
 import { calculateDirectLaborBudget, validateDirectLaborBudgetInputs, formatDirectLaborBudgetForDisplay } from '@/lib/calculations/04-directLaborBudget';
 import { calculateManufacturingOverheadBudget, validateManufacturingOverheadInputs, formatManufacturingOverheadBudgetForDisplay } from '@/lib/calculations/05-manufacturingOverheadBudget';
 import { calculateSellingAdminExpenseBudget, validateSellingAdminExpenseInputs, formatSellingAdminExpenseBudgetForDisplay } from '@/lib/calculations/06-sellingAdminExpenseBudget';
-import type { SalesBudgetInputs, ProductionBudgetInputs, DirectMaterialBudgetInputs, DirectLabourBudgetInputs, ManufacturingOverheadInputs, SellingAdminExpenseInputs, MaterialType, LaborCategory, OverheadCostCategory, SalesPersonnelCategory, DistributionChannel, DepartmentBudget } from '@/lib/types/budgets';
+import { calculateCashReceiptsBudget, formatCashReceiptsOutput, exportCashReceiptsToCSV } from '@/lib/calculations/08-cashReceiptsBudget';
+import type { SalesBudgetInputs, ProductionBudgetInputs, DirectMaterialBudgetInputs, DirectLabourBudgetInputs, ManufacturingOverheadInputs, SellingAdminExpenseInputs, CashReceiptsInputs, CashReceiptsOutput, MaterialType, LaborCategory, OverheadCostCategory, SalesPersonnelCategory, DistributionChannel, DepartmentBudget } from '@/lib/types/budgets';
 
 export default function InputPage() {
   const [darkMode, setDarkMode] = useState(false);
@@ -219,6 +220,15 @@ export default function InputPage() {
 
   const [sgaResult, setSgaResult] = useState<any>(null);
   const [sgaErrors, setSgaErrors] = useState<string[]>([]);
+
+  // Schedule 8: Cash Receipts Budget state
+  const [percentCollectedSameQuarter, setPercentCollectedSameQuarter] = useState('');
+  const [percentCollectedNextQuarter, setPercentCollectedNextQuarter] = useState('');
+  const [percentUncollectible, setPercentUncollectible] = useState('');
+  const [beginningAccountsReceivable, setBeginningAccountsReceivable] = useState('');
+  const [cashReceiptsResult, setCashReceiptsResult] = useState<CashReceiptsOutput | null>(null);
+  const [cashReceiptsErrors, setCashReceiptsErrors] = useState<string[]>([]);
+  const [cashReceiptsWarnings, setCashReceiptsWarnings] = useState<string[]>([]);
 
   // Save preferences to localStorage when they change
   const toggleDarkMode = () => {
@@ -437,6 +447,16 @@ export default function InputPage() {
     setBadDebtRate(String(randDecimal(0.015, 0.035, 3)));
     setDepreciationOfficeEquipment(String(rand(2500, 4500)));
 
+    // Schedule 8: Cash Receipts Budget - randomized
+    const sameQuarterPercent = randDecimal(0.60, 0.75, 2);
+    const nextQuarterPercent = randDecimal(0.20, 0.35, 2);
+    const uncollectiblePercent = parseFloat((1 - sameQuarterPercent - nextQuarterPercent).toFixed(3));
+
+    setPercentCollectedSameQuarter(String(sameQuarterPercent));
+    setPercentCollectedNextQuarter(String(nextQuarterPercent));
+    setPercentUncollectible(String(Math.max(0, uncollectiblePercent)));
+    setBeginningAccountsReceivable(String(rand(15000, 35000)));
+
     // Auto-calculate all schedules after a brief delay to ensure state updates
     setTimeout(() => {
       handleCalculate();
@@ -445,6 +465,7 @@ export default function InputPage() {
       handleCalculateLabor();
       handleCalculateOverhead();
       handleCalculateSGA();
+      handleCalculateCashReceipts();
     }, 100);
   };
 
@@ -1127,6 +1148,47 @@ export default function InputPage() {
     const url = URL.createObjectURL(blob);
     link.setAttribute('href', url);
     link.setAttribute('download', `sga-expense-budget-${companyName.replace(/\s+/g, '-').toLowerCase() || 'export'}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const handleCalculateCashReceipts = () => {
+    if (!result) {
+      alert('Please calculate Sales Budget first (Schedule 1)');
+      return;
+    }
+
+    const inputs: CashReceiptsInputs = {
+      percentCollectedInSameQuarter: parseFloat(percentCollectedSameQuarter) || 0,
+      percentCollectedInNextQuarter: parseFloat(percentCollectedNextQuarter) || 0,
+      percentUncollectible: percentUncollectible ? parseFloat(percentUncollectible) : undefined,
+      beginningAccountsReceivable: parseFloat(beginningAccountsReceivable) || 0,
+    };
+
+    const { output, validation } = calculateCashReceiptsBudget(result, inputs);
+
+    setCashReceiptsResult(output);
+    setCashReceiptsErrors(validation.errors);
+    setCashReceiptsWarnings(validation.warnings);
+  };
+
+  const downloadCashReceiptsCSV = () => {
+    if (!cashReceiptsResult) return;
+
+    const csvContent = exportCashReceiptsToCSV(
+      cashReceiptsResult,
+      companyName || 'Your Company',
+      productName || 'Product',
+      fiscalYear
+    );
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `cash-receipts-budget-${companyName.replace(/\s+/g, '-').toLowerCase() || 'export'}.csv`);
     link.style.visibility = 'hidden';
     document.body.appendChild(link);
     link.click();
@@ -4051,6 +4113,193 @@ export default function InputPage() {
         </p>
         <p className="text-base leading-relaxed">
           <strong>Formula:</strong> Total SG&A = Variable Expenses + Fixed Expenses; Variable includes commissions and distribution; Fixed includes salaries, rent, and utilities
+        </p>
+
+        <hr className={`my-12 ${hrColor}`} />
+
+        {/* ============================================ */}
+        {/* SCHEDULE 8: CASH RECEIPTS BUDGET */}
+        {/* ============================================ */}
+
+        <h2 className={`text-4xl font-bold mb-4 ${headingColor}`}>
+          Schedule 8: Cash Receipts Budget
+        </h2>
+        <p className="text-lg mb-8 leading-relaxed">
+          The Cash Receipts Budget calculates when cash is actually collected from sales, bridging the gap between accrual accounting (sales revenue) and cash accounting (actual cash received).
+        </p>
+
+        {/* Cash Receipts Inputs */}
+        <div className="mb-8">
+          <h4 className={`text-lg font-semibold mb-4 ${headingColor}`}>Collection Policy</h4>
+          <div className="grid md:grid-cols-2 gap-6 mb-6">
+            <div>
+              <label className={`block text-sm font-medium mb-2 ${headingColor}`}>
+                Percent Collected in Same Quarter
+              </label>
+              <input
+                type="number"
+                step="0.01"
+                value={percentCollectedSameQuarter}
+                onChange={(e) => setPercentCollectedSameQuarter(e.target.value)}
+                placeholder="0.70 (70%)"
+                className={`w-full px-4 py-2 border ${inputBg}`}
+              />
+              <p className="text-xs mt-1 opacity-75">e.g., 0.70 for 70% collected in same quarter</p>
+            </div>
+
+            <div>
+              <label className={`block text-sm font-medium mb-2 ${headingColor}`}>
+                Percent Collected in Next Quarter
+              </label>
+              <input
+                type="number"
+                step="0.01"
+                value={percentCollectedNextQuarter}
+                onChange={(e) => setPercentCollectedNextQuarter(e.target.value)}
+                placeholder="0.28 (28%)"
+                className={`w-full px-4 py-2 border ${inputBg}`}
+              />
+              <p className="text-xs mt-1 opacity-75">e.g., 0.28 for 28% collected next quarter</p>
+            </div>
+
+            <div>
+              <label className={`block text-sm font-medium mb-2 ${headingColor}`}>
+                Percent Uncollectible (Bad Debt) - Optional
+              </label>
+              <input
+                type="number"
+                step="0.001"
+                value={percentUncollectible}
+                onChange={(e) => setPercentUncollectible(e.target.value)}
+                placeholder="0.02 (2%)"
+                className={`w-full px-4 py-2 border ${inputBg}`}
+              />
+              <p className="text-xs mt-1 opacity-75">e.g., 0.02 for 2% bad debt allowance</p>
+            </div>
+
+            <div>
+              <label className={`block text-sm font-medium mb-2 ${headingColor}`}>
+                Beginning Accounts Receivable ($)
+              </label>
+              <input
+                type="number"
+                step="0.01"
+                value={beginningAccountsReceivable}
+                onChange={(e) => setBeginningAccountsReceivable(e.target.value)}
+                placeholder="25000"
+                className={`w-full px-4 py-2 border ${inputBg}`}
+              />
+              <p className="text-xs mt-1 opacity-75">Outstanding receivables at start of year</p>
+            </div>
+          </div>
+
+          <button
+            onClick={handleCalculateCashReceipts}
+            className={`${buttonBg} font-medium px-8 py-3 text-lg`}
+          >
+            Calculate Cash Receipts
+          </button>
+        </div>
+
+        {/* Display Errors and Warnings */}
+        {cashReceiptsErrors.length > 0 && (
+          <div className="mb-6 p-4 border border-red-500 bg-red-50 dark:bg-red-900/20">
+            <h4 className="font-semibold text-red-700 dark:text-red-400 mb-2">Errors:</h4>
+            <ul className="list-disc list-inside text-sm text-red-600 dark:text-red-300">
+              {cashReceiptsErrors.map((err, idx) => (
+                <li key={idx}>{err}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {cashReceiptsWarnings.length > 0 && (
+          <div className="mb-6 p-4 border border-yellow-500 bg-yellow-50 dark:bg-yellow-900/20">
+            <h4 className="font-semibold text-yellow-700 dark:text-yellow-400 mb-2">Warnings:</h4>
+            <ul className="list-disc list-inside text-sm text-yellow-600 dark:text-yellow-300">
+              {cashReceiptsWarnings.map((warn, idx) => (
+                <li key={idx}>{warn}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {/* Cash Receipts Results */}
+        <div>
+          <div className="flex justify-between items-center mb-6">
+            <h3 className={`text-2xl font-semibold ${headingColor}`}>Cash Receipts Results</h3>
+            {cashReceiptsResult && (
+              <button
+                onClick={downloadCashReceiptsCSV}
+                className={`${buttonBg} font-medium px-6 py-2 text-sm`}
+              >
+                Download CSV
+              </button>
+            )}
+          </div>
+
+          {!cashReceiptsResult && (
+            <p className="text-lg leading-relaxed">
+              Calculate Sales Budget first, then enter cash receipts data and click Calculate Cash Receipts
+            </p>
+          )}
+
+          {cashReceiptsResult && (
+            <div>
+              <p className={`text-lg mb-2 ${headingColor}`}>
+                <strong>{companyName || 'Your Company'}</strong> — {productName || 'Product'}
+              </p>
+              <p className={`text-sm mb-6 ${textColor}`}>
+                For the Year Ending December 31, {fiscalYear}
+              </p>
+
+              <div className="overflow-x-auto mb-8">
+                <table className="w-full border-collapse">
+                  <thead>
+                    <tr className={`border-b-2 ${darkMode ? 'border-gray-700' : 'border-gray-300'}`}>
+                      <th className={`py-3 px-4 text-left font-semibold text-sm ${headingColor}`}>Item</th>
+                      <th className={`py-3 px-4 text-right font-semibold text-sm ${headingColor}`}>Q1</th>
+                      <th className={`py-3 px-4 text-right font-semibold text-sm ${headingColor}`}>Q2</th>
+                      <th className={`py-3 px-4 text-right font-semibold text-sm ${headingColor}`}>Q3</th>
+                      <th className={`py-3 px-4 text-right font-semibold text-sm ${headingColor}`}>Q4</th>
+                      <th className={`py-3 px-4 text-right font-semibold text-sm ${headingColor}`}>Yearly</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {formatCashReceiptsOutput(cashReceiptsResult).map((row, idx) => (
+                      <tr
+                        key={idx}
+                        className={`border-b ${darkMode ? 'border-gray-800' : 'border-gray-200'}`}
+                      >
+                        <td className={`py-3 px-4 text-sm ${headingColor}`}>{row.label}</td>
+                        <td className="py-3 px-4 text-sm text-right">{row.q1}</td>
+                        <td className="py-3 px-4 text-sm text-right">{row.q2}</td>
+                        <td className="py-3 px-4 text-sm text-right">{row.q3}</td>
+                        <td className="py-3 px-4 text-sm text-right">{row.q4}</td>
+                        <td className="py-3 px-4 text-sm text-right font-medium">{row.yearly}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              <p className="text-lg leading-relaxed">
+                ✓ Cash Receipts Budget calculated successfully
+              </p>
+            </div>
+          )}
+        </div>
+
+        <hr className={`my-12 ${hrColor}`} />
+
+        <h3 className={`text-2xl font-semibold mb-4 ${headingColor}`}>
+          About the Cash Receipts Budget
+        </h3>
+        <p className="text-lg mb-4 leading-relaxed">
+          The Cash Receipts Budget shows when cash from sales is actually collected. It accounts for the timing difference between when a sale is made (revenue recognition) and when cash is received (cash collection).
+        </p>
+        <p className="text-base leading-relaxed">
+          <strong>Formula:</strong> Total Cash Receipts = Cash Sales + (Credit Sales × % Collected Same Quarter) + (Prior Quarter Credit Sales × % Collected Next Quarter)
         </p>
       </main>
 

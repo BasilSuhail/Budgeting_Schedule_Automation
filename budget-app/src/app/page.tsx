@@ -141,8 +141,13 @@ export default function Home() {
           and administrative expenses with detailed breakdowns by category and performance metrics.
         </p>
 
+        <p className="text-lg mb-6 leading-relaxed">
+          <strong>Schedule 8: Cash Receipts Budget</strong> — Fully functional. Calculate when cash is actually collected
+          from sales with collection timing tracking, accounts receivable management, and bad debt allowance.
+        </p>
+
         <p className="text-lg mb-12 leading-relaxed">
-          Schedules 7-14 are coming soon.
+          Schedules 7, 9-14 are coming soon.
         </p>
 
         <hr className={`my-16 ${darkMode ? 'border-gray-700' : 'border-gray-300'}`} />

@@ -66,7 +66,15 @@ Budget Generator for manufacturing companies. Automates the creation of all 13 i
 - Performance metrics (SG&A as % of sales, expense ratios)
 - CSV export
 
-🚧 **Schedules 7-13** - Coming soon
+✅ **Schedule 8: Cash Receipts Budget** - Fully functional with all enhancements
+- Collection timing tracking (same quarter vs next quarter)
+- Cash sales vs credit sales analysis
+- Beginning and ending accounts receivable
+- Bad debt allowance (uncollectible percentage)
+- Automatic calculation from Schedule 1 (Sales Budget)
+- CSV export
+
+🚧 **Schedules 7, 9-13** - Coming soon
 
 ## Development
 
