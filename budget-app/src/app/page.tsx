@@ -56,12 +56,20 @@ export default function Home() {
           No signup required. All calculations happen in your browser.
         </p>
 
-        <Link
-          href="/input"
-          className={`inline-block ${darkMode ? 'bg-white text-black hover:bg-gray-200' : 'bg-black text-white hover:bg-gray-800'} font-medium px-8 py-4 text-lg mb-16`}
-        >
-          Start New Budget
-        </Link>
+        <div className="flex gap-4 mb-16">
+          <Link
+            href="/input"
+            className={`inline-block ${darkMode ? 'bg-white text-black hover:bg-gray-200' : 'bg-black text-white hover:bg-gray-800'} font-medium px-8 py-4 text-lg`}
+          >
+            Start New Budget
+          </Link>
+          <Link
+            href="/dashboard"
+            className={`inline-block ${darkMode ? 'border-gray-600 text-gray-300 hover:bg-gray-800' : 'border-gray-300 text-gray-700 hover:bg-gray-100'} border font-medium px-8 py-4 text-lg`}
+          >
+            View Dashboard
+          </Link>
+        </div>
 
         <hr className={`my-16 ${darkMode ? 'border-gray-700' : 'border-gray-300'}`} />
 

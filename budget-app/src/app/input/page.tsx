@@ -15,7 +15,19 @@ import { calculateCOGS, formatCOGSOutput, exportCOGSToCSV } from '@/lib/calculat
 import { calculateIncomeStatement, formatIncomeStatementOutput, exportIncomeStatementToCSV } from '@/lib/calculations/11-incomeStatement';
 import { calculateCashFlowStatement, formatCashFlowStatementOutput, formatIndirectMethodReconciliation, formatQualityMetrics, exportCashFlowStatementToCSV } from '@/lib/calculations/12-cashFlowStatement';
 import { calculateBalanceSheet, formatBalanceSheetOutput, formatFinancialRatios, exportBalanceSheetToCSV } from '@/lib/calculations/13-balanceSheet';
-import type { SalesBudgetInputs, ProductionBudgetInputs, DirectMaterialBudgetInputs, DirectLabourBudgetInputs, ManufacturingOverheadInputs, SellingAdminExpenseInputs, CashReceiptsInputs, CashReceiptsOutput, CashDisbursementInputs, CashDisbursementOutput, CashBudgetInputs, CashBudgetOutput, COGSInputs, COGSOutput, IncomeStatementInputs, IncomeStatementOutput, CashFlowStatementInputs, CashFlowStatementOutput, BalanceSheetInputs, BalanceSheetOutput, MaterialType, LaborCategory, OverheadCostCategory, SalesPersonnelCategory, DistributionChannel, DepartmentBudget } from '@/lib/types/budgets';
+import type { SalesBudgetInputs, SalesBudgetOutput, ProductionBudgetInputs, ProductionBudgetOutput, DirectMaterialBudgetInputs, DirectMaterialBudgetOutput, DirectLabourBudgetInputs, DirectLabourBudgetOutput, ManufacturingOverheadInputs, ManufacturingOverheadOutput, SellingAdminExpenseInputs, SellingAdminExpenseOutput, CashReceiptsInputs, CashReceiptsOutput, CashDisbursementInputs, CashDisbursementOutput, CashBudgetInputs, CashBudgetOutput, COGSInputs, COGSOutput, IncomeStatementInputs, IncomeStatementOutput, CashFlowStatementInputs, CashFlowStatementOutput, BalanceSheetInputs, BalanceSheetOutput, MaterialType, LaborCategory, OverheadCostCategory, SalesPersonnelCategory, DistributionChannel, DepartmentBudget } from '@/lib/types/budgets';
+import {
+  SalesTrendChart,
+  SalesComparisonChart,
+  ProductionChart,
+  CostTrendChart,
+  ExpenseBreakdownChart,
+  CashFlowChart,
+  COGSBreakdownChart,
+  IncomeWaterfallChart,
+  CashFlowActivitiesChart,
+  BalanceSheetChart,
+} from '@/components/charts';
 
 export default function InputPage() {
   const [darkMode, setDarkMode] = useState(false);
@@ -56,6 +68,18 @@ export default function InputPage() {
 
   const [result, setResult] = useState<any>(null);
   const [errors, setErrors] = useState<string[]>([]);
+
+  // Raw outputs for charting
+  const [salesRawOutput, setSalesRawOutput] = useState<SalesBudgetOutput | null>(null);
+  const [productionRawOutput, setProductionRawOutput] = useState<ProductionBudgetOutput | null>(null);
+  const [materialRawOutput, setMaterialRawOutput] = useState<DirectMaterialBudgetOutput | null>(null);
+  const [laborRawOutput, setLaborRawOutput] = useState<DirectLabourBudgetOutput | null>(null);
+  const [overheadRawOutput, setOverheadRawOutput] = useState<ManufacturingOverheadOutput | null>(null);
+  const [sgaRawOutput, setSgaRawOutput] = useState<SellingAdminExpenseOutput | null>(null);
+  const [historicalSalesData, setHistoricalSalesData] = useState<{ q1: number; q2: number; q3: number; q4: number; yearly: number } | null>(null);
+
+  // Chart visibility toggle
+  const [showCharts, setShowCharts] = useState(true);
 
   // Schedule 2: Production Budget state
   const [beginningInventory, setBeginningInventory] = useState('');
@@ -681,6 +705,299 @@ export default function InputPage() {
     setBsNewLongTermBorrowing('20000');
     setBsLongTermDebtRepayment('10000');
     setBsStockIssued('10000');
+
+    // =========================================================================
+    // AUTO-CALCULATE ALL SCHEDULES
+    // =========================================================================
+    // We calculate directly with the example values since React state updates are async
+
+    // Schedule 1: Sales Budget
+    const salesInputs: SalesBudgetInputs = {
+      historicalSalesUnits: { q1: 10000, q2: 12000, q3: 15000, q4: 13000, yearly: 50000 },
+      forecastedSalesUnits: { q1: 11000, q2: 13200, q3: 16500, q4: 14300, yearly: 55000 },
+      sellingPricePerUnit: 50,
+      priceInflationRate: 0.02,
+      cashSalesPercentage: 0.30,
+      creditSalesPercentage: 0.70,
+    };
+    const salesOutput = calculateSalesBudget(salesInputs);
+    const salesFormatted = formatSalesBudgetForDisplay(salesOutput, salesInputs);
+    setResult(salesFormatted);
+    setErrors([]);
+    setSalesRawOutput(salesOutput);
+    setHistoricalSalesData(salesInputs.historicalSalesUnits || null);
+
+    // Schedule 2: Production Budget
+    const productionInputs: ProductionBudgetInputs = {
+      forecastedSalesUnits: { q1: 11000, q2: 13200, q3: 16500, q4: 14300, yearly: 55000 },
+      beginningInventory: 2000,
+      desiredEndingInventoryRatio: 0.15,
+      nextYearQ1ForecastedSales: 12100,
+      maxProductionCapacityPerQuarter: 20000,
+      minimumBatchSize: 1000,
+      optimalBatchSize: 5000,
+      inventoryCarryingCostPerUnit: 2.50,
+      useJIT: false,
+      obsolescenceRiskPercentage: 0.02,
+    };
+    const productionOutput = calculateProductionBudget(productionInputs);
+    const productionFormatted = formatProductionBudgetForDisplay(productionOutput, productionInputs);
+    setProductionResult(productionFormatted);
+    setProductionErrors([]);
+    setProductionRawOutput(productionOutput);
+
+    // Schedule 3: Direct Material Budget
+    const exampleMaterials: MaterialType[] = [
+      { name: 'Steel Frame', requiredPerUnit: 2, costPerUnit: 8, beginningInventory: 5000, desiredEndingInventoryRatio: 0.10, unit: 'kg', scrapWastePercentage: 0.03, bulkDiscountThreshold: 10000, bulkDiscountRate: 0.08, priceInflationRate: 0.015, useJIT: false },
+      { name: 'Electronic Components', requiredPerUnit: 3, costPerUnit: 12, beginningInventory: 8000, desiredEndingInventoryRatio: 0.12, unit: 'pieces', scrapWastePercentage: 0.02, bulkDiscountThreshold: 15000, bulkDiscountRate: 0.10, priceInflationRate: 0.01, useJIT: false },
+      { name: 'Plastic Housing', requiredPerUnit: 1, costPerUnit: 5, beginningInventory: 3000, desiredEndingInventoryRatio: 0.10, unit: 'units', scrapWastePercentage: 0.04, bulkDiscountThreshold: 8000, bulkDiscountRate: 0.05, priceInflationRate: 0.02, useJIT: false },
+    ];
+    const materialInputs: DirectMaterialBudgetInputs = {
+      unitsToBeProduced: productionOutput.requiredProduction,
+      materials: exampleMaterials,
+      nextYearQ1Production: 12500,
+      percentPaidInCurrentQuarter: 0.60,
+      percentPaidInNextQuarter: 0.40,
+    };
+    const materialOutput = calculateDirectMaterialBudget(materialInputs);
+    const materialFormatted = formatDirectMaterialBudgetForDisplay(materialOutput);
+    setMaterialResult(materialFormatted);
+    setMaterialErrors([]);
+    setMaterialRawOutput(materialOutput);
+
+    // Schedule 4: Direct Labor Budget
+    const exampleLaborCategories: LaborCategory[] = [
+      { name: 'Assembly Workers', hoursPerUnit: 1.5, wageRatePerHour: 22 },
+      { name: 'Quality Inspectors', hoursPerUnit: 0.5, wageRatePerHour: 28 },
+      { name: 'Finishing Technicians', hoursPerUnit: 1.0, wageRatePerHour: 25 },
+    ];
+    const laborInputs: DirectLabourBudgetInputs = {
+      unitsToBeProduced: productionOutput.requiredProduction,
+      laborCategories: exampleLaborCategories,
+      wageInflationRate: 0.02,
+      overtimeThreshold: 2000,
+      overtimeMultiplier: 1.5,
+      fringeBenefitRate: 0.25,
+      productivityEfficiencyRate: 0.95,
+      turnoverRate: 0.12,
+      trainingCostPerEmployee: 1500,
+      averageHoursPerEmployee: 500,
+    };
+    const laborOutput = calculateDirectLaborBudget(laborInputs);
+    const laborFormatted = formatDirectLaborBudgetForDisplay(laborOutput);
+    setLaborResult(laborFormatted);
+    setLaborErrors([]);
+    setLaborRawOutput(laborOutput);
+
+    // Schedule 5: Manufacturing Overhead Budget
+    const overheadInputs: ManufacturingOverheadInputs = {
+      unitsToBeProduced: productionOutput.requiredProduction,
+      directLaborHours: laborOutput.totalLaborHoursRequired,
+      variableOverheadRatePerUnit: 6,
+      variableOverheadRatePerLaborHour: 3,
+      fixedOverheadPerQuarter: 28000,
+      depreciationPerQuarter: 8000,
+      useActivityBasedCosting: true,
+      numberOfProductionRuns: { q1: 15, q2: 18, q3: 22, q4: 19, yearly: 74 },
+      costPerProductionRun: 800,
+      numberOfInspections: { q1: 25, q2: 30, q3: 35, q4: 32, yearly: 122 },
+      costPerInspection: 150,
+      machineHours: { q1: 1200, q2: 1400, q3: 1700, q4: 1500, yearly: 5800 },
+      costPerMachineHour: 15,
+      facilityRent: 12000,
+      facilityInsurance: 3000,
+      propertyTaxes: 2000,
+      utilities: 4000,
+      utilitiesIsVariable: false,
+      supervisorySalaries: 18000,
+      supportStaffSalaries: 12000,
+      indirectMaterialsPerUnit: 3,
+      shopSuppliesPerQuarter: 1500,
+      plannedMaintenancePerQuarter: 4500,
+      maintenancePerMachineHour: 6,
+      qualityControlPerUnit: 1.5,
+      qualityControlLabor: 6500,
+      technologyCosts: 2000,
+      warehouseCosts: 3500,
+      environmentalComplianceCosts: 1500,
+    };
+    const overheadOutput = calculateManufacturingOverheadBudget(overheadInputs);
+    const overheadFormatted = formatManufacturingOverheadBudgetForDisplay(overheadOutput);
+    setOverheadResult(overheadFormatted);
+    setOverheadErrors([]);
+    setOverheadRawOutput(overheadOutput);
+
+    // Schedule 6: SG&A Expense Budget
+    const sgaInputs: SellingAdminExpenseInputs = {
+      salesRevenue: salesOutput.salesRevenue,
+      salesUnits: salesOutput.salesUnits,
+      commissionRate: 0.05,
+      distributionCostPerUnit: 3.50,
+      distributionFixedCostPerQuarter: 8000,
+      customerServiceSalaries: 15000,
+      warrantyExpensePerUnit: 1.50,
+      advertisingBudgetPerQuarter: 12000,
+      brandDevelopmentPerQuarter: 8000,
+      marketingCampaignsPerQuarter: 10000,
+      executiveSalaries: 35000,
+      financeSalaries: 22000,
+      hrSalaries: 15000,
+      itSalaries: 20000,
+      officeRentPerQuarter: 10000,
+      utilitiesPerQuarter: 3000,
+      softwareLicensesPerQuarter: 4500,
+      telecommunicationsPerQuarter: 1500,
+      officeSuppliesPerQuarter: 1200,
+      legalFeesPerQuarter: 5000,
+      badDebtRate: 0.02,
+      depreciationOfficeEquipment: 3500,
+    };
+    const sgaOutput = calculateSellingAdminExpenseBudget(sgaInputs);
+    const sgaFormatted = formatSellingAdminExpenseBudgetForDisplay(sgaOutput);
+    setSgaResult(sgaFormatted);
+    setSgaErrors([]);
+    setSgaRawOutput(sgaOutput);
+
+    // Schedule 7: Cash Receipts Budget
+    const cashReceiptsInputs: CashReceiptsInputs = {
+      percentCollectedInSameQuarter: 0.70,
+      percentCollectedInNextQuarter: 0.28,
+      percentUncollectible: 0.02,
+      beginningAccountsReceivable: 25000,
+    };
+    const cashReceiptsCalc = calculateCashReceiptsBudget(salesOutput, cashReceiptsInputs);
+    setCashReceiptsResult(cashReceiptsCalc.output);
+    setCashReceiptsErrors(cashReceiptsCalc.validation.errors);
+
+    // Schedule 8: Cash Disbursements Budget
+    const cashDisbursementsInputs: CashDisbursementInputs = {
+      percentMaterialPaidSameQuarter: 0.55,
+      percentMaterialPaidNextQuarter: 0.45,
+      beginningAccountsPayable: 20000,
+      incomeTaxPayments: { q1: 0, q2: 12000, q3: 0, q4: 15000, yearly: 27000 },
+      dividendPayments: { q1: 0, q2: 0, q3: 0, q4: 8000, yearly: 8000 },
+      capitalExpenditures: { q1: 10000, q2: 0, q3: 15000, q4: 0, yearly: 25000 },
+      loanPayments: { q1: 6000, q2: 6000, q3: 6000, q4: 6000, yearly: 24000 },
+    };
+    const cashDisbursementsCalc = calculateCashDisbursementsBudget(
+      materialOutput,
+      laborOutput,
+      overheadOutput,
+      sgaOutput,
+      cashDisbursementsInputs
+    );
+    setCashDisbursementsResult(cashDisbursementsCalc.output);
+    setCashDisbursementsErrors(cashDisbursementsCalc.validation.errors);
+
+    // Schedule 9: Cash Budget
+    if (cashReceiptsCalc.output && cashDisbursementsCalc.output) {
+      const cashBudgetInputs: CashBudgetInputs = {
+        beginningCashBalance: 40000,
+        minimumCashBalance: 15000,
+        interestRateOnBorrowing: 0.08,
+        interestRateOnInvestments: 0.03,
+      };
+      const cashBudgetCalc = calculateCashBudget(
+        cashReceiptsCalc.output,
+        cashDisbursementsCalc.output,
+        cashBudgetInputs
+      );
+      setCashBudgetResult(cashBudgetCalc.output);
+      setCashBudgetErrors(cashBudgetCalc.validation.errors);
+
+      // Schedule 10: COGS
+      const cogsInputs: COGSInputs = {
+        beginningWIPInventory: 3000,
+        endingWIPInventory: 3500,
+        beginningFinishedGoodsInventory: 10000,
+        endingFinishedGoodsInventory: 12000,
+      };
+      const cogsCalc = calculateCOGS(
+        materialOutput,
+        laborOutput,
+        overheadOutput,
+        productionOutput,
+        cogsInputs
+      );
+      setCogsResult(cogsCalc.output);
+      setCogsErrors(cogsCalc.validation.errors);
+
+      // Schedule 11: Income Statement
+      if (cogsCalc.output) {
+        const incomeStatementInputs: IncomeStatementInputs = {
+          interestExpense: 15000,
+          incomeTaxRate: 0.25,
+        };
+        const incomeStatementCalc = calculateIncomeStatement(
+          salesOutput,
+          cogsCalc.output,
+          sgaOutput,
+          incomeStatementInputs
+        );
+        setIncomeStatementResult(incomeStatementCalc.output);
+        setIncomeStatementErrors(incomeStatementCalc.validation.errors);
+
+        // Schedule 12: Cash Flow Statement
+        if (incomeStatementCalc.output) {
+          const cashFlowInputs: CashFlowStatementInputs = {
+            beginningCash: 40000,
+            beginningAccountsReceivable: 50000,
+            beginningInventory: 60000,
+            beginningAccountsPayable: 35000,
+            loanProceeds: 25000,
+            stockIssued: 10000,
+            proceedsFromAssetSales: 5000,
+          };
+          const cashFlowCalc = calculateCashFlowStatement(
+            incomeStatementCalc.output,
+            cashReceiptsCalc.output,
+            cashDisbursementsCalc.output,
+            overheadOutput,
+            salesOutput,
+            cogsCalc.output,
+            cashFlowInputs
+          );
+          setCashFlowResult(cashFlowCalc.output);
+          setCashFlowErrors(cashFlowCalc.validation.errors);
+
+          // Schedule 13: Balance Sheet
+          const balanceSheetInputs: BalanceSheetInputs = {
+            beginningCash: 40000,
+            beginningAccountsReceivable: 60000,
+            beginningRawMaterialInventory: 22000,
+            beginningWIPInventory: 10000,
+            beginningFinishedGoodsInventory: 30000,
+            beginningOtherCurrentAssets: 5000,
+            beginningFixedAssets: 350000,
+            beginningAccumulatedDepreciation: 100000,
+            beginningOtherAssets: 10000,
+            beginningAccountsPayable: 40000,
+            beginningWagesPayable: 10000,
+            beginningTaxesPayable: 12000,
+            beginningOtherAccruedExpenses: 5000,
+            beginningShortTermDebt: 15000,
+            beginningLongTermDebt: 100000,
+            beginningCommonStock: 150000,
+            beginningRetainedEarnings: 95000,
+            newLongTermBorrowing: 20000,
+            longTermDebtRepayment: 10000,
+            stockIssued: 10000,
+          };
+          const balanceSheetCalc = calculateBalanceSheet(
+            incomeStatementCalc.output,
+            cashBudgetCalc.output,
+            cashReceiptsCalc.output,
+            cashDisbursementsCalc.output,
+            cogsCalc.output,
+            overheadOutput,
+            salesOutput,
+            balanceSheetInputs
+          );
+          setBalanceSheetResult(balanceSheetCalc.output);
+          setBalanceSheetErrors(balanceSheetCalc.validation.errors);
+        }
+      }
+    }
   };
 
   const handleCalculate = () => {
@@ -723,6 +1040,8 @@ export default function InputPage() {
     const formatted = formatSalesBudgetForDisplay(output, inputs);
     setResult(formatted);
     setErrors(validationErrors); // Keep warnings visible even after successful calculation
+    setSalesRawOutput(output);
+    setHistoricalSalesData(inputs.historicalSalesUnits || null);
   };
 
   const handleCalculateProduction = () => {
@@ -763,6 +1082,7 @@ export default function InputPage() {
     const formatted = formatProductionBudgetForDisplay(output, inputs);
     setProductionResult(formatted);
     setProductionErrors(validationErrors);
+    setProductionRawOutput(output);
   };
 
   const downloadCSV = () => {
@@ -1810,9 +2130,15 @@ export default function InputPage() {
     <div className={`min-h-screen ${bgColor} ${textColor}`}>
       {/* Header */}
       <header className="max-w-5xl mx-auto px-6 py-6 flex justify-between items-center">
-        <Link href="/" className={`text-sm hover:underline ${textColor}`}>
-          ← Back
-        </Link>
+        <div className="flex items-center gap-4">
+          <Link href="/" className={`text-sm hover:underline ${textColor}`}>
+            ← Home
+          </Link>
+          <span className={`text-xs ${darkMode ? 'text-gray-600' : 'text-gray-300'}`}>|</span>
+          <Link href="/dashboard" className={`text-sm hover:underline ${darkMode ? 'text-blue-400' : 'text-blue-600'}`}>
+            Dashboard
+          </Link>
+        </div>
         <h1 className={`text-xl font-semibold ${headingColor}`}>
           Budget Input
         </h1>
@@ -2324,6 +2650,39 @@ export default function InputPage() {
                 </div>
               </div>
 
+              {/* Sales Budget Charts */}
+              {showCharts && salesRawOutput && (
+                <div className="mb-8">
+                  <div className="flex justify-between items-center mb-4">
+                    <h4 className={`text-lg font-semibold ${headingColor}`}>
+                      Data Visualization
+                    </h4>
+                    <button
+                      onClick={() => setShowCharts(!showCharts)}
+                      className={`text-sm ${darkMode ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-700'}`}
+                    >
+                      {showCharts ? 'Hide Charts' : 'Show Charts'}
+                    </button>
+                  </div>
+                  <div className="grid md:grid-cols-2 gap-6">
+                    <SalesTrendChart
+                      salesUnits={salesRawOutput.salesUnits}
+                      salesRevenue={salesRawOutput.salesRevenue}
+                      historicalUnits={historicalSalesData || undefined}
+                      darkMode={darkMode}
+                    />
+                    {historicalSalesData && (
+                      <SalesComparisonChart
+                        salesUnits={salesRawOutput.salesUnits}
+                        salesRevenue={salesRawOutput.salesRevenue}
+                        historicalUnits={historicalSalesData}
+                        darkMode={darkMode}
+                      />
+                    )}
+                  </div>
+                </div>
+              )}
+
               <p className="text-lg leading-relaxed">
                 ✓ Sales Budget calculated successfully
               </p>
@@ -2635,6 +2994,21 @@ export default function InputPage() {
                     Q4: {productionResult.obsolescenceCost.q4.toFixed(2)} |
                     Yearly: {productionResult.obsolescenceCost.yearly.toFixed(2)}
                   </p>
+                </div>
+              )}
+
+              {/* Production Budget Charts */}
+              {showCharts && productionRawOutput && salesRawOutput && (
+                <div className="mb-8">
+                  <h4 className={`text-lg font-semibold mb-4 ${headingColor}`}>
+                    Data Visualization
+                  </h4>
+                  <ProductionChart
+                    salesUnits={salesRawOutput.salesUnits}
+                    production={productionRawOutput.requiredProduction}
+                    endingInventory={productionRawOutput.desiredEndingInventory}
+                    darkMode={darkMode}
+                  />
                 </div>
               )}
 
@@ -3139,6 +3513,21 @@ export default function InputPage() {
                       <strong>⚠ Critical Materials (low turnover):</strong> {materialResult.analytics.criticalMaterials.join(', ')}
                     </p>
                   )}
+                </div>
+              )}
+
+              {/* Direct Material Budget Charts */}
+              {showCharts && materialRawOutput && (
+                <div className="mb-8">
+                  <h4 className={`text-lg font-semibold mb-4 ${headingColor}`}>
+                    Data Visualization
+                  </h4>
+                  <CostTrendChart
+                    data={materialRawOutput.totalMaterialPurchaseCost}
+                    label="Material Purchase Cost Trend"
+                    color="#3B82F6"
+                    darkMode={darkMode}
+                  />
                 </div>
               )}
 
@@ -3683,6 +4072,21 @@ export default function InputPage() {
                 </div>
               )}
 
+              {/* Direct Labor Budget Charts */}
+              {showCharts && laborRawOutput && (
+                <div className="mb-8">
+                  <h4 className={`text-lg font-semibold mb-4 ${headingColor}`}>
+                    Data Visualization
+                  </h4>
+                  <CostTrendChart
+                    data={laborRawOutput.totalLaborCost}
+                    label="Total Labor Cost Trend"
+                    color="#10B981"
+                    darkMode={darkMode}
+                  />
+                </div>
+              )}
+
               <p className="text-lg leading-relaxed">
                 ✓ Direct Labor Budget calculated successfully
               </p>
@@ -4161,6 +4565,32 @@ export default function InputPage() {
                       <strong>Predetermined Overhead Rate:</strong> {currency} {overheadResult.predeterminedRate.toFixed(2)} per {allocationBase === 'units' ? 'unit' : allocationBase === 'labor-hours' ? 'labor hour' : 'machine hour'}
                     </p>
                   )}
+                </div>
+              )}
+
+              {/* Manufacturing Overhead Charts */}
+              {showCharts && overheadRawOutput && (
+                <div className="mb-8">
+                  <h4 className={`text-lg font-semibold mb-4 ${headingColor}`}>
+                    Data Visualization
+                  </h4>
+                  <div className="grid md:grid-cols-2 gap-6">
+                    <CostTrendChart
+                      data={overheadRawOutput.totalOverhead}
+                      label="Total Overhead Trend"
+                      color="#F59E0B"
+                      darkMode={darkMode}
+                    />
+                    <ExpenseBreakdownChart
+                      expenses={[
+                        { name: 'Variable', value: overheadRawOutput.variableOverhead.yearly },
+                        { name: 'Fixed', value: overheadRawOutput.fixedOverhead.yearly },
+                        { name: 'Depreciation', value: overheadRawOutput.depreciation?.yearly || 0 },
+                      ]}
+                      title="Overhead Breakdown"
+                      darkMode={darkMode}
+                    />
+                  </div>
                 </div>
               )}
 
@@ -4700,6 +5130,32 @@ export default function InputPage() {
                 </div>
               )}
 
+              {/* SG&A Charts */}
+              {showCharts && sgaRawOutput && (
+                <div className="mb-8">
+                  <h4 className={`text-lg font-semibold mb-4 ${headingColor}`}>
+                    Data Visualization
+                  </h4>
+                  <div className="grid md:grid-cols-2 gap-6">
+                    <CostTrendChart
+                      data={sgaRawOutput.totalSGAExpenses}
+                      label="Total SG&A Expenses Trend"
+                      color="#8B5CF6"
+                      darkMode={darkMode}
+                    />
+                    <ExpenseBreakdownChart
+                      expenses={[
+                        { name: 'Selling', value: sgaRawOutput.totalSellingExpenses?.yearly || 0 },
+                        { name: 'Marketing', value: sgaRawOutput.totalMarketingExpenses?.yearly || 0 },
+                        { name: 'Admin', value: sgaRawOutput.totalAdministrativeExpenses?.yearly || 0 },
+                      ]}
+                      title="SG&A Expense Breakdown"
+                      darkMode={darkMode}
+                    />
+                  </div>
+                </div>
+              )}
+
               <p className="text-lg leading-relaxed">
                 ✓ SG&A Expense Budget calculated successfully
               </p>
@@ -4890,6 +5346,39 @@ export default function InputPage() {
               <p className="text-lg leading-relaxed">
                 ✓ Cash Receipts Budget calculated successfully
               </p>
+
+              {/* Charts for Cash Receipts */}
+              {showCharts && (
+                <div className="mt-8">
+                  <div className="flex justify-between items-center mb-4">
+                    <h4 className={`text-lg font-semibold ${headingColor}`}>Cash Collection Visualization</h4>
+                    <button
+                      onClick={() => setShowCharts(!showCharts)}
+                      className={`text-sm ${darkMode ? 'text-blue-400' : 'text-blue-600'} hover:underline`}
+                    >
+                      Hide Charts
+                    </button>
+                  </div>
+                  <div className="grid md:grid-cols-1 gap-6">
+                    <CostTrendChart
+                      data={cashReceiptsResult.totalCashReceipts}
+                      label="Total Cash Receipts by Quarter"
+                      color="#10B981"
+                      darkMode={darkMode}
+                      height={280}
+                    />
+                    <ExpenseBreakdownChart
+                      expenses={[
+                        { name: 'Cash Sales', value: cashReceiptsResult.collectionsSameQuarter.yearly },
+                        { name: 'Credit Collections', value: cashReceiptsResult.collectionsNextQuarter.yearly },
+                      ]}
+                      title="Cash Receipts Composition (Yearly)"
+                      darkMode={darkMode}
+                      height={280}
+                    />
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -5264,6 +5753,43 @@ export default function InputPage() {
               <p className="text-lg leading-relaxed">
                 ✓ Cash Disbursements Budget calculated successfully
               </p>
+
+              {/* Charts for Cash Disbursements */}
+              {showCharts && (
+                <div className="mt-8">
+                  <div className="flex justify-between items-center mb-4">
+                    <h4 className={`text-lg font-semibold ${headingColor}`}>Cash Disbursements Visualization</h4>
+                    <button
+                      onClick={() => setShowCharts(!showCharts)}
+                      className={`text-sm ${darkMode ? 'text-blue-400' : 'text-blue-600'} hover:underline`}
+                    >
+                      Hide Charts
+                    </button>
+                  </div>
+                  <div className="grid md:grid-cols-2 gap-6">
+                    <CostTrendChart
+                      data={cashDisbursementsResult.totalDisbursements}
+                      label="Total Disbursements by Quarter"
+                      color="#EF4444"
+                      darkMode={darkMode}
+                      height={280}
+                    />
+                    <ExpenseBreakdownChart
+                      expenses={[
+                        { name: 'Materials', value: cashDisbursementsResult.materialPayments.yearly },
+                        { name: 'Labor', value: cashDisbursementsResult.laborPayments.yearly },
+                        { name: 'Overhead', value: cashDisbursementsResult.overheadPayments.yearly },
+                        { name: 'SG&A', value: cashDisbursementsResult.sgaPayments.yearly },
+                        { name: 'Taxes', value: cashDisbursementsResult.incomeTaxPayments.yearly },
+                        { name: 'CapEx', value: cashDisbursementsResult.capitalExpenditures.yearly },
+                      ].filter(e => e.value > 0)}
+                      title="Disbursements by Category (Yearly)"
+                      darkMode={darkMode}
+                      height={280}
+                    />
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -5451,6 +5977,46 @@ export default function InputPage() {
               <p className="text-lg leading-relaxed">
                 ✓ Cash Budget calculated successfully
               </p>
+
+              {/* Charts for Cash Budget */}
+              {showCharts && (
+                <div className="mt-8">
+                  <div className="flex justify-between items-center mb-4">
+                    <h4 className={`text-lg font-semibold ${headingColor}`}>Cash Position Visualization</h4>
+                    <button
+                      onClick={() => setShowCharts(!showCharts)}
+                      className={`text-sm ${darkMode ? 'text-blue-400' : 'text-blue-600'} hover:underline`}
+                    >
+                      Hide Charts
+                    </button>
+                  </div>
+                  <div className="grid md:grid-cols-1 gap-6">
+                    <CashFlowChart
+                      receipts={cashBudgetResult.cashReceipts}
+                      disbursements={cashBudgetResult.cashDisbursements}
+                      endingCash={cashBudgetResult.endingCash}
+                      darkMode={darkMode}
+                      height={320}
+                    />
+                    <div className="grid md:grid-cols-2 gap-6">
+                      <CostTrendChart
+                        data={cashBudgetResult.operatingCashFlow}
+                        label="Operating Cash Flow by Quarter"
+                        color="#3B82F6"
+                        darkMode={darkMode}
+                        height={250}
+                      />
+                      <CostTrendChart
+                        data={cashBudgetResult.freeCashFlow}
+                        label="Free Cash Flow by Quarter"
+                        color="#10B981"
+                        darkMode={darkMode}
+                        height={250}
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -5630,6 +6196,30 @@ export default function InputPage() {
               <p className="text-lg leading-relaxed">
                 ✓ COGS Schedule calculated successfully
               </p>
+
+              {/* Charts for COGS */}
+              {showCharts && (
+                <div className="mt-8">
+                  <div className="flex justify-between items-center mb-4">
+                    <h4 className={`text-lg font-semibold ${headingColor}`}>Cost of Goods Sold Visualization</h4>
+                    <button
+                      onClick={() => setShowCharts(!showCharts)}
+                      className={`text-sm ${darkMode ? 'text-blue-400' : 'text-blue-600'} hover:underline`}
+                    >
+                      Hide Charts
+                    </button>
+                  </div>
+                  <div className="grid md:grid-cols-1 gap-6">
+                    <COGSBreakdownChart
+                      directMaterial={cogsResult.directMaterial}
+                      directLabor={cogsResult.directLabor}
+                      manufacturingOverhead={cogsResult.manufacturingOverhead}
+                      darkMode={darkMode}
+                      height={300}
+                    />
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -5760,6 +6350,32 @@ export default function InputPage() {
               <p className="text-lg leading-relaxed">
                 ✓ Income Statement calculated successfully
               </p>
+
+              {/* Charts for Income Statement */}
+              {showCharts && (
+                <div className="mt-8">
+                  <div className="flex justify-between items-center mb-4">
+                    <h4 className={`text-lg font-semibold ${headingColor}`}>Income Statement Visualization</h4>
+                    <button
+                      onClick={() => setShowCharts(!showCharts)}
+                      className={`text-sm ${darkMode ? 'text-blue-400' : 'text-blue-600'} hover:underline`}
+                    >
+                      Hide Charts
+                    </button>
+                  </div>
+                  <div className="grid md:grid-cols-1 gap-6">
+                    <IncomeWaterfallChart
+                      salesRevenue={incomeStatementResult.salesRevenue}
+                      cogs={incomeStatementResult.costOfGoodsSold}
+                      sgaExpenses={incomeStatementResult.sellingAdminExpenses}
+                      interestExpense={incomeStatementResult.interestExpense}
+                      taxes={incomeStatementResult.incomeTax}
+                      darkMode={darkMode}
+                      height={350}
+                    />
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -6010,6 +6626,30 @@ export default function InputPage() {
               <p className="text-lg leading-relaxed">
                 ✓ Cash Flow Statement calculated successfully
               </p>
+
+              {/* Charts for Cash Flow Statement */}
+              {showCharts && (
+                <div className="mt-8">
+                  <div className="flex justify-between items-center mb-4">
+                    <h4 className={`text-lg font-semibold ${headingColor}`}>Cash Flow Visualization</h4>
+                    <button
+                      onClick={() => setShowCharts(!showCharts)}
+                      className={`text-sm ${darkMode ? 'text-blue-400' : 'text-blue-600'} hover:underline`}
+                    >
+                      Hide Charts
+                    </button>
+                  </div>
+                  <div className="grid md:grid-cols-1 gap-6">
+                    <CashFlowActivitiesChart
+                      operating={cashFlowResult.netCashFromOperating}
+                      investing={cashFlowResult.netCashFromInvesting}
+                      financing={cashFlowResult.netCashFromFinancing}
+                      darkMode={darkMode}
+                      height={300}
+                    />
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -6248,6 +6888,37 @@ export default function InputPage() {
               <p className="text-lg leading-relaxed">
                 ✓ Balance Sheet calculated successfully
               </p>
+
+              {/* Charts for Balance Sheet */}
+              {showCharts && (
+                <div className="mt-8">
+                  <div className="flex justify-between items-center mb-4">
+                    <h4 className={`text-lg font-semibold ${headingColor}`}>Balance Sheet Visualization</h4>
+                    <button
+                      onClick={() => setShowCharts(!showCharts)}
+                      className={`text-sm ${darkMode ? 'text-blue-400' : 'text-blue-600'} hover:underline`}
+                    >
+                      Hide Charts
+                    </button>
+                  </div>
+                  <div className="grid md:grid-cols-1 gap-6">
+                    <BalanceSheetChart
+                      assets={{
+                        current: balanceSheetResult.totalCurrentAssets,
+                        fixed: balanceSheetResult.netFixedAssets,
+                        other: balanceSheetResult.otherAssets,
+                      }}
+                      liabilities={{
+                        current: balanceSheetResult.totalCurrentLiabilities,
+                        longTerm: balanceSheetResult.longTermDebt,
+                      }}
+                      equity={balanceSheetResult.totalEquity}
+                      darkMode={darkMode}
+                      height={350}
+                    />
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>

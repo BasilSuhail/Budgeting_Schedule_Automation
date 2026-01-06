@@ -176,11 +176,23 @@ Creating master budgets manually in Excel is tedious and error-prone. You spend 
 │  ▸ Sales Forecast          │  ▸ Automatic Integration   │  ▸ 13 Schedules  │
 │  ▸ Cost Drivers            │  ▸ Real-time Updates       │  ▸ CSV Export    │
 │  ▸ Inventory Policies      │  ▸ Validation Checks       │  ▸ Ratio Analysis│
-│  ▸ Collection Patterns     │  ▸ Error Detection         │  ▸ Trend Charts  │
-│  ▸ Payment Terms           │  ▸ Cross-Schedule Links    │  ▸ KPI Dashboard │
+│  ▸ Collection Patterns     │  ▸ Error Detection         │  ▸ Interactive   │
+│  ▸ Payment Terms           │  ▸ Cross-Schedule Links    │    Charts        │
+│  ▸ Prior Balances          │  ▸ Financial Ratios        │  ▸ KPI Dashboard │
 │                            │                            │                  │
 └────────────────────────────┴────────────────────────────┴──────────────────┘
 ```
+
+### Visualization Features
+
+| Chart Type | Schedules | Purpose |
+|------------|-----------|---------|
+| **Area/Line Charts** | 1-6 | Cost trends over quarters |
+| **Bar Charts** | 2, 7-9 | Production vs sales, cash flow |
+| **Pie Charts** | 5-6 | Expense breakdowns |
+| **Waterfall Chart** | 11 | Revenue to net income flow |
+| **Stacked Bar** | 13 | Balance sheet structure |
+| **KPI Cards** | Dashboard | Executive summary metrics |
 
 ### Schedule Details
 
@@ -350,11 +362,11 @@ Creating master budgets manually in Excel is tedious and error-prone. You spend 
 ├─────────────────────────────────────────────────────────────────────────────┤
 │                                                                             │
 │   ┌─────────────┐    ┌─────────────┐    ┌─────────────┐    ┌────────────┐  │
-│   │   Next.js   │    │ TypeScript  │    │  Tailwind   │    │   GitHub   │  │
-│   │     15      │    │      5      │    │     CSS     │    │   Pages    │  │
+│   │   Next.js   │    │ TypeScript  │    │  Tailwind   │    │  Recharts  │  │
+│   │     15      │    │      5      │    │     CSS     │    │            │  │
 │   │             │    │             │    │             │    │            │  │
-│   │  Framework  │    │ Type-Safe   │    │  Styling    │    │  Hosting   │  │
-│   │  & Routing  │    │ Calculations│    │  & Theming  │    │  & CI/CD   │  │
+│   │  Framework  │    │ Type-Safe   │    │  Styling    │    │   Charts   │  │
+│   │  & Routing  │    │ Calculations│    │  & Theming  │    │   & Viz    │  │
 │   └─────────────┘    └─────────────┘    └─────────────┘    └────────────┘  │
 │                                                                             │
 ├─────────────────────────────────────────────────────────────────────────────┤
@@ -362,8 +374,8 @@ Creating master budgets manually in Excel is tedious and error-prone. You spend 
 │   KEY FEATURES:                                                             │
 │   • Static site generation (no server required)                             │
 │   • Client-side calculations (privacy-first)                                │
-│   • Zero external dependencies for core logic                               │
-│   • Automatic deployments on push                                           │
+│   • Interactive data visualizations                                         │
+│   • Automatic deployments on push (GitHub Pages)                            │
 │                                                                             │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
@@ -377,8 +389,15 @@ budget-app/
 ├── src/
 │   ├── app/
 │   │   ├── page.tsx              # Landing page
-│   │   └── input/
-│   │       └── page.tsx          # Main budget input interface
+│   │   ├── input/
+│   │   │   └── page.tsx          # Main budget input interface
+│   │   └── dashboard/
+│   │       └── page.tsx          # Executive dashboard with KPIs
+│   │
+│   ├── components/
+│   │   └── charts/
+│   │       ├── index.ts          # Chart exports
+│   │       └── BudgetCharts.tsx  # Recharts visualizations
 │   │
 │   └── lib/
 │       ├── calculations/
@@ -519,16 +538,25 @@ The master budget is the primary planning document used by manufacturing compani
 - [x] Dark mode support
 - [x] Input validation
 - [x] Financial ratio analysis
+- [x] Dashboard visualization (executive overview with KPIs)
+- [x] Interactive charts (Recharts - all 13 schedules)
+- [x] Example data loader (ABC Manufacturing demo)
 
 ### Future Enhancements
+
+#### Phase 1: Quick Wins
+- [ ] Save/load projects (localStorage + JSON export/import)
+- [ ] PDF export (professional reports with charts)
+- [ ] What-if analysis tool (sliders + real-time updates)
+
+#### Phase 2: Core Analysis
 - [ ] Scenario modeling (best/base/worst cases)
-- [ ] Sensitivity analysis
-- [ ] Budget vs actual variance tracking
-- [ ] Dashboard visualization
-- [ ] What-if analysis tool
-- [ ] PDF export
-- [ ] Multi-product support
-- [ ] Multi-year forecasting
+- [ ] Sensitivity analysis (tornado charts, key driver identification)
+- [ ] Budget vs actual variance tracking (import actuals, variance reports)
+
+#### Phase 3: Advanced Features
+- [ ] Multi-product support (multiple SKUs, product mix analysis)
+- [ ] Multi-year forecasting (3-5 year projections, NPV/IRR)
 
 ---
 
