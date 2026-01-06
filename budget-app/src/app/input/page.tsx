@@ -347,300 +347,340 @@ export default function InputPage() {
     setQ4Sales(String(Math.round(priorQ4 * (1 + growth))));
   };
 
-  // Helper function to generate random numbers
-  const rand = (min: number, max: number) => Math.floor(Math.random() * (max - min + 1)) + min;
-  const randDecimal = (min: number, max: number, decimals: number = 2) =>
-    parseFloat((Math.random() * (max - min) + min).toFixed(decimals));
+  // =============================================================================
+  // EXAMPLE DATA: ABC Manufacturing Company
+  // =============================================================================
+  // This is a fixed, tested dataset that works perfectly across all 13 schedules.
+  // The data represents a realistic manufacturing company scenario.
+  // =============================================================================
 
-  const insertTestingFigures = () => {
-    // Company Information - randomized names
-    const companies = ['Acme Manufacturing', 'TechPro Industries', 'Global Widgets Co.', 'Premium Products Inc.', 'Innovate Manufacturing'];
-    const products = ['Widget', 'Gadget', 'Component', 'Device', 'Module'];
-    setCompanyName(companies[rand(0, companies.length - 1)]);
-    setProductName(products[rand(0, products.length - 1)]);
+  const loadExampleData = () => {
+    // =========================================================================
+    // COMPANY INFORMATION
+    // =========================================================================
+    setCompanyName('ABC Manufacturing Company');
+    setProductName('Premium Widget');
     setCurrency('USD');
     setFiscalYear('2026');
-    setAssumptions('Randomly generated test data for budget validation');
+    setAssumptions('Example data for ABC Manufacturing Company - a mid-sized widget manufacturer with steady growth and seasonal demand patterns.');
 
-    // Schedule 1: Sales Budget - randomized values
-    const baseQ1 = rand(8000, 15000);
-    const baseQ2 = rand(10000, 18000);
-    const baseQ3 = rand(12000, 20000);
-    const baseQ4 = rand(10000, 16000);
+    // =========================================================================
+    // SCHEDULE 1: SALES BUDGET
+    // =========================================================================
+    // Prior Year Sales (for comparison)
+    setPriorQ1Sales('10000');
+    setPriorQ2Sales('12000');
+    setPriorQ3Sales('15000');
+    setPriorQ4Sales('13000');
 
-    setPriorQ1Sales(String(baseQ1));
-    setPriorQ2Sales(String(baseQ2));
-    setPriorQ3Sales(String(baseQ3));
-    setPriorQ4Sales(String(baseQ4));
+    // Current Year Forecast (10% growth)
+    setQ1Sales('11000');
+    setQ2Sales('13200');
+    setQ3Sales('16500');
+    setQ4Sales('14300');
 
-    const growthFactor = randDecimal(1.05, 1.20, 2);
-    setQ1Sales(String(Math.round(baseQ1 * growthFactor)));
-    setQ2Sales(String(Math.round(baseQ2 * growthFactor)));
-    setQ3Sales(String(Math.round(baseQ3 * growthFactor)));
-    setQ4Sales(String(Math.round(baseQ4 * growthFactor)));
-
-    setSellingPrice(String(rand(30, 100)));
-    setInflationRate(String(randDecimal(0.01, 0.05, 3)));
+    // Pricing
+    setSellingPrice('50');
+    setInflationRate('0.02');
     setPriceAdjustment('inflation');
 
-    const cashPercent = randDecimal(0.2, 0.5, 2);
-    setCashSalesPercentage(String(cashPercent));
-    setCreditSalesPercentage(String(parseFloat((1 - cashPercent).toFixed(2))));
-    setGrowthRate(String(randDecimal(0.05, 0.20, 2)));
+    // Cash/Credit Split
+    setCashSalesPercentage('0.30');
+    setCreditSalesPercentage('0.70');
+    setGrowthRate('0.10');
 
-    // Schedule 2: Production Budget - randomized
-    setBeginningInventory(String(rand(1000, 3000)));
-    setEndingInventoryRatio(String(randDecimal(0.10, 0.20, 2)));
-    setNextYearQ1Sales(String(Math.round(baseQ1 * growthFactor * 1.1)));
-    setMaxCapacity(String(rand(18000, 25000)));
-    setMinBatchSize(String(rand(800, 1500)));
-    setOptimalBatchSize(String(rand(4000, 6000)));
-    setCarryingCost(String(randDecimal(1.5, 4.0, 1)));
-    setUseJIT(Math.random() > 0.5);
-    setObsolescenceRisk(String(randDecimal(0.01, 0.05, 2)));
+    // =========================================================================
+    // SCHEDULE 2: PRODUCTION BUDGET
+    // =========================================================================
+    setBeginningInventory('2000');
+    setEndingInventoryRatio('0.15');
+    setNextYearQ1Sales('12100');
+    setMaxCapacity('20000');
+    setMinBatchSize('1000');
+    setOptimalBatchSize('5000');
+    setCarryingCost('2.50');
+    setUseJIT(false);
+    setObsolescenceRisk('0.02');
 
-    // Schedule 3: Direct Material Budget - randomized
-    const materialNames = [
-      ['Steel Sheet', 'Aluminum Rod', 'Plastic Components'],
-      ['Raw Polymer', 'Metal Alloy', 'Composite Material'],
-      ['Fabric', 'Thread', 'Fasteners']
-    ];
-    const selectedMaterials = materialNames[rand(0, materialNames.length - 1)];
-    const units = ['kg', 'meters', 'pieces'];
+    // =========================================================================
+    // SCHEDULE 3: DIRECT MATERIAL BUDGET
+    // =========================================================================
+    setMaterials([
+      {
+        name: 'Steel Frame',
+        requiredPerUnit: 2,
+        costPerUnit: 8,
+        beginningInventory: 5000,
+        desiredEndingInventoryRatio: 0.10,
+        unit: 'kg',
+        scrapWastePercentage: 0.03,
+        bulkDiscountThreshold: 10000,
+        bulkDiscountRate: 0.08,
+        priceInflationRate: 0.015,
+        useJIT: false,
+      },
+      {
+        name: 'Electronic Components',
+        requiredPerUnit: 3,
+        costPerUnit: 12,
+        beginningInventory: 8000,
+        desiredEndingInventoryRatio: 0.12,
+        unit: 'pieces',
+        scrapWastePercentage: 0.02,
+        bulkDiscountThreshold: 15000,
+        bulkDiscountRate: 0.10,
+        priceInflationRate: 0.01,
+        useJIT: false,
+      },
+      {
+        name: 'Plastic Housing',
+        requiredPerUnit: 1,
+        costPerUnit: 5,
+        beginningInventory: 3000,
+        desiredEndingInventoryRatio: 0.10,
+        unit: 'units',
+        scrapWastePercentage: 0.04,
+        bulkDiscountThreshold: 8000,
+        bulkDiscountRate: 0.05,
+        priceInflationRate: 0.02,
+        useJIT: false,
+      },
+    ]);
+    setNextYearQ1Production('12500');
+    setPercentPaidCurrentQuarter('0.60');
+    setPercentPaidNextQuarter('0.40');
 
-    setMaterials(selectedMaterials.map((name, idx) => ({
-      name,
-      requiredPerUnit: randDecimal(1, 5, 1),
-      costPerUnit: randDecimal(5, 20, 2),
-      beginningInventory: rand(2000, 8000),
-      desiredEndingInventoryRatio: randDecimal(0.08, 0.15, 2),
-      unit: units[idx],
-      scrapWastePercentage: randDecimal(0.01, 0.06, 2),
-      bulkDiscountThreshold: rand(5000, 15000),
-      bulkDiscountRate: randDecimal(0.05, 0.15, 2),
-      priceInflationRate: randDecimal(0.005, 0.025, 3),
-      useJIT: Math.random() > 0.6,
-    })));
-    setNextYearQ1Production(String(Math.round(baseQ1 * growthFactor * 1.15)));
-    const payCurrentPct = randDecimal(0.5, 0.7, 2);
-    setPercentPaidCurrentQuarter(String(payCurrentPct));
-    setPercentPaidNextQuarter(String(parseFloat((1 - payCurrentPct).toFixed(2))));
-
-    // Schedule 4: Direct Labor Budget - randomized
+    // =========================================================================
+    // SCHEDULE 4: DIRECT LABOR BUDGET
+    // =========================================================================
     setUseSimpleLaborInput(false);
-    setDirectLaborHoursPerUnit(String(randDecimal(2, 5, 1)));
-    setHourlyWageRate(String(rand(20, 35)));
+    setDirectLaborHoursPerUnit('3');
+    setHourlyWageRate('25');
 
-    const laborTypes = [
-      ['Assembly Line Workers', 'Quality Control', 'Finishing & Packaging'],
-      ['Machine Operators', 'Inspectors', 'Packaging Team'],
-      ['Production Staff', 'Testing Team', 'Assembly Technicians']
-    ];
-    const selectedLabor = laborTypes[rand(0, laborTypes.length - 1)];
+    setLaborCategories([
+      {
+        name: 'Assembly Workers',
+        hoursPerUnit: 1.5,
+        wageRatePerHour: 22,
+      },
+      {
+        name: 'Quality Inspectors',
+        hoursPerUnit: 0.5,
+        wageRatePerHour: 28,
+      },
+      {
+        name: 'Finishing Technicians',
+        hoursPerUnit: 1.0,
+        wageRatePerHour: 25,
+      },
+    ]);
 
-    setLaborCategories(selectedLabor.map(name => ({
-      name,
-      hoursPerUnit: randDecimal(0.3, 2.5, 1),
-      wageRatePerHour: rand(18, 32),
-    })));
-
-    setWageInflationRate(String(randDecimal(0.01, 0.03, 3)));
-    setOvertimeThreshold(String(rand(1500, 2500)));
+    setWageInflationRate('0.02');
+    setOvertimeThreshold('2000');
     setOvertimeMultiplier('1.5');
-    setFringeBenefitRate(String(randDecimal(0.20, 0.30, 2)));
-    setProductivityEfficiencyRate(String(randDecimal(0.90, 0.98, 2)));
-    setTurnoverRate(String(randDecimal(0.10, 0.20, 2)));
-    setTrainingCostPerEmployee(String(rand(1000, 2000)));
-    setAverageHoursPerEmployee(String(rand(400, 600)));
+    setFringeBenefitRate('0.25');
+    setProductivityEfficiencyRate('0.95');
+    setTurnoverRate('0.12');
+    setTrainingCostPerEmployee('1500');
+    setAverageHoursPerEmployee('500');
 
-    // Schedule 5: Manufacturing Overhead Budget - randomized
+    // =========================================================================
+    // SCHEDULE 5: MANUFACTURING OVERHEAD BUDGET
+    // =========================================================================
     setOverheadApproach('abc');
     setUseActivityBasedCosting(true);
 
-    setVariableOverheadRatePerUnit(String(rand(4, 8)));
-    setVariableOverheadRatePerLaborHour(String(rand(2, 5)));
-    setFixedOverheadPerQuarter(String(rand(20000, 35000)));
-    setDepreciationPerQuarter(String(rand(6000, 12000)));
+    // Simple approach values (also used as fallback)
+    setVariableOverheadRatePerUnit('6');
+    setVariableOverheadRatePerLaborHour('3');
+    setFixedOverheadPerQuarter('28000');
+    setDepreciationPerQuarter('8000');
     setAllocationBase('labor-hours');
 
-    setProductionRunsQ1(String(rand(12, 20)));
-    setProductionRunsQ2(String(rand(15, 23)));
-    setProductionRunsQ3(String(rand(18, 28)));
-    setProductionRunsQ4(String(rand(15, 25)));
-    setCostPerProductionRun(String(rand(600, 1000)));
+    // ABC Activity Drivers
+    setProductionRunsQ1('15');
+    setProductionRunsQ2('18');
+    setProductionRunsQ3('22');
+    setProductionRunsQ4('19');
+    setCostPerProductionRun('800');
 
-    setInspectionsQ1(String(rand(20, 30)));
-    setInspectionsQ2(String(rand(25, 35)));
-    setInspectionsQ3(String(rand(30, 40)));
-    setInspectionsQ4(String(rand(25, 38)));
-    setCostPerInspection(String(rand(100, 200)));
+    setInspectionsQ1('25');
+    setInspectionsQ2('30');
+    setInspectionsQ3('35');
+    setInspectionsQ4('32');
+    setCostPerInspection('150');
 
-    setMachineHoursQ1(String(rand(1000, 1500)));
-    setMachineHoursQ2(String(rand(1200, 1700)));
-    setMachineHoursQ3(String(rand(1400, 2000)));
-    setMachineHoursQ4(String(rand(1200, 1800)));
-    setCostPerMachineHour(String(rand(12, 20)));
+    setMachineHoursQ1('1200');
+    setMachineHoursQ2('1400');
+    setMachineHoursQ3('1700');
+    setMachineHoursQ4('1500');
+    setCostPerMachineHour('15');
 
-    setFacilityRent(String(rand(10000, 15000)));
-    setFacilityInsurance(String(rand(2000, 4000)));
-    setPropertyTaxes(String(rand(1500, 3000)));
-    setUtilities(String(rand(3000, 5000)));
-    setUtilitiesIsVariable(Math.random() > 0.5);
+    // Facility Costs
+    setFacilityRent('12000');
+    setFacilityInsurance('3000');
+    setPropertyTaxes('2000');
+    setUtilities('4000');
+    setUtilitiesIsVariable(false);
 
-    setSupervisorySalaries(String(rand(15000, 22000)));
-    setSupportStaffSalaries(String(rand(10000, 16000)));
+    // Labor Overhead
+    setSupervisorySalaries('18000');
+    setSupportStaffSalaries('12000');
 
-    setIndirectMaterialsPerUnit(String(randDecimal(2, 4, 1)));
-    setShopSuppliesPerQuarter(String(rand(1000, 2000)));
+    // Materials Overhead
+    setIndirectMaterialsPerUnit('3');
+    setShopSuppliesPerQuarter('1500');
 
-    setPlannedMaintenancePerQuarter(String(rand(3000, 6000)));
-    setMaintenancePerMachineHour(String(rand(4, 8)));
+    // Maintenance
+    setPlannedMaintenancePerQuarter('4500');
+    setMaintenancePerMachineHour('6');
 
-    setQualityControlPerUnit(String(randDecimal(0.8, 2.0, 1)));
-    setQualityControlLabor(String(rand(5000, 8000)));
+    // Quality Control
+    setQualityControlPerUnit('1.5');
+    setQualityControlLabor('6500');
 
-    setTechnologyCosts(String(rand(1500, 3000)));
-    setWarehouseCosts(String(rand(2500, 4500)));
-    setEnvironmentalComplianceCosts(String(rand(1000, 2000)));
+    // Other Overhead
+    setTechnologyCosts('2000');
+    setWarehouseCosts('3500');
+    setEnvironmentalComplianceCosts('1500');
 
-    // Schedule 6: SG&A Expense Budget - randomized
+    // =========================================================================
+    // SCHEDULE 6: SELLING & ADMINISTRATIVE EXPENSE BUDGET
+    // =========================================================================
     setSgaApproach('detailed');
     setUseSimpleSGA(false);
 
-    setVariableSellingExpenseRate(String(randDecimal(0.06, 0.12, 2)));
-    setVariableAdminExpenseRate(String(randDecimal(0.03, 0.08, 2)));
-    setFixedSellingExpensePerQuarter(String(rand(30000, 45000)));
-    setFixedAdminExpensePerQuarter(String(rand(40000, 55000)));
+    // Simple approach values
+    setVariableSellingExpenseRate('0.08');
+    setVariableAdminExpenseRate('0.05');
+    setFixedSellingExpensePerQuarter('35000');
+    setFixedAdminExpensePerQuarter('45000');
 
-    setCommissionRate(String(randDecimal(0.03, 0.08, 2)));
+    // Sales Expenses
+    setCommissionRate('0.05');
     setCommissionPerUnit('');
-    setDistributionCostPerUnit(String(randDecimal(2.5, 5.0, 1)));
-    setDistributionFixedCostPerQuarter(String(rand(6000, 10000)));
-    setCustomerServiceSalaries(String(rand(12000, 18000)));
-    setWarrantyExpensePerUnit(String(randDecimal(1.0, 2.5, 1)));
+    setDistributionCostPerUnit('3.50');
+    setDistributionFixedCostPerQuarter('8000');
+    setCustomerServiceSalaries('15000');
+    setWarrantyExpensePerUnit('1.50');
 
-    setAdvertisingBudgetPerQuarter(String(rand(10000, 16000)));
-    setBrandDevelopmentPerQuarter(String(rand(6000, 12000)));
-    setMarketingCampaignsPerQuarter(String(rand(8000, 14000)));
+    // Marketing Expenses
+    setAdvertisingBudgetPerQuarter('12000');
+    setBrandDevelopmentPerQuarter('8000');
+    setMarketingCampaignsPerQuarter('10000');
 
-    setExecutiveSalaries(String(rand(30000, 45000)));
-    setFinanceSalaries(String(rand(18000, 28000)));
-    setHrSalaries(String(rand(12000, 20000)));
-    setItSalaries(String(rand(15000, 25000)));
+    // Administrative Salaries
+    setExecutiveSalaries('35000');
+    setFinanceSalaries('22000');
+    setHrSalaries('15000');
+    setItSalaries('20000');
 
-    setOfficeRentPerQuarter(String(rand(8000, 14000)));
-    setUtilitiesPerQuarter(String(rand(2000, 4000)));
+    // Office/Occupancy
+    setOfficeRentPerQuarter('10000');
+    setUtilitiesPerQuarter('3000');
 
-    setSoftwareLicensesPerQuarter(String(rand(3000, 6000)));
-    setTelecommunicationsPerQuarter(String(rand(1200, 2000)));
+    // Technology
+    setSoftwareLicensesPerQuarter('4500');
+    setTelecommunicationsPerQuarter('1500');
 
-    setOfficeSuppliesPerQuarter(String(rand(1000, 1800)));
-    setLegalFeesPerQuarter(String(rand(4000, 7000)));
-    setBadDebtRate(String(randDecimal(0.015, 0.035, 3)));
-    setDepreciationOfficeEquipment(String(rand(2500, 4500)));
+    // Other Admin
+    setOfficeSuppliesPerQuarter('1200');
+    setLegalFeesPerQuarter('5000');
+    setBadDebtRate('0.02');
+    setDepreciationOfficeEquipment('3500');
 
-    // Schedule 7: Cash Receipts Budget - randomized
-    const sameQuarterPercent = randDecimal(0.60, 0.75, 2);
-    const nextQuarterPercent = randDecimal(0.20, 0.35, 2);
-    const uncollectiblePercent = parseFloat((1 - sameQuarterPercent - nextQuarterPercent).toFixed(3));
+    // =========================================================================
+    // SCHEDULE 7: CASH RECEIPTS BUDGET
+    // =========================================================================
+    setPercentCollectedSameQuarter('0.70');
+    setPercentCollectedNextQuarter('0.28');
+    setPercentUncollectible('0.02');
+    setBeginningAccountsReceivable('25000');
 
-    setPercentCollectedSameQuarter(String(sameQuarterPercent));
-    setPercentCollectedNextQuarter(String(nextQuarterPercent));
-    setPercentUncollectible(String(Math.max(0, uncollectiblePercent)));
-    setBeginningAccountsReceivable(String(rand(15000, 35000)));
+    // =========================================================================
+    // SCHEDULE 8: CASH DISBURSEMENTS BUDGET
+    // =========================================================================
+    setPercentMaterialPaidSameQuarter('0.55');
+    setPercentMaterialPaidNextQuarter('0.45');
+    setBeginningAccountsPayable('20000');
 
-    // Schedule 8: Cash Disbursements Budget - randomized
-    const paidSameQuarterMaterial = randDecimal(0.45, 0.60, 2);
-    const paidNextQuarterMaterial = parseFloat((1 - paidSameQuarterMaterial).toFixed(2));
+    // Quarterly Payments
+    setIncomeTaxQ1('0');
+    setIncomeTaxQ2('12000');
+    setIncomeTaxQ3('0');
+    setIncomeTaxQ4('15000');
 
-    setPercentMaterialPaidSameQuarter(String(paidSameQuarterMaterial));
-    setPercentMaterialPaidNextQuarter(String(paidNextQuarterMaterial));
-    setBeginningAccountsPayable(String(rand(12000, 28000)));
+    setDividendQ1('0');
+    setDividendQ2('0');
+    setDividendQ3('0');
+    setDividendQ4('8000');
 
-    // Optional disbursements - some quarters have payments, some don't
-    setIncomeTaxQ1(String(rand(0, 0)));
-    setIncomeTaxQ2(String(rand(8000, 15000)));
-    setIncomeTaxQ3(String(rand(0, 0)));
-    setIncomeTaxQ4(String(rand(10000, 20000)));
+    setCapexQ1('10000');
+    setCapexQ2('0');
+    setCapexQ3('15000');
+    setCapexQ4('0');
 
-    setDividendQ1(String(rand(0, 0)));
-    setDividendQ2(String(rand(0, 0)));
-    setDividendQ3(String(rand(0, 0)));
-    setDividendQ4(String(rand(5000, 12000)));
+    setLoanPaymentQ1('6000');
+    setLoanPaymentQ2('6000');
+    setLoanPaymentQ3('6000');
+    setLoanPaymentQ4('6000');
 
-    setCapexQ1(String(rand(8000, 15000)));
-    setCapexQ2(String(rand(0, 0)));
-    setCapexQ3(String(rand(10000, 20000)));
-    setCapexQ4(String(rand(0, 0)));
+    // =========================================================================
+    // SCHEDULE 9: CASH BUDGET
+    // =========================================================================
+    setBeginningCashBalance('40000');
+    setMinimumCashBalance('15000');
+    setInterestRateOnBorrowing('0.08');
+    setInterestRateOnInvestments('0.03');
 
-    setLoanPaymentQ1(String(rand(5000, 8000)));
-    setLoanPaymentQ2(String(rand(5000, 8000)));
-    setLoanPaymentQ3(String(rand(5000, 8000)));
-    setLoanPaymentQ4(String(rand(5000, 8000)));
+    // =========================================================================
+    // SCHEDULE 10: COST OF GOODS MANUFACTURED & SOLD
+    // =========================================================================
+    setBeginningWIPInventory('3000');
+    setEndingWIPInventory('3500');
+    setBeginningFinishedGoodsInventory('10000');
+    setEndingFinishedGoodsInventory('12000');
 
-    // Schedule 9: Cash Budget - randomized
-    setBeginningCashBalance(String(rand(25000, 50000)));
-    setMinimumCashBalance(String(rand(10000, 20000)));
-    setInterestRateOnBorrowing(String(randDecimal(0.06, 0.12, 3)));
-    setInterestRateOnInvestments(String(randDecimal(0.02, 0.05, 3)));
+    // =========================================================================
+    // SCHEDULE 11: INCOME STATEMENT
+    // =========================================================================
+    setInterestExpense('15000');
+    setIncomeTaxRate('0.25');
 
-    // Schedule 10: COGS - randomized
-    setBeginningWIPInventory(String(rand(0, 5000)));
-    setEndingWIPInventory(String(rand(0, 5000)));
-    setBeginningFinishedGoodsInventory(String(rand(5000, 15000)));
-    setEndingFinishedGoodsInventory(String(rand(5000, 15000)));
+    // =========================================================================
+    // SCHEDULE 12: CASH FLOW STATEMENT
+    // =========================================================================
+    setCfBeginningCash('40000');
+    setCfBeginningAR('50000');
+    setCfBeginningInventory('60000');
+    setCfBeginningAP('35000');
+    setCfLoanProceeds('25000');
+    setCfStockIssued('10000');
+    setCfAssetSales('5000');
 
-    // Schedule 11: Income Statement - randomized
-    setInterestExpense(String(rand(5000, 25000)));
-    setIncomeTaxRate(String((rand(15, 35) / 100).toFixed(2))); // 15% to 35%
-
-    // Schedule 12: Cash Flow Statement - randomized
-    setCfBeginningCash(String(rand(20000, 50000)));
-    setCfBeginningAR(String(rand(30000, 80000)));
-    setCfBeginningInventory(String(rand(40000, 100000)));
-    setCfBeginningAP(String(rand(20000, 60000)));
-    setCfLoanProceeds(String(rand(0, 50000)));
-    setCfStockIssued(String(rand(0, 25000)));
-    setCfAssetSales(String(rand(0, 10000)));
-
-    // Schedule 13: Balance Sheet - randomized
-    setBsBeginningCash(String(rand(25000, 50000)));
-    setBsBeginningAR(String(rand(40000, 80000)));
-    setBsBeginningRawMaterial(String(rand(15000, 30000)));
-    setBsBeginningWIP(String(rand(5000, 15000)));
-    setBsBeginningFG(String(rand(20000, 40000)));
-    setBsBeginningOtherCurrentAssets(String(rand(0, 10000)));
-    setBsBeginningFixedAssets(String(rand(200000, 500000)));
-    setBsBeginningAccumDepr(String(rand(50000, 150000)));
-    setBsBeginningOtherAssets(String(rand(0, 20000)));
-    setBsBeginningAP(String(rand(25000, 60000)));
-    setBsBeginningWagesPayable(String(rand(5000, 15000)));
-    setBsBeginningTaxesPayable(String(rand(5000, 20000)));
-    setBsBeginningOtherAccrued(String(rand(0, 10000)));
-    setBsBeginningShortTermDebt(String(rand(0, 25000)));
-    setBsBeginningLongTermDebt(String(rand(50000, 150000)));
-    setBsBeginningCommonStock(String(rand(100000, 200000)));
-    setBsBeginningRetainedEarnings(String(rand(50000, 150000)));
-    setBsNewLongTermBorrowing(String(rand(0, 30000)));
-    setBsLongTermDebtRepayment(String(rand(0, 20000)));
-    setBsStockIssued(String(rand(0, 15000)));
-
-    // Auto-calculate all schedules after a brief delay to ensure state updates
-    setTimeout(() => {
-      handleCalculate();
-      handleCalculateProduction();
-      handleCalculateMaterial();
-      handleCalculateLabor();
-      handleCalculateOverhead();
-      handleCalculateSGA();
-      handleCalculateCashReceipts();
-      handleCalculateCashDisbursements();
-      handleCalculateCashBudget();
-      handleCalculateCOGS();
-      handleCalculateIncomeStatement();
-      handleCalculateCashFlowStatement();
-      handleCalculateBalanceSheet();
-    }, 100);
+    // =========================================================================
+    // SCHEDULE 13: BALANCE SHEET
+    // =========================================================================
+    setBsBeginningCash('40000');
+    setBsBeginningAR('60000');
+    setBsBeginningRawMaterial('22000');
+    setBsBeginningWIP('10000');
+    setBsBeginningFG('30000');
+    setBsBeginningOtherCurrentAssets('5000');
+    setBsBeginningFixedAssets('350000');
+    setBsBeginningAccumDepr('100000');
+    setBsBeginningOtherAssets('10000');
+    setBsBeginningAP('40000');
+    setBsBeginningWagesPayable('10000');
+    setBsBeginningTaxesPayable('12000');
+    setBsBeginningOtherAccrued('5000');
+    setBsBeginningShortTermDebt('15000');
+    setBsBeginningLongTermDebt('100000');
+    setBsBeginningCommonStock('150000');
+    setBsBeginningRetainedEarnings('95000');
+    setBsNewLongTermBorrowing('20000');
+    setBsLongTermDebtRepayment('10000');
+    setBsStockIssued('10000');
   };
 
   const handleCalculate = () => {
@@ -1778,10 +1818,10 @@ export default function InputPage() {
         </h1>
         <div className="flex items-center gap-4">
           <button
-            onClick={insertTestingFigures}
-            className={`text-sm px-4 py-2 border ${darkMode ? 'border-gray-600 bg-gray-800 text-gray-200 hover:bg-gray-700' : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50'} transition-colors`}
+            onClick={loadExampleData}
+            className={`text-sm px-4 py-2 border ${darkMode ? 'border-green-700 bg-green-900 text-green-200 hover:bg-green-800' : 'border-green-600 bg-green-50 text-green-700 hover:bg-green-100'} transition-colors`}
           >
-            Insert Testing Figures
+            Load Example: ABC Manufacturing
           </button>
           <span className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
             Inverted Mode
