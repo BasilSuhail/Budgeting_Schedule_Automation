@@ -8,8 +8,14 @@ import { calculateDirectMaterialBudget, validateDirectMaterialBudgetInputs, form
 import { calculateDirectLaborBudget, validateDirectLaborBudgetInputs, formatDirectLaborBudgetForDisplay } from '@/lib/calculations/04-directLaborBudget';
 import { calculateManufacturingOverheadBudget, validateManufacturingOverheadInputs, formatManufacturingOverheadBudgetForDisplay } from '@/lib/calculations/05-manufacturingOverheadBudget';
 import { calculateSellingAdminExpenseBudget, validateSellingAdminExpenseInputs, formatSellingAdminExpenseBudgetForDisplay } from '@/lib/calculations/06-sellingAdminExpenseBudget';
-import { calculateCashReceiptsBudget, formatCashReceiptsOutput, exportCashReceiptsToCSV } from '@/lib/calculations/08-cashReceiptsBudget';
-import type { SalesBudgetInputs, ProductionBudgetInputs, DirectMaterialBudgetInputs, DirectLabourBudgetInputs, ManufacturingOverheadInputs, SellingAdminExpenseInputs, CashReceiptsInputs, CashReceiptsOutput, MaterialType, LaborCategory, OverheadCostCategory, SalesPersonnelCategory, DistributionChannel, DepartmentBudget } from '@/lib/types/budgets';
+import { calculateCashReceiptsBudget, formatCashReceiptsOutput, exportCashReceiptsToCSV } from '@/lib/calculations/07-cashReceiptsBudget';
+import { calculateCashDisbursementsBudget, formatCashDisbursementsOutput, exportCashDisbursementsToCSV } from '@/lib/calculations/08-cashDisbursementsBudget';
+import { calculateCashBudget, formatCashBudgetOutput, exportCashBudgetToCSV } from '@/lib/calculations/09-cashBudget';
+import { calculateCOGS, formatCOGSOutput, exportCOGSToCSV } from '@/lib/calculations/10-cogsSchedule';
+import { calculateIncomeStatement, formatIncomeStatementOutput, exportIncomeStatementToCSV } from '@/lib/calculations/11-incomeStatement';
+import { calculateCashFlowStatement, formatCashFlowStatementOutput, formatIndirectMethodReconciliation, formatQualityMetrics, exportCashFlowStatementToCSV } from '@/lib/calculations/12-cashFlowStatement';
+import { calculateBalanceSheet, formatBalanceSheetOutput, formatFinancialRatios, exportBalanceSheetToCSV } from '@/lib/calculations/13-balanceSheet';
+import type { SalesBudgetInputs, ProductionBudgetInputs, DirectMaterialBudgetInputs, DirectLabourBudgetInputs, ManufacturingOverheadInputs, SellingAdminExpenseInputs, CashReceiptsInputs, CashReceiptsOutput, CashDisbursementInputs, CashDisbursementOutput, CashBudgetInputs, CashBudgetOutput, COGSInputs, COGSOutput, IncomeStatementInputs, IncomeStatementOutput, CashFlowStatementInputs, CashFlowStatementOutput, BalanceSheetInputs, BalanceSheetOutput, MaterialType, LaborCategory, OverheadCostCategory, SalesPersonnelCategory, DistributionChannel, DepartmentBudget } from '@/lib/types/budgets';
 
 export default function InputPage() {
   const [darkMode, setDarkMode] = useState(false);
@@ -221,7 +227,7 @@ export default function InputPage() {
   const [sgaResult, setSgaResult] = useState<any>(null);
   const [sgaErrors, setSgaErrors] = useState<string[]>([]);
 
-  // Schedule 8: Cash Receipts Budget state
+  // Schedule 7: Cash Receipts Budget state
   const [percentCollectedSameQuarter, setPercentCollectedSameQuarter] = useState('');
   const [percentCollectedNextQuarter, setPercentCollectedNextQuarter] = useState('');
   const [percentUncollectible, setPercentUncollectible] = useState('');
@@ -229,6 +235,92 @@ export default function InputPage() {
   const [cashReceiptsResult, setCashReceiptsResult] = useState<CashReceiptsOutput | null>(null);
   const [cashReceiptsErrors, setCashReceiptsErrors] = useState<string[]>([]);
   const [cashReceiptsWarnings, setCashReceiptsWarnings] = useState<string[]>([]);
+
+  // Schedule 8: Cash Disbursements Budget state
+  const [percentMaterialPaidSameQuarter, setPercentMaterialPaidSameQuarter] = useState('');
+  const [percentMaterialPaidNextQuarter, setPercentMaterialPaidNextQuarter] = useState('');
+  const [beginningAccountsPayable, setBeginningAccountsPayable] = useState('');
+  const [incomeTaxQ1, setIncomeTaxQ1] = useState('');
+  const [incomeTaxQ2, setIncomeTaxQ2] = useState('');
+  const [incomeTaxQ3, setIncomeTaxQ3] = useState('');
+  const [incomeTaxQ4, setIncomeTaxQ4] = useState('');
+  const [dividendQ1, setDividendQ1] = useState('');
+  const [dividendQ2, setDividendQ2] = useState('');
+  const [dividendQ3, setDividendQ3] = useState('');
+  const [dividendQ4, setDividendQ4] = useState('');
+  const [capexQ1, setCapexQ1] = useState('');
+  const [capexQ2, setCapexQ2] = useState('');
+  const [capexQ3, setCapexQ3] = useState('');
+  const [capexQ4, setCapexQ4] = useState('');
+  const [loanPaymentQ1, setLoanPaymentQ1] = useState('');
+  const [loanPaymentQ2, setLoanPaymentQ2] = useState('');
+  const [loanPaymentQ3, setLoanPaymentQ3] = useState('');
+  const [loanPaymentQ4, setLoanPaymentQ4] = useState('');
+  const [cashDisbursementsResult, setCashDisbursementsResult] = useState<CashDisbursementOutput | null>(null);
+  const [cashDisbursementsErrors, setCashDisbursementsErrors] = useState<string[]>([]);
+  const [cashDisbursementsWarnings, setCashDisbursementsWarnings] = useState<string[]>([]);
+
+  // Schedule 9: Cash Budget state
+  const [beginningCashBalance, setBeginningCashBalance] = useState('');
+  const [minimumCashBalance, setMinimumCashBalance] = useState('');
+  const [interestRateOnBorrowing, setInterestRateOnBorrowing] = useState('');
+  const [interestRateOnInvestments, setInterestRateOnInvestments] = useState('');
+  const [cashBudgetResult, setCashBudgetResult] = useState<CashBudgetOutput | null>(null);
+  const [cashBudgetErrors, setCashBudgetErrors] = useState<string[]>([]);
+  const [cashBudgetWarnings, setCashBudgetWarnings] = useState<string[]>([]);
+
+  // Schedule 10: COGS state
+  const [beginningWIPInventory, setBeginningWIPInventory] = useState('');
+  const [endingWIPInventory, setEndingWIPInventory] = useState('');
+  const [beginningFinishedGoodsInventory, setBeginningFinishedGoodsInventory] = useState('');
+  const [endingFinishedGoodsInventory, setEndingFinishedGoodsInventory] = useState('');
+  const [cogsResult, setCogsResult] = useState<COGSOutput | null>(null);
+  const [cogsErrors, setCogsErrors] = useState<string[]>([]);
+  const [cogsWarnings, setCogsWarnings] = useState<string[]>([]);
+
+  // Schedule 11: Income Statement state
+  const [interestExpense, setInterestExpense] = useState('');
+  const [incomeTaxRate, setIncomeTaxRate] = useState('');
+  const [incomeStatementResult, setIncomeStatementResult] = useState<IncomeStatementOutput | null>(null);
+  const [incomeStatementErrors, setIncomeStatementErrors] = useState<string[]>([]);
+  const [incomeStatementWarnings, setIncomeStatementWarnings] = useState<string[]>([]);
+
+  // Schedule 12: Cash Flow Statement state
+  const [cfBeginningCash, setCfBeginningCash] = useState('');
+  const [cfBeginningAR, setCfBeginningAR] = useState('');
+  const [cfBeginningInventory, setCfBeginningInventory] = useState('');
+  const [cfBeginningAP, setCfBeginningAP] = useState('');
+  const [cfLoanProceeds, setCfLoanProceeds] = useState('');
+  const [cfStockIssued, setCfStockIssued] = useState('');
+  const [cfAssetSales, setCfAssetSales] = useState('');
+  const [cashFlowResult, setCashFlowResult] = useState<CashFlowStatementOutput | null>(null);
+  const [cashFlowErrors, setCashFlowErrors] = useState<string[]>([]);
+  const [cashFlowWarnings, setCashFlowWarnings] = useState<string[]>([]);
+
+  // Schedule 13: Balance Sheet state
+  const [bsBeginningCash, setBsBeginningCash] = useState('');
+  const [bsBeginningAR, setBsBeginningAR] = useState('');
+  const [bsBeginningRawMaterial, setBsBeginningRawMaterial] = useState('');
+  const [bsBeginningWIP, setBsBeginningWIP] = useState('');
+  const [bsBeginningFG, setBsBeginningFG] = useState('');
+  const [bsBeginningOtherCurrentAssets, setBsBeginningOtherCurrentAssets] = useState('');
+  const [bsBeginningFixedAssets, setBsBeginningFixedAssets] = useState('');
+  const [bsBeginningAccumDepr, setBsBeginningAccumDepr] = useState('');
+  const [bsBeginningOtherAssets, setBsBeginningOtherAssets] = useState('');
+  const [bsBeginningAP, setBsBeginningAP] = useState('');
+  const [bsBeginningWagesPayable, setBsBeginningWagesPayable] = useState('');
+  const [bsBeginningTaxesPayable, setBsBeginningTaxesPayable] = useState('');
+  const [bsBeginningOtherAccrued, setBsBeginningOtherAccrued] = useState('');
+  const [bsBeginningShortTermDebt, setBsBeginningShortTermDebt] = useState('');
+  const [bsBeginningLongTermDebt, setBsBeginningLongTermDebt] = useState('');
+  const [bsBeginningCommonStock, setBsBeginningCommonStock] = useState('');
+  const [bsBeginningRetainedEarnings, setBsBeginningRetainedEarnings] = useState('');
+  const [bsNewLongTermBorrowing, setBsNewLongTermBorrowing] = useState('');
+  const [bsLongTermDebtRepayment, setBsLongTermDebtRepayment] = useState('');
+  const [bsStockIssued, setBsStockIssued] = useState('');
+  const [balanceSheetResult, setBalanceSheetResult] = useState<BalanceSheetOutput | null>(null);
+  const [balanceSheetErrors, setBalanceSheetErrors] = useState<string[]>([]);
+  const [balanceSheetWarnings, setBalanceSheetWarnings] = useState<string[]>([]);
 
   // Save preferences to localStorage when they change
   const toggleDarkMode = () => {
@@ -447,7 +539,7 @@ export default function InputPage() {
     setBadDebtRate(String(randDecimal(0.015, 0.035, 3)));
     setDepreciationOfficeEquipment(String(rand(2500, 4500)));
 
-    // Schedule 8: Cash Receipts Budget - randomized
+    // Schedule 7: Cash Receipts Budget - randomized
     const sameQuarterPercent = randDecimal(0.60, 0.75, 2);
     const nextQuarterPercent = randDecimal(0.20, 0.35, 2);
     const uncollectiblePercent = parseFloat((1 - sameQuarterPercent - nextQuarterPercent).toFixed(3));
@@ -456,6 +548,82 @@ export default function InputPage() {
     setPercentCollectedNextQuarter(String(nextQuarterPercent));
     setPercentUncollectible(String(Math.max(0, uncollectiblePercent)));
     setBeginningAccountsReceivable(String(rand(15000, 35000)));
+
+    // Schedule 8: Cash Disbursements Budget - randomized
+    const paidSameQuarterMaterial = randDecimal(0.45, 0.60, 2);
+    const paidNextQuarterMaterial = parseFloat((1 - paidSameQuarterMaterial).toFixed(2));
+
+    setPercentMaterialPaidSameQuarter(String(paidSameQuarterMaterial));
+    setPercentMaterialPaidNextQuarter(String(paidNextQuarterMaterial));
+    setBeginningAccountsPayable(String(rand(12000, 28000)));
+
+    // Optional disbursements - some quarters have payments, some don't
+    setIncomeTaxQ1(String(rand(0, 0)));
+    setIncomeTaxQ2(String(rand(8000, 15000)));
+    setIncomeTaxQ3(String(rand(0, 0)));
+    setIncomeTaxQ4(String(rand(10000, 20000)));
+
+    setDividendQ1(String(rand(0, 0)));
+    setDividendQ2(String(rand(0, 0)));
+    setDividendQ3(String(rand(0, 0)));
+    setDividendQ4(String(rand(5000, 12000)));
+
+    setCapexQ1(String(rand(8000, 15000)));
+    setCapexQ2(String(rand(0, 0)));
+    setCapexQ3(String(rand(10000, 20000)));
+    setCapexQ4(String(rand(0, 0)));
+
+    setLoanPaymentQ1(String(rand(5000, 8000)));
+    setLoanPaymentQ2(String(rand(5000, 8000)));
+    setLoanPaymentQ3(String(rand(5000, 8000)));
+    setLoanPaymentQ4(String(rand(5000, 8000)));
+
+    // Schedule 9: Cash Budget - randomized
+    setBeginningCashBalance(String(rand(25000, 50000)));
+    setMinimumCashBalance(String(rand(10000, 20000)));
+    setInterestRateOnBorrowing(String(randDecimal(0.06, 0.12, 3)));
+    setInterestRateOnInvestments(String(randDecimal(0.02, 0.05, 3)));
+
+    // Schedule 10: COGS - randomized
+    setBeginningWIPInventory(String(rand(0, 5000)));
+    setEndingWIPInventory(String(rand(0, 5000)));
+    setBeginningFinishedGoodsInventory(String(rand(5000, 15000)));
+    setEndingFinishedGoodsInventory(String(rand(5000, 15000)));
+
+    // Schedule 11: Income Statement - randomized
+    setInterestExpense(String(rand(5000, 25000)));
+    setIncomeTaxRate(String((rand(15, 35) / 100).toFixed(2))); // 15% to 35%
+
+    // Schedule 12: Cash Flow Statement - randomized
+    setCfBeginningCash(String(rand(20000, 50000)));
+    setCfBeginningAR(String(rand(30000, 80000)));
+    setCfBeginningInventory(String(rand(40000, 100000)));
+    setCfBeginningAP(String(rand(20000, 60000)));
+    setCfLoanProceeds(String(rand(0, 50000)));
+    setCfStockIssued(String(rand(0, 25000)));
+    setCfAssetSales(String(rand(0, 10000)));
+
+    // Schedule 13: Balance Sheet - randomized
+    setBsBeginningCash(String(rand(25000, 50000)));
+    setBsBeginningAR(String(rand(40000, 80000)));
+    setBsBeginningRawMaterial(String(rand(15000, 30000)));
+    setBsBeginningWIP(String(rand(5000, 15000)));
+    setBsBeginningFG(String(rand(20000, 40000)));
+    setBsBeginningOtherCurrentAssets(String(rand(0, 10000)));
+    setBsBeginningFixedAssets(String(rand(200000, 500000)));
+    setBsBeginningAccumDepr(String(rand(50000, 150000)));
+    setBsBeginningOtherAssets(String(rand(0, 20000)));
+    setBsBeginningAP(String(rand(25000, 60000)));
+    setBsBeginningWagesPayable(String(rand(5000, 15000)));
+    setBsBeginningTaxesPayable(String(rand(5000, 20000)));
+    setBsBeginningOtherAccrued(String(rand(0, 10000)));
+    setBsBeginningShortTermDebt(String(rand(0, 25000)));
+    setBsBeginningLongTermDebt(String(rand(50000, 150000)));
+    setBsBeginningCommonStock(String(rand(100000, 200000)));
+    setBsBeginningRetainedEarnings(String(rand(50000, 150000)));
+    setBsNewLongTermBorrowing(String(rand(0, 30000)));
+    setBsLongTermDebtRepayment(String(rand(0, 20000)));
+    setBsStockIssued(String(rand(0, 15000)));
 
     // Auto-calculate all schedules after a brief delay to ensure state updates
     setTimeout(() => {
@@ -466,6 +634,12 @@ export default function InputPage() {
       handleCalculateOverhead();
       handleCalculateSGA();
       handleCalculateCashReceipts();
+      handleCalculateCashDisbursements();
+      handleCalculateCashBudget();
+      handleCalculateCOGS();
+      handleCalculateIncomeStatement();
+      handleCalculateCashFlowStatement();
+      handleCalculateBalanceSheet();
     }, 100);
   };
 
@@ -1189,6 +1363,396 @@ export default function InputPage() {
     const url = URL.createObjectURL(blob);
     link.setAttribute('href', url);
     link.setAttribute('download', `cash-receipts-budget-${companyName.replace(/\s+/g, '-').toLowerCase() || 'export'}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const handleCalculateCashDisbursements = () => {
+    const inputs: CashDisbursementInputs = {
+      percentMaterialPaidSameQuarter: parseFloat(percentMaterialPaidSameQuarter) || undefined,
+      percentMaterialPaidNextQuarter: parseFloat(percentMaterialPaidNextQuarter) || undefined,
+      beginningAccountsPayable: parseFloat(beginningAccountsPayable) || undefined,
+      incomeTaxPayments: {
+        q1: parseFloat(incomeTaxQ1) || 0,
+        q2: parseFloat(incomeTaxQ2) || 0,
+        q3: parseFloat(incomeTaxQ3) || 0,
+        q4: parseFloat(incomeTaxQ4) || 0,
+        yearly: 0,
+      },
+      dividendPayments: {
+        q1: parseFloat(dividendQ1) || 0,
+        q2: parseFloat(dividendQ2) || 0,
+        q3: parseFloat(dividendQ3) || 0,
+        q4: parseFloat(dividendQ4) || 0,
+        yearly: 0,
+      },
+      capitalExpenditures: {
+        q1: parseFloat(capexQ1) || 0,
+        q2: parseFloat(capexQ2) || 0,
+        q3: parseFloat(capexQ3) || 0,
+        q4: parseFloat(capexQ4) || 0,
+        yearly: 0,
+      },
+      loanPayments: {
+        q1: parseFloat(loanPaymentQ1) || 0,
+        q2: parseFloat(loanPaymentQ2) || 0,
+        q3: parseFloat(loanPaymentQ3) || 0,
+        q4: parseFloat(loanPaymentQ4) || 0,
+        yearly: 0,
+      },
+    };
+
+    const { output, validation } = calculateCashDisbursementsBudget(
+      materialResult,
+      laborResult,
+      overheadResult,
+      sgaResult,
+      inputs
+    );
+
+    setCashDisbursementsResult(output);
+    setCashDisbursementsErrors(validation.errors);
+    setCashDisbursementsWarnings(validation.warnings);
+  };
+
+  const downloadCashDisbursementsCSV = () => {
+    if (!cashDisbursementsResult) return;
+
+    const csvContent = exportCashDisbursementsToCSV(
+      cashDisbursementsResult,
+      companyName || 'Your Company',
+      productName || 'Product',
+      fiscalYear
+    );
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `cash-disbursements-budget-${companyName.replace(/\s+/g, '-').toLowerCase() || 'export'}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const handleCalculateCashBudget = () => {
+    if (!cashReceiptsResult) {
+      alert('Please calculate Cash Receipts Budget first (Schedule 7)');
+      return;
+    }
+
+    if (!cashDisbursementsResult) {
+      alert('Please calculate Cash Disbursements Budget first (Schedule 8)');
+      return;
+    }
+
+    const inputs: CashBudgetInputs = {
+      beginningCashBalance: parseFloat(beginningCashBalance) || 0,
+      minimumCashBalance: parseFloat(minimumCashBalance) || 0,
+      interestRateOnBorrowing: interestRateOnBorrowing ? parseFloat(interestRateOnBorrowing) : undefined,
+      interestRateOnInvestments: interestRateOnInvestments ? parseFloat(interestRateOnInvestments) : undefined,
+    };
+
+    const { output, validation } = calculateCashBudget(
+      cashReceiptsResult,
+      cashDisbursementsResult,
+      inputs
+    );
+
+    setCashBudgetResult(output);
+    setCashBudgetErrors(validation.errors);
+    setCashBudgetWarnings(validation.warnings);
+  };
+
+  const downloadCashBudgetCSV = () => {
+    if (!cashBudgetResult) return;
+
+    const csvContent = exportCashBudgetToCSV(
+      cashBudgetResult,
+      companyName || 'Your Company',
+      productName || 'Product',
+      fiscalYear
+    );
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `cash-budget-${companyName.replace(/\s+/g, '-').toLowerCase() || 'export'}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const handleCalculateCOGS = () => {
+    if (!materialResult) {
+      alert('Please calculate Direct Materials Budget first (Schedule 3)');
+      return;
+    }
+
+    if (!laborResult) {
+      alert('Please calculate Direct Labor Budget first (Schedule 4)');
+      return;
+    }
+
+    if (!overheadResult) {
+      alert('Please calculate Manufacturing Overhead Budget first (Schedule 5)');
+      return;
+    }
+
+    if (!productionResult) {
+      alert('Please calculate Production Budget first (Schedule 2)');
+      return;
+    }
+
+    const inputs: COGSInputs = {
+      beginningWIPInventory: parseFloat(beginningWIPInventory) || 0,
+      endingWIPInventory: parseFloat(endingWIPInventory) || 0,
+      beginningFinishedGoodsInventory: parseFloat(beginningFinishedGoodsInventory) || 0,
+      endingFinishedGoodsInventory: parseFloat(endingFinishedGoodsInventory) || 0,
+    };
+
+    const { output, validation } = calculateCOGS(
+      materialResult,
+      laborResult,
+      overheadResult,
+      productionResult,
+      inputs
+    );
+
+    setCogsResult(output);
+    setCogsErrors(validation.errors);
+    setCogsWarnings(validation.warnings);
+  };
+
+  const downloadCOGSCSV = () => {
+    if (!cogsResult) return;
+
+    const csvContent = exportCOGSToCSV(
+      cogsResult,
+      companyName || 'Your Company',
+      productName || 'Product',
+      fiscalYear
+    );
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `cogs-schedule-${companyName.replace(/\s+/g, '-').toLowerCase() || 'export'}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const handleCalculateIncomeStatement = () => {
+    if (!result) {
+      alert('Please calculate Sales Budget first (Schedule 1)');
+      return;
+    }
+
+    if (!cogsResult) {
+      alert('Please calculate Cost of Goods Sold first (Schedule 10)');
+      return;
+    }
+
+    if (!sgaResult) {
+      alert('Please calculate Selling & Administrative Expenses first (Schedule 6)');
+      return;
+    }
+
+    const inputs: IncomeStatementInputs = {
+      interestExpense: parseFloat(interestExpense) || 0,
+      incomeTaxRate: parseFloat(incomeTaxRate) || 0,
+    };
+
+    const { output, validation } = calculateIncomeStatement(
+      result,
+      cogsResult,
+      sgaResult,
+      inputs
+    );
+
+    setIncomeStatementResult(output);
+    setIncomeStatementErrors(validation.errors);
+    setIncomeStatementWarnings(validation.warnings);
+  };
+
+  const downloadIncomeStatementCSV = () => {
+    if (!incomeStatementResult) return;
+
+    const csvContent = exportIncomeStatementToCSV(
+      incomeStatementResult,
+      companyName || 'Your Company',
+      fiscalYear
+    );
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `income-statement-${companyName.replace(/\s+/g, '-').toLowerCase() || 'export'}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const handleCalculateCashFlowStatement = () => {
+    if (!incomeStatementResult) {
+      alert('Please calculate Income Statement first (Schedule 11)');
+      return;
+    }
+
+    if (!cashReceiptsResult) {
+      alert('Please calculate Cash Receipts Budget first (Schedule 7)');
+      return;
+    }
+
+    if (!cashDisbursementsResult) {
+      alert('Please calculate Cash Disbursements Budget first (Schedule 8)');
+      return;
+    }
+
+    if (!overheadResult) {
+      alert('Please calculate Manufacturing Overhead Budget first (Schedule 5)');
+      return;
+    }
+
+    const inputs: CashFlowStatementInputs = {
+      beginningCash: parseFloat(cfBeginningCash) || 0,
+      beginningAccountsReceivable: parseFloat(cfBeginningAR) || 0,
+      beginningInventory: parseFloat(cfBeginningInventory) || 0,
+      beginningAccountsPayable: parseFloat(cfBeginningAP) || 0,
+      loanProceeds: parseFloat(cfLoanProceeds) || 0,
+      stockIssued: parseFloat(cfStockIssued) || 0,
+      proceedsFromAssetSales: parseFloat(cfAssetSales) || 0,
+    };
+
+    const { output, validation } = calculateCashFlowStatement(
+      incomeStatementResult,
+      cashReceiptsResult,
+      cashDisbursementsResult,
+      overheadResult,
+      result,  // salesData
+      cogsResult,  // cogsData
+      inputs
+    );
+
+    setCashFlowResult(output);
+    setCashFlowErrors(validation.errors);
+    setCashFlowWarnings(validation.warnings);
+  };
+
+  const downloadCashFlowStatementCSV = () => {
+    if (!cashFlowResult) return;
+
+    const csvContent = exportCashFlowStatementToCSV(
+      cashFlowResult,
+      companyName || 'Your Company',
+      fiscalYear
+    );
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `cash-flow-statement-${companyName.replace(/\s+/g, '-').toLowerCase() || 'export'}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const handleCalculateBalanceSheet = () => {
+    if (!incomeStatementResult) {
+      alert('Please calculate Income Statement first (Schedule 11)');
+      return;
+    }
+
+    if (!cashBudgetResult) {
+      alert('Please calculate Cash Budget first (Schedule 9)');
+      return;
+    }
+
+    if (!cashReceiptsResult) {
+      alert('Please calculate Cash Receipts Budget first (Schedule 7)');
+      return;
+    }
+
+    if (!cashDisbursementsResult) {
+      alert('Please calculate Cash Disbursements Budget first (Schedule 8)');
+      return;
+    }
+
+    if (!cogsResult) {
+      alert('Please calculate COGS first (Schedule 10)');
+      return;
+    }
+
+    if (!overheadResult) {
+      alert('Please calculate Manufacturing Overhead Budget first (Schedule 5)');
+      return;
+    }
+
+    const inputs: BalanceSheetInputs = {
+      beginningCash: parseFloat(bsBeginningCash) || 0,
+      beginningAccountsReceivable: parseFloat(bsBeginningAR) || 0,
+      beginningRawMaterialInventory: parseFloat(bsBeginningRawMaterial) || 0,
+      beginningWIPInventory: parseFloat(bsBeginningWIP) || 0,
+      beginningFinishedGoodsInventory: parseFloat(bsBeginningFG) || 0,
+      beginningOtherCurrentAssets: parseFloat(bsBeginningOtherCurrentAssets) || 0,
+      beginningFixedAssets: parseFloat(bsBeginningFixedAssets) || 0,
+      beginningAccumulatedDepreciation: parseFloat(bsBeginningAccumDepr) || 0,
+      beginningOtherAssets: parseFloat(bsBeginningOtherAssets) || 0,
+      beginningAccountsPayable: parseFloat(bsBeginningAP) || 0,
+      beginningWagesPayable: parseFloat(bsBeginningWagesPayable) || 0,
+      beginningTaxesPayable: parseFloat(bsBeginningTaxesPayable) || 0,
+      beginningOtherAccruedExpenses: parseFloat(bsBeginningOtherAccrued) || 0,
+      beginningShortTermDebt: parseFloat(bsBeginningShortTermDebt) || 0,
+      beginningLongTermDebt: parseFloat(bsBeginningLongTermDebt) || 0,
+      beginningCommonStock: parseFloat(bsBeginningCommonStock) || 0,
+      beginningRetainedEarnings: parseFloat(bsBeginningRetainedEarnings) || 0,
+      newLongTermBorrowing: parseFloat(bsNewLongTermBorrowing) || 0,
+      longTermDebtRepayment: parseFloat(bsLongTermDebtRepayment) || 0,
+      stockIssued: parseFloat(bsStockIssued) || 0,
+    };
+
+    const { output, validation } = calculateBalanceSheet(
+      incomeStatementResult,
+      cashBudgetResult,
+      cashReceiptsResult,
+      cashDisbursementsResult,
+      cogsResult,
+      overheadResult,
+      result, // salesData
+      inputs
+    );
+
+    setBalanceSheetResult(output);
+    setBalanceSheetErrors(validation.errors);
+    setBalanceSheetWarnings(validation.warnings);
+  };
+
+  const downloadBalanceSheetCSV = () => {
+    if (!balanceSheetResult) return;
+
+    const csvContent = exportBalanceSheetToCSV(
+      balanceSheetResult,
+      companyName || 'Your Company',
+      fiscalYear
+    );
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `balance-sheet-${companyName.replace(/\s+/g, '-').toLowerCase() || 'export'}.csv`);
     link.style.visibility = 'hidden';
     document.body.appendChild(link);
     link.click();
@@ -4118,11 +4682,11 @@ export default function InputPage() {
         <hr className={`my-12 ${hrColor}`} />
 
         {/* ============================================ */}
-        {/* SCHEDULE 8: CASH RECEIPTS BUDGET */}
+        {/* SCHEDULE 7: CASH RECEIPTS BUDGET */}
         {/* ============================================ */}
 
         <h2 className={`text-4xl font-bold mb-4 ${headingColor}`}>
-          Schedule 8: Cash Receipts Budget
+          Schedule 7: Cash Receipts Budget
         </h2>
         <p className="text-lg mb-8 leading-relaxed">
           The Cash Receipts Budget calculates when cash is actually collected from sales, bridging the gap between accrual accounting (sales revenue) and cash accounting (actual cash received).
@@ -4300,6 +4864,1373 @@ export default function InputPage() {
         </p>
         <p className="text-base leading-relaxed">
           <strong>Formula:</strong> Total Cash Receipts = Cash Sales + (Credit Sales × % Collected Same Quarter) + (Prior Quarter Credit Sales × % Collected Next Quarter)
+        </p>
+
+        <hr className={`my-12 ${hrColor}`} />
+
+        {/* ============================================ */}
+        {/* SCHEDULE 8: CASH DISBURSEMENTS BUDGET */}
+        {/* ============================================ */}
+
+        <h2 className={`text-4xl font-bold mb-4 ${headingColor}`}>
+          Schedule 8: Cash Disbursements Budget
+        </h2>
+        <p className="text-lg mb-8 leading-relaxed">
+          The Cash Disbursements Budget calculates when cash is actually paid out for all operating expenses, combining data from Schedules 3-6 plus additional payments like taxes, dividends, and capital expenditures.
+        </p>
+
+        {/* Cash Disbursements Inputs */}
+        <div className="mb-8">
+          <h4 className={`text-lg font-semibold mb-4 ${headingColor}`}>Material Payment Policy</h4>
+          <div className="grid md:grid-cols-3 gap-6 mb-6">
+            <div>
+              <label className={`block text-sm font-medium mb-2 ${headingColor}`}>
+                Percent Paid in Same Quarter
+              </label>
+              <input
+                type="number"
+                step="0.01"
+                value={percentMaterialPaidSameQuarter}
+                onChange={(e) => setPercentMaterialPaidSameQuarter(e.target.value)}
+                placeholder="0.50 (50%)"
+                className={`w-full px-4 py-2 border ${inputBg}`}
+              />
+              <p className="text-xs mt-1 opacity-75">e.g., 0.50 for 50% paid immediately</p>
+            </div>
+
+            <div>
+              <label className={`block text-sm font-medium mb-2 ${headingColor}`}>
+                Percent Paid in Next Quarter
+              </label>
+              <input
+                type="number"
+                step="0.01"
+                value={percentMaterialPaidNextQuarter}
+                onChange={(e) => setPercentMaterialPaidNextQuarter(e.target.value)}
+                placeholder="0.50 (50%)"
+                className={`w-full px-4 py-2 border ${inputBg}`}
+              />
+              <p className="text-xs mt-1 opacity-75">e.g., 0.50 for 50% paid next quarter</p>
+            </div>
+
+            <div>
+              <label className={`block text-sm font-medium mb-2 ${headingColor}`}>
+                Beginning Accounts Payable ($)
+              </label>
+              <input
+                type="number"
+                step="0.01"
+                value={beginningAccountsPayable}
+                onChange={(e) => setBeginningAccountsPayable(e.target.value)}
+                placeholder="20000"
+                className={`w-full px-4 py-2 border ${inputBg}`}
+              />
+              <p className="text-xs mt-1 opacity-75">Outstanding payables at start of year</p>
+            </div>
+          </div>
+
+          <h4 className={`text-lg font-semibold mb-4 mt-6 ${headingColor}`}>Other Cash Disbursements (Optional)</h4>
+
+          <div className="mb-6">
+            <p className={`text-sm font-medium mb-3 ${headingColor}`}>Income Tax Payments ($)</p>
+            <div className="grid grid-cols-4 gap-4">
+              <div>
+                <label className="block text-xs mb-1 opacity-75">Q1</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={incomeTaxQ1}
+                  onChange={(e) => setIncomeTaxQ1(e.target.value)}
+                  placeholder="0"
+                  className={`w-full px-3 py-2 border text-sm ${inputBg}`}
+                />
+              </div>
+              <div>
+                <label className="block text-xs mb-1 opacity-75">Q2</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={incomeTaxQ2}
+                  onChange={(e) => setIncomeTaxQ2(e.target.value)}
+                  placeholder="0"
+                  className={`w-full px-3 py-2 border text-sm ${inputBg}`}
+                />
+              </div>
+              <div>
+                <label className="block text-xs mb-1 opacity-75">Q3</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={incomeTaxQ3}
+                  onChange={(e) => setIncomeTaxQ3(e.target.value)}
+                  placeholder="0"
+                  className={`w-full px-3 py-2 border text-sm ${inputBg}`}
+                />
+              </div>
+              <div>
+                <label className="block text-xs mb-1 opacity-75">Q4</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={incomeTaxQ4}
+                  onChange={(e) => setIncomeTaxQ4(e.target.value)}
+                  placeholder="0"
+                  className={`w-full px-3 py-2 border text-sm ${inputBg}`}
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="mb-6">
+            <p className={`text-sm font-medium mb-3 ${headingColor}`}>Dividend Payments ($)</p>
+            <div className="grid grid-cols-4 gap-4">
+              <div>
+                <label className="block text-xs mb-1 opacity-75">Q1</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={dividendQ1}
+                  onChange={(e) => setDividendQ1(e.target.value)}
+                  placeholder="0"
+                  className={`w-full px-3 py-2 border text-sm ${inputBg}`}
+                />
+              </div>
+              <div>
+                <label className="block text-xs mb-1 opacity-75">Q2</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={dividendQ2}
+                  onChange={(e) => setDividendQ2(e.target.value)}
+                  placeholder="0"
+                  className={`w-full px-3 py-2 border text-sm ${inputBg}`}
+                />
+              </div>
+              <div>
+                <label className="block text-xs mb-1 opacity-75">Q3</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={dividendQ3}
+                  onChange={(e) => setDividendQ3(e.target.value)}
+                  placeholder="0"
+                  className={`w-full px-3 py-2 border text-sm ${inputBg}`}
+                />
+              </div>
+              <div>
+                <label className="block text-xs mb-1 opacity-75">Q4</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={dividendQ4}
+                  onChange={(e) => setDividendQ4(e.target.value)}
+                  placeholder="0"
+                  className={`w-full px-3 py-2 border text-sm ${inputBg}`}
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="mb-6">
+            <p className={`text-sm font-medium mb-3 ${headingColor}`}>Capital Expenditures ($)</p>
+            <div className="grid grid-cols-4 gap-4">
+              <div>
+                <label className="block text-xs mb-1 opacity-75">Q1</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={capexQ1}
+                  onChange={(e) => setCapexQ1(e.target.value)}
+                  placeholder="0"
+                  className={`w-full px-3 py-2 border text-sm ${inputBg}`}
+                />
+              </div>
+              <div>
+                <label className="block text-xs mb-1 opacity-75">Q2</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={capexQ2}
+                  onChange={(e) => setCapexQ2(e.target.value)}
+                  placeholder="0"
+                  className={`w-full px-3 py-2 border text-sm ${inputBg}`}
+                />
+              </div>
+              <div>
+                <label className="block text-xs mb-1 opacity-75">Q3</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={capexQ3}
+                  onChange={(e) => setCapexQ3(e.target.value)}
+                  placeholder="0"
+                  className={`w-full px-3 py-2 border text-sm ${inputBg}`}
+                />
+              </div>
+              <div>
+                <label className="block text-xs mb-1 opacity-75">Q4</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={capexQ4}
+                  onChange={(e) => setCapexQ4(e.target.value)}
+                  placeholder="0"
+                  className={`w-full px-3 py-2 border text-sm ${inputBg}`}
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="mb-6">
+            <p className={`text-sm font-medium mb-3 ${headingColor}`}>Loan Payments ($)</p>
+            <div className="grid grid-cols-4 gap-4">
+              <div>
+                <label className="block text-xs mb-1 opacity-75">Q1</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={loanPaymentQ1}
+                  onChange={(e) => setLoanPaymentQ1(e.target.value)}
+                  placeholder="0"
+                  className={`w-full px-3 py-2 border text-sm ${inputBg}`}
+                />
+              </div>
+              <div>
+                <label className="block text-xs mb-1 opacity-75">Q2</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={loanPaymentQ2}
+                  onChange={(e) => setLoanPaymentQ2(e.target.value)}
+                  placeholder="0"
+                  className={`w-full px-3 py-2 border text-sm ${inputBg}`}
+                />
+              </div>
+              <div>
+                <label className="block text-xs mb-1 opacity-75">Q3</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={loanPaymentQ3}
+                  onChange={(e) => setLoanPaymentQ3(e.target.value)}
+                  placeholder="0"
+                  className={`w-full px-3 py-2 border text-sm ${inputBg}`}
+                />
+              </div>
+              <div>
+                <label className="block text-xs mb-1 opacity-75">Q4</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={loanPaymentQ4}
+                  onChange={(e) => setLoanPaymentQ4(e.target.value)}
+                  placeholder="0"
+                  className={`w-full px-3 py-2 border text-sm ${inputBg}`}
+                />
+              </div>
+            </div>
+          </div>
+
+          <button
+            onClick={handleCalculateCashDisbursements}
+            className={`${buttonBg} font-medium px-8 py-3 text-lg`}
+          >
+            Calculate Cash Disbursements
+          </button>
+        </div>
+
+        {/* Display Errors and Warnings */}
+        {cashDisbursementsErrors.length > 0 && (
+          <div className="mb-6 p-4 border border-red-500 bg-red-50 dark:bg-red-900/20">
+            <h4 className="font-semibold text-red-700 dark:text-red-400 mb-2">Errors:</h4>
+            <ul className="list-disc list-inside text-sm text-red-600 dark:text-red-300">
+              {cashDisbursementsErrors.map((err, idx) => (
+                <li key={idx}>{err}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {cashDisbursementsWarnings.length > 0 && (
+          <div className="mb-6 p-4 border border-yellow-500 bg-yellow-50 dark:bg-yellow-900/20">
+            <h4 className="font-semibold text-yellow-700 dark:text-yellow-400 mb-2">Warnings:</h4>
+            <ul className="list-disc list-inside text-sm text-yellow-600 dark:text-yellow-300">
+              {cashDisbursementsWarnings.map((warn, idx) => (
+                <li key={idx}>{warn}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {/* Cash Disbursements Results */}
+        <div>
+          <div className="flex justify-between items-center mb-6">
+            <h3 className={`text-2xl font-semibold ${headingColor}`}>Cash Disbursements Results</h3>
+            {cashDisbursementsResult && (
+              <button
+                onClick={downloadCashDisbursementsCSV}
+                className={`${buttonBg} font-medium px-6 py-2 text-sm`}
+              >
+                Download CSV
+              </button>
+            )}
+          </div>
+
+          {!cashDisbursementsResult && (
+            <p className="text-lg leading-relaxed">
+              Calculate Schedules 3-6 first, then enter cash disbursements data and click Calculate Cash Disbursements
+            </p>
+          )}
+
+          {cashDisbursementsResult && (
+            <div>
+              <p className={`text-lg mb-2 ${headingColor}`}>
+                <strong>{companyName || 'Your Company'}</strong> — {productName || 'Product'}
+              </p>
+              <p className={`text-sm mb-6 ${textColor}`}>
+                For the Year Ending December 31, {fiscalYear}
+              </p>
+
+              <div className="overflow-x-auto mb-8">
+                <table className="w-full border-collapse">
+                  <thead>
+                    <tr className={`border-b-2 ${darkMode ? 'border-gray-700' : 'border-gray-300'}`}>
+                      <th className={`py-3 px-4 text-left font-semibold text-sm ${headingColor}`}>Item</th>
+                      <th className={`py-3 px-4 text-right font-semibold text-sm ${headingColor}`}>Q1</th>
+                      <th className={`py-3 px-4 text-right font-semibold text-sm ${headingColor}`}>Q2</th>
+                      <th className={`py-3 px-4 text-right font-semibold text-sm ${headingColor}`}>Q3</th>
+                      <th className={`py-3 px-4 text-right font-semibold text-sm ${headingColor}`}>Q4</th>
+                      <th className={`py-3 px-4 text-right font-semibold text-sm ${headingColor}`}>Yearly</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {formatCashDisbursementsOutput(cashDisbursementsResult).map((row, idx) => (
+                      <tr
+                        key={idx}
+                        className={`border-b ${darkMode ? 'border-gray-800' : 'border-gray-200'}`}
+                      >
+                        <td className={`py-3 px-4 text-sm ${headingColor}`}>{row.label}</td>
+                        <td className="py-3 px-4 text-sm text-right">{row.q1}</td>
+                        <td className="py-3 px-4 text-sm text-right">{row.q2}</td>
+                        <td className="py-3 px-4 text-sm text-right">{row.q3}</td>
+                        <td className="py-3 px-4 text-sm text-right">{row.q4}</td>
+                        <td className="py-3 px-4 text-sm text-right font-medium">{row.yearly}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              <p className="text-lg leading-relaxed">
+                ✓ Cash Disbursements Budget calculated successfully
+              </p>
+            </div>
+          )}
+        </div>
+
+        <hr className={`my-12 ${hrColor}`} />
+
+        <h3 className={`text-2xl font-semibold mb-4 ${headingColor}`}>
+          About the Cash Disbursements Budget
+        </h3>
+        <p className="text-lg mb-4 leading-relaxed">
+          The Cash Disbursements Budget shows when cash is actually paid out for all business expenses. It combines operating expenses from Schedules 3-6 with additional payments like taxes, dividends, capital expenditures, and loan payments.
+        </p>
+        <p className="text-base leading-relaxed">
+          <strong>Formula:</strong> Total Disbursements = Material Payments + Labor + Overhead (cash portion) + SGA (cash portion) + Taxes + Dividends + CapEx + Loan Payments
+        </p>
+
+        <hr className={`my-12 ${hrColor}`} />
+
+        {/* ============================================ */}
+        {/* SCHEDULE 9: CASH BUDGET */}
+        {/* ============================================ */}
+
+        <h2 className={`text-4xl font-bold mb-4 ${headingColor}`}>
+          Schedule 9: Cash Budget
+        </h2>
+        <p className="text-lg mb-8 leading-relaxed">
+          The Cash Budget is the master cash planning schedule that forecasts the company's cash position and financing needs by combining cash receipts and disbursements.
+        </p>
+
+        {/* Cash Budget Inputs */}
+        <div className="mb-8">
+          <h4 className={`text-lg font-semibold mb-4 ${headingColor}`}>Cash Policy</h4>
+          <div className="grid md:grid-cols-2 gap-6 mb-6">
+            <div>
+              <label className={`block text-sm font-medium mb-2 ${headingColor}`}>
+                Beginning Cash Balance ($)
+              </label>
+              <input
+                type="number"
+                step="0.01"
+                value={beginningCashBalance}
+                onChange={(e) => setBeginningCashBalance(e.target.value)}
+                placeholder="35000"
+                className={`w-full px-4 py-2 border ${inputBg}`}
+              />
+              <p className="text-xs mt-1 opacity-75">Cash on hand at start of year</p>
+            </div>
+
+            <div>
+              <label className={`block text-sm font-medium mb-2 ${headingColor}`}>
+                Minimum Cash Balance Required ($)
+              </label>
+              <input
+                type="number"
+                step="0.01"
+                value={minimumCashBalance}
+                onChange={(e) => setMinimumCashBalance(e.target.value)}
+                placeholder="15000"
+                className={`w-full px-4 py-2 border ${inputBg}`}
+              />
+              <p className="text-xs mt-1 opacity-75">Safety cushion for operations</p>
+            </div>
+
+            <div>
+              <label className={`block text-sm font-medium mb-2 ${headingColor}`}>
+                Interest Rate on Borrowing (Optional)
+              </label>
+              <input
+                type="number"
+                step="0.001"
+                value={interestRateOnBorrowing}
+                onChange={(e) => setInterestRateOnBorrowing(e.target.value)}
+                placeholder="0.08 (8% annual)"
+                className={`w-full px-4 py-2 border ${inputBg}`}
+              />
+              <p className="text-xs mt-1 opacity-75">e.g., 0.08 for 8% annual interest</p>
+            </div>
+
+            <div>
+              <label className={`block text-sm font-medium mb-2 ${headingColor}`}>
+                Interest Rate on Investments (Optional)
+              </label>
+              <input
+                type="number"
+                step="0.001"
+                value={interestRateOnInvestments}
+                onChange={(e) => setInterestRateOnInvestments(e.target.value)}
+                placeholder="0.03 (3% annual)"
+                className={`w-full px-4 py-2 border ${inputBg}`}
+              />
+              <p className="text-xs mt-1 opacity-75">e.g., 0.03 for 3% annual return</p>
+            </div>
+          </div>
+
+          <button
+            onClick={handleCalculateCashBudget}
+            className={`${buttonBg} font-medium px-8 py-3 text-lg`}
+          >
+            Calculate Cash Budget
+          </button>
+        </div>
+
+        {/* Display Errors and Warnings */}
+        {cashBudgetErrors.length > 0 && (
+          <div className="mb-6 p-4 border border-red-500 bg-red-50 dark:bg-red-900/20">
+            <h4 className="font-semibold text-red-700 dark:text-red-400 mb-2">Errors:</h4>
+            <ul className="list-disc list-inside text-sm text-red-600 dark:text-red-300">
+              {cashBudgetErrors.map((err, idx) => (
+                <li key={idx}>{err}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {cashBudgetWarnings.length > 0 && (
+          <div className="mb-6 p-4 border border-yellow-500 bg-yellow-50 dark:bg-yellow-900/20">
+            <h4 className="font-semibold text-yellow-700 dark:text-yellow-400 mb-2">Warnings:</h4>
+            <ul className="list-disc list-inside text-sm text-yellow-600 dark:text-yellow-300">
+              {cashBudgetWarnings.map((warn, idx) => (
+                <li key={idx}>{warn}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {/* Cash Budget Results */}
+        <div>
+          <div className="flex justify-between items-center mb-6">
+            <h3 className={`text-2xl font-semibold ${headingColor}`}>Cash Budget Results</h3>
+            {cashBudgetResult && (
+              <button
+                onClick={downloadCashBudgetCSV}
+                className={`${buttonBg} font-medium px-6 py-2 text-sm`}
+              >
+                Download CSV
+              </button>
+            )}
+          </div>
+
+          {!cashBudgetResult && (
+            <p className="text-lg leading-relaxed">
+              Calculate Schedules 7 and 8 first, then enter cash budget data and click Calculate Cash Budget
+            </p>
+          )}
+
+          {cashBudgetResult && (
+            <div>
+              <p className={`text-lg mb-2 ${headingColor}`}>
+                <strong>{companyName || 'Your Company'}</strong> — {productName || 'Product'}
+              </p>
+              <p className={`text-sm mb-6 ${textColor}`}>
+                For the Year Ending December 31, {fiscalYear}
+              </p>
+
+              <div className="overflow-x-auto mb-8">
+                <table className="w-full border-collapse">
+                  <thead>
+                    <tr className={`border-b-2 ${darkMode ? 'border-gray-700' : 'border-gray-300'}`}>
+                      <th className={`py-3 px-4 text-left font-semibold text-sm ${headingColor}`}>Item</th>
+                      <th className={`py-3 px-4 text-right font-semibold text-sm ${headingColor}`}>Q1</th>
+                      <th className={`py-3 px-4 text-right font-semibold text-sm ${headingColor}`}>Q2</th>
+                      <th className={`py-3 px-4 text-right font-semibold text-sm ${headingColor}`}>Q3</th>
+                      <th className={`py-3 px-4 text-right font-semibold text-sm ${headingColor}`}>Q4</th>
+                      <th className={`py-3 px-4 text-right font-semibold text-sm ${headingColor}`}>Yearly</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {formatCashBudgetOutput(cashBudgetResult).map((row, idx) => (
+                      <tr
+                        key={idx}
+                        className={`border-b ${darkMode ? 'border-gray-800' : 'border-gray-200'}`}
+                      >
+                        <td className={`py-3 px-4 text-sm ${headingColor}`}>{row.label}</td>
+                        <td className="py-3 px-4 text-sm text-right">{row.q1}</td>
+                        <td className="py-3 px-4 text-sm text-right">{row.q2}</td>
+                        <td className="py-3 px-4 text-sm text-right">{row.q3}</td>
+                        <td className="py-3 px-4 text-sm text-right">{row.q4}</td>
+                        <td className="py-3 px-4 text-sm text-right font-medium">{row.yearly}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              <p className="text-lg leading-relaxed">
+                ✓ Cash Budget calculated successfully
+              </p>
+            </div>
+          )}
+        </div>
+
+        <hr className={`my-12 ${hrColor}`} />
+
+        <h3 className={`text-2xl font-semibold mb-4 ${headingColor}`}>
+          About the Cash Budget
+        </h3>
+        <p className="text-lg mb-4 leading-relaxed">
+          The Cash Budget is the master cash planning document that shows the company's projected cash position throughout the year. It identifies periods of cash surplus or deficit and helps plan financing needs.
+        </p>
+        <p className="text-base leading-relaxed">
+          <strong>Key Metrics:</strong> Operating Cash Flow (receipts - disbursements), Free Cash Flow (operating cash flow - capital expenditures), and Financing Requirements (borrowing needed to maintain minimum cash balance).
+        </p>
+
+        <hr className={`my-12 ${hrColor}`} />
+
+        {/* ============================================ */}
+        {/* SCHEDULE 10: COST OF GOODS MANUFACTURED & SOLD */}
+        {/* ============================================ */}
+
+        <h2 className={`text-4xl font-bold mb-4 ${headingColor}`}>
+          Schedule 10: Cost of Goods Manufactured & Sold (COGS)
+        </h2>
+        <p className="text-lg mb-8 leading-relaxed">
+          The COGS Schedule calculates the total cost of producing and selling goods by combining direct materials, direct labor, and manufacturing overhead with inventory adjustments.
+        </p>
+
+        {/* COGS Inputs */}
+        <div className="mb-8">
+          <h4 className={`text-lg font-semibold mb-4 ${headingColor}`}>Inventory Values</h4>
+          <div className="grid md:grid-cols-2 gap-6 mb-6">
+            <div>
+              <label className={`block text-sm font-medium mb-2 ${headingColor}`}>
+                Beginning Work-in-Process Inventory ($)
+              </label>
+              <input
+                type="number"
+                step="0.01"
+                value={beginningWIPInventory}
+                onChange={(e) => setBeginningWIPInventory(e.target.value)}
+                placeholder="0"
+                className={`w-full px-4 py-2 border ${inputBg}`}
+              />
+              <p className="text-xs mt-1 opacity-75">Partially completed goods at start of year</p>
+            </div>
+
+            <div>
+              <label className={`block text-sm font-medium mb-2 ${headingColor}`}>
+                Ending Work-in-Process Inventory ($)
+              </label>
+              <input
+                type="number"
+                step="0.01"
+                value={endingWIPInventory}
+                onChange={(e) => setEndingWIPInventory(e.target.value)}
+                placeholder="0"
+                className={`w-full px-4 py-2 border ${inputBg}`}
+              />
+              <p className="text-xs mt-1 opacity-75">Partially completed goods at end of year</p>
+            </div>
+
+            <div>
+              <label className={`block text-sm font-medium mb-2 ${headingColor}`}>
+                Beginning Finished Goods Inventory ($)
+              </label>
+              <input
+                type="number"
+                step="0.01"
+                value={beginningFinishedGoodsInventory}
+                onChange={(e) => setBeginningFinishedGoodsInventory(e.target.value)}
+                placeholder="10000"
+                className={`w-full px-4 py-2 border ${inputBg}`}
+              />
+              <p className="text-xs mt-1 opacity-75">Completed goods ready for sale at start of year</p>
+            </div>
+
+            <div>
+              <label className={`block text-sm font-medium mb-2 ${headingColor}`}>
+                Ending Finished Goods Inventory ($)
+              </label>
+              <input
+                type="number"
+                step="0.01"
+                value={endingFinishedGoodsInventory}
+                onChange={(e) => setEndingFinishedGoodsInventory(e.target.value)}
+                placeholder="10000"
+                className={`w-full px-4 py-2 border ${inputBg}`}
+              />
+              <p className="text-xs mt-1 opacity-75">Completed goods ready for sale at end of year</p>
+            </div>
+          </div>
+
+          <button
+            onClick={handleCalculateCOGS}
+            className={`${buttonBg} font-medium px-8 py-3 text-lg`}
+          >
+            Calculate COGS
+          </button>
+        </div>
+
+        {/* Display Errors and Warnings */}
+        {cogsErrors.length > 0 && (
+          <div className="mb-6 p-4 border border-red-500 bg-red-50 dark:bg-red-900/20">
+            <h4 className="font-semibold text-red-700 dark:text-red-400 mb-2">Errors:</h4>
+            <ul className="list-disc list-inside text-sm text-red-600 dark:text-red-300">
+              {cogsErrors.map((err, idx) => (
+                <li key={idx}>{err}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {cogsWarnings.length > 0 && (
+          <div className="mb-6 p-4 border border-yellow-500 bg-yellow-50 dark:bg-yellow-900/20">
+            <h4 className="font-semibold text-yellow-700 dark:text-yellow-400 mb-2">Warnings:</h4>
+            <ul className="list-disc list-inside text-sm text-yellow-600 dark:text-yellow-300">
+              {cogsWarnings.map((warn, idx) => (
+                <li key={idx}>{warn}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {/* COGS Results */}
+        <div>
+          <div className="flex justify-between items-center mb-6">
+            <h3 className={`text-2xl font-semibold ${headingColor}`}>COGS Results</h3>
+            {cogsResult && (
+              <button
+                onClick={downloadCOGSCSV}
+                className={`${buttonBg} font-medium px-6 py-2 text-sm`}
+              >
+                Download CSV
+              </button>
+            )}
+          </div>
+
+          {!cogsResult && (
+            <p className="text-lg leading-relaxed">
+              Calculate Schedules 2-5 first, then enter inventory data and click Calculate COGS
+            </p>
+          )}
+
+          {cogsResult && (
+            <div>
+              <p className={`text-lg mb-2 ${headingColor}`}>
+                <strong>{companyName || 'Your Company'}</strong> — {productName || 'Product'}
+              </p>
+              <p className={`text-sm mb-6 ${textColor}`}>
+                For the Year Ending December 31, {fiscalYear}
+              </p>
+
+              <div className="overflow-x-auto mb-8">
+                <table className="w-full border-collapse">
+                  <thead>
+                    <tr className={`border-b-2 ${darkMode ? 'border-gray-700' : 'border-gray-300'}`}>
+                      <th className={`py-3 px-4 text-left font-semibold text-sm ${headingColor}`}>Item</th>
+                      <th className={`py-3 px-4 text-right font-semibold text-sm ${headingColor}`}>Amount</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {formatCOGSOutput(cogsResult).map((row, idx) => (
+                      <tr
+                        key={idx}
+                        className={`border-b ${darkMode ? 'border-gray-800' : 'border-gray-200'}`}
+                      >
+                        <td className={`py-3 px-4 text-sm ${row.label.includes('TOTAL') || row.label.includes('Cost of Goods') ? 'font-semibold' : ''} ${headingColor}`}>{row.label}</td>
+                        <td className={`py-3 px-4 text-sm text-right ${row.label.includes('TOTAL') || row.label.includes('Cost of Goods') ? 'font-semibold' : ''}`}>{row.amount}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              <p className="text-lg leading-relaxed">
+                ✓ COGS Schedule calculated successfully
+              </p>
+            </div>
+          )}
+        </div>
+
+        <hr className={`my-12 ${hrColor}`} />
+
+        <h3 className={`text-2xl font-semibold mb-4 ${headingColor}`}>
+          About the COGS Schedule
+        </h3>
+        <p className="text-lg mb-4 leading-relaxed">
+          The Cost of Goods Manufactured & Sold schedule combines all manufacturing costs (materials, labor, overhead) and adjusts for inventory changes to determine the final cost of products sold during the period.
+        </p>
+        <p className="text-base leading-relaxed">
+          <strong>Key Formulas:</strong> Cost of Goods Manufactured = Beginning WIP + Total Manufacturing Cost - Ending WIP; Cost of Goods Sold = Beginning FG + COGM - Ending FG
+        </p>
+
+        {/* ============================================ */}
+        {/* SCHEDULE 11: BUDGETED INCOME STATEMENT        */}
+        {/* ============================================ */}
+
+        <div id="schedule11" className="mt-16">
+          <h2 className={`text-3xl font-bold mb-6 ${headingColor}`}>
+            Schedule 11: Budgeted Income Statement
+          </h2>
+
+          <p className="text-lg mb-6 leading-relaxed">
+            Project your company's profitability by combining sales revenue, cost of goods sold, and operating expenses into a comprehensive income statement.
+          </p>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            <div>
+              <label className={`block text-sm font-medium mb-2 ${textColor}`}>
+                Interest Expense (optional)
+              </label>
+              <input
+                type="number"
+                value={interestExpense}
+                onChange={(e) => setInterestExpense(e.target.value)}
+                placeholder="e.g., 15000"
+                className={`w-full px-4 py-2 border ${inputBg} focus:outline-none focus:ring-2 focus:ring-blue-500`}
+              />
+            </div>
+
+            <div>
+              <label className={`block text-sm font-medium mb-2 ${textColor}`}>
+                Income Tax Rate (0-1, e.g., 0.25 for 25%)
+              </label>
+              <input
+                type="number"
+                value={incomeTaxRate}
+                onChange={(e) => setIncomeTaxRate(e.target.value)}
+                placeholder="e.g., 0.25"
+                step="0.01"
+                min="0"
+                max="1"
+                className={`w-full px-4 py-2 border ${inputBg} focus:outline-none focus:ring-2 focus:ring-blue-500`}
+              />
+            </div>
+          </div>
+
+          <button
+            onClick={handleCalculateIncomeStatement}
+            className={`${buttonBg} font-medium px-8 py-3 text-lg mb-6`}
+          >
+            Calculate Income Statement
+          </button>
+
+          {incomeStatementErrors.length > 0 && (
+            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 mb-6">
+              <strong>Errors:</strong>
+              <ul className="list-disc list-inside">
+                {incomeStatementErrors.map((error, idx) => (
+                  <li key={idx}>{error}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {incomeStatementWarnings.length > 0 && (
+            <div className="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 mb-6">
+              <strong>Warnings:</strong>
+              <ul className="list-disc list-inside">
+                {incomeStatementWarnings.map((warning, idx) => (
+                  <li key={idx}>{warning}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {incomeStatementResult && (
+            <div className="space-y-6">
+              <div className="flex justify-between items-center">
+                <h3 className={`text-2xl font-semibold ${headingColor}`}>
+                  Results
+                </h3>
+                <button
+                  onClick={downloadIncomeStatementCSV}
+                  className={`${buttonBg} px-6 py-2 text-sm`}
+                >
+                  Download CSV
+                </button>
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className={`w-full border ${darkMode ? 'border-gray-700' : 'border-gray-300'}`}>
+                  <thead className={darkMode ? 'bg-gray-800' : 'bg-gray-100'}>
+                    <tr>
+                      <th className={`py-3 px-4 text-left text-sm font-semibold ${headingColor}`}>Item</th>
+                      <th className={`py-3 px-4 text-right text-sm font-semibold ${headingColor}`}>Amount</th>
+                      <th className={`py-3 px-4 text-right text-sm font-semibold ${headingColor}`}>% of Sales</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {formatIncomeStatementOutput(incomeStatementResult).map((row, idx) => (
+                      <tr
+                        key={idx}
+                        className={`border-b ${darkMode ? 'border-gray-800' : 'border-gray-200'}`}
+                      >
+                        <td className={`py-3 px-4 text-sm ${row.label.includes('TOTAL') || row.label.includes('Net Income') || row.label.includes('Gross Margin') || row.label.includes('Operating Income') ? 'font-semibold' : ''} ${headingColor}`}>{row.label}</td>
+                        <td className={`py-3 px-4 text-sm text-right ${row.label.includes('TOTAL') || row.label.includes('Net Income') || row.label.includes('Gross Margin') || row.label.includes('Operating Income') ? 'font-semibold' : ''}`}>{row.amount}</td>
+                        <td className={`py-3 px-4 text-sm text-right ${row.label.includes('TOTAL') || row.label.includes('Net Income') || row.label.includes('Gross Margin') || row.label.includes('Operating Income') ? 'font-semibold' : ''}`}>{row.percentage}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              <p className="text-lg leading-relaxed">
+                ✓ Income Statement calculated successfully
+              </p>
+            </div>
+          )}
+        </div>
+
+        <hr className={`my-12 ${hrColor}`} />
+
+        <h3 className={`text-2xl font-semibold mb-4 ${headingColor}`}>
+          About the Budgeted Income Statement
+        </h3>
+        <p className="text-lg mb-4 leading-relaxed">
+          The Budgeted Income Statement combines data from all previous schedules to project your company's profitability. It shows sales revenue, cost of goods sold, gross margin, operating expenses, and net income with percentage analysis.
+        </p>
+        <p className="text-base leading-relaxed">
+          <strong>Key Formulas:</strong> Gross Margin = Sales Revenue - COGS; Operating Income = Gross Margin - SG&A; Net Income = Operating Income - Interest - Taxes
+        </p>
+
+        {/* ============================================ */}
+        {/* SCHEDULE 12: BUDGETED STATEMENT OF CASH FLOWS */}
+        {/* ============================================ */}
+
+        <div id="schedule12" className="mt-16">
+          <h2 className={`text-3xl font-bold mb-6 ${headingColor}`}>
+            Schedule 12: Budgeted Statement of Cash Flows
+          </h2>
+
+          <p className="text-lg mb-6 leading-relaxed">
+            Reconcile net income to operating cash flow and see the complete picture of cash movements by activity (operating, investing, financing) using the direct method.
+          </p>
+
+          <h3 className={`text-xl font-semibold mb-4 ${headingColor}`}>Beginning Balances (from Prior Period)</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+            <div>
+              <label className={`block text-sm font-medium mb-2 ${textColor}`}>
+                Beginning Cash
+              </label>
+              <input
+                type="number"
+                value={cfBeginningCash}
+                onChange={(e) => setCfBeginningCash(e.target.value)}
+                placeholder="e.g., 35000"
+                className={`w-full px-4 py-2 border ${inputBg} focus:outline-none focus:ring-2 focus:ring-blue-500`}
+              />
+            </div>
+
+            <div>
+              <label className={`block text-sm font-medium mb-2 ${textColor}`}>
+                Beginning Accounts Receivable
+              </label>
+              <input
+                type="number"
+                value={cfBeginningAR}
+                onChange={(e) => setCfBeginningAR(e.target.value)}
+                placeholder="e.g., 50000"
+                className={`w-full px-4 py-2 border ${inputBg} focus:outline-none focus:ring-2 focus:ring-blue-500`}
+              />
+            </div>
+
+            <div>
+              <label className={`block text-sm font-medium mb-2 ${textColor}`}>
+                Beginning Inventory
+              </label>
+              <input
+                type="number"
+                value={cfBeginningInventory}
+                onChange={(e) => setCfBeginningInventory(e.target.value)}
+                placeholder="e.g., 60000"
+                className={`w-full px-4 py-2 border ${inputBg} focus:outline-none focus:ring-2 focus:ring-blue-500`}
+              />
+            </div>
+
+            <div>
+              <label className={`block text-sm font-medium mb-2 ${textColor}`}>
+                Beginning Accounts Payable
+              </label>
+              <input
+                type="number"
+                value={cfBeginningAP}
+                onChange={(e) => setCfBeginningAP(e.target.value)}
+                placeholder="e.g., 40000"
+                className={`w-full px-4 py-2 border ${inputBg} focus:outline-none focus:ring-2 focus:ring-blue-500`}
+              />
+            </div>
+          </div>
+
+          <h3 className={`text-xl font-semibold mb-4 ${headingColor}`}>Financing & Investing Activities (Optional)</h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+            <div>
+              <label className={`block text-sm font-medium mb-2 ${textColor}`}>
+                New Loan Proceeds
+              </label>
+              <input
+                type="number"
+                value={cfLoanProceeds}
+                onChange={(e) => setCfLoanProceeds(e.target.value)}
+                placeholder="e.g., 25000"
+                className={`w-full px-4 py-2 border ${inputBg} focus:outline-none focus:ring-2 focus:ring-blue-500`}
+              />
+            </div>
+
+            <div>
+              <label className={`block text-sm font-medium mb-2 ${textColor}`}>
+                Stock Issued
+              </label>
+              <input
+                type="number"
+                value={cfStockIssued}
+                onChange={(e) => setCfStockIssued(e.target.value)}
+                placeholder="e.g., 10000"
+                className={`w-full px-4 py-2 border ${inputBg} focus:outline-none focus:ring-2 focus:ring-blue-500`}
+              />
+            </div>
+
+            <div>
+              <label className={`block text-sm font-medium mb-2 ${textColor}`}>
+                Proceeds from Asset Sales
+              </label>
+              <input
+                type="number"
+                value={cfAssetSales}
+                onChange={(e) => setCfAssetSales(e.target.value)}
+                placeholder="e.g., 5000"
+                className={`w-full px-4 py-2 border ${inputBg} focus:outline-none focus:ring-2 focus:ring-blue-500`}
+              />
+            </div>
+          </div>
+
+          <button
+            onClick={handleCalculateCashFlowStatement}
+            className={`${buttonBg} font-medium px-8 py-3 text-lg mb-6`}
+          >
+            Calculate Cash Flow Statement
+          </button>
+
+          {cashFlowErrors.length > 0 && (
+            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 mb-6">
+              <strong>Errors:</strong>
+              <ul className="list-disc list-inside">
+                {cashFlowErrors.map((error, idx) => (
+                  <li key={idx}>{error}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {cashFlowWarnings.length > 0 && (
+            <div className="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 mb-6">
+              <strong>Warnings:</strong>
+              <ul className="list-disc list-inside">
+                {cashFlowWarnings.map((warning, idx) => (
+                  <li key={idx}>{warning}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {cashFlowResult && (
+            <div className="space-y-6">
+              <div className="flex justify-between items-center">
+                <h3 className={`text-2xl font-semibold ${headingColor}`}>
+                  Statement of Cash Flows (Direct Method)
+                </h3>
+                <button
+                  onClick={downloadCashFlowStatementCSV}
+                  className={`${buttonBg} px-6 py-2 text-sm`}
+                >
+                  Download CSV
+                </button>
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className={`w-full border ${darkMode ? 'border-gray-700' : 'border-gray-300'}`}>
+                  <thead className={darkMode ? 'bg-gray-800' : 'bg-gray-100'}>
+                    <tr>
+                      <th className={`py-3 px-4 text-left text-sm font-semibold ${headingColor}`}>Section</th>
+                      <th className={`py-3 px-4 text-left text-sm font-semibold ${headingColor}`}>Item</th>
+                      <th className={`py-3 px-4 text-right text-sm font-semibold ${headingColor}`}>Amount</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {formatCashFlowStatementOutput(cashFlowResult).map((row, idx) => (
+                      <tr
+                        key={idx}
+                        className={`border-b ${darkMode ? 'border-gray-800' : 'border-gray-200'} ${row.isTotal ? (darkMode ? 'bg-gray-800' : 'bg-gray-100') : ''}`}
+                      >
+                        <td className={`py-3 px-4 text-sm ${row.section.includes('ACTIVITIES') || row.section === 'SUMMARY' ? 'font-bold' : ''} ${headingColor}`}>{row.section.includes('ACTIVITIES') || row.section === 'SUMMARY' ? row.section : ''}</td>
+                        <td className={`py-3 px-4 text-sm ${row.isSubtotal || row.isTotal ? 'font-semibold' : ''} ${headingColor}`}>{row.label}</td>
+                        <td className={`py-3 px-4 text-sm text-right ${row.isSubtotal || row.isTotal ? 'font-semibold' : ''}`}>{row.amount}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Indirect Method Reconciliation */}
+              <h3 className={`text-xl font-semibold mt-8 mb-4 ${headingColor}`}>
+                Indirect Method Reconciliation
+              </h3>
+              <div className="overflow-x-auto">
+                <table className={`w-full border ${darkMode ? 'border-gray-700' : 'border-gray-300'}`}>
+                  <thead className={darkMode ? 'bg-gray-800' : 'bg-gray-100'}>
+                    <tr>
+                      <th className={`py-3 px-4 text-left text-sm font-semibold ${headingColor}`}>Item</th>
+                      <th className={`py-3 px-4 text-right text-sm font-semibold ${headingColor}`}>Amount</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {formatIndirectMethodReconciliation(cashFlowResult).map((row, idx) => (
+                      <tr
+                        key={idx}
+                        className={`border-b ${darkMode ? 'border-gray-800' : 'border-gray-200'} ${row.isSubtotal ? (darkMode ? 'bg-gray-800' : 'bg-gray-100') : ''}`}
+                      >
+                        <td className={`py-3 px-4 text-sm ${row.isSubtotal ? 'font-semibold' : ''} ${headingColor}`}>{row.label}</td>
+                        <td className={`py-3 px-4 text-sm text-right ${row.isSubtotal ? 'font-semibold' : ''}`}>{row.amount}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Quality Metrics */}
+              <h3 className={`text-xl font-semibold mt-8 mb-4 ${headingColor}`}>
+                Cash Flow Quality Metrics
+              </h3>
+              <div className="overflow-x-auto">
+                <table className={`w-full border ${darkMode ? 'border-gray-700' : 'border-gray-300'}`}>
+                  <thead className={darkMode ? 'bg-gray-800' : 'bg-gray-100'}>
+                    <tr>
+                      <th className={`py-3 px-4 text-left text-sm font-semibold ${headingColor}`}>Metric</th>
+                      <th className={`py-3 px-4 text-right text-sm font-semibold ${headingColor}`}>Value</th>
+                      <th className={`py-3 px-4 text-left text-sm font-semibold ${headingColor}`}>Interpretation</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {formatQualityMetrics(cashFlowResult).map((metric, idx) => (
+                      <tr
+                        key={idx}
+                        className={`border-b ${darkMode ? 'border-gray-800' : 'border-gray-200'}`}
+                      >
+                        <td className={`py-3 px-4 text-sm ${headingColor}`}>{metric.label}</td>
+                        <td className={`py-3 px-4 text-sm text-right font-medium`}>{metric.value}</td>
+                        <td className={`py-3 px-4 text-sm ${metric.interpretation.includes('Good') || metric.interpretation.includes('Positive') || metric.interpretation.includes('Sustainable') || metric.interpretation.includes('Low') || metric.interpretation.includes('Self') ? 'text-green-600' : 'text-yellow-600'}`}>{metric.interpretation}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              <p className="text-lg leading-relaxed">
+                ✓ Cash Flow Statement calculated successfully
+              </p>
+            </div>
+          )}
+        </div>
+
+        <hr className={`my-12 ${hrColor}`} />
+
+        <h3 className={`text-2xl font-semibold mb-4 ${headingColor}`}>
+          About the Cash Flow Statement
+        </h3>
+        <p className="text-lg mb-4 leading-relaxed">
+          The Budgeted Statement of Cash Flows reconciles net income to operating cash flow and shows the complete picture of cash movements. It uses the direct method for clarity, with reconciliation to the indirect method for comparison.
+        </p>
+        <p className="text-base leading-relaxed">
+          <strong>Key Sections:</strong> Operating Activities (cash from business operations), Investing Activities (capital expenditures and asset sales), Financing Activities (debt and equity transactions). Quality metrics help assess cash flow sustainability.
+        </p>
+
+        {/* ============================================ */}
+        {/* SCHEDULE 13: BUDGETED BALANCE SHEET          */}
+        {/* ============================================ */}
+
+        <div id="schedule13" className="mt-16">
+          <h2 className={`text-3xl font-bold mb-6 ${headingColor}`}>
+            Schedule 13: Budgeted Balance Sheet
+          </h2>
+
+          <p className="text-lg mb-6 leading-relaxed">
+            Project your company's financial position (assets, liabilities, equity) at the end of the budget period. Enter beginning balances from your prior period balance sheet.
+          </p>
+
+          {/* Beginning Assets */}
+          <h3 className={`text-xl font-semibold mb-4 ${headingColor}`}>Beginning Assets</h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-6">
+            <div>
+              <label className={`block text-sm font-medium mb-2 ${textColor}`}>Cash</label>
+              <input type="number" value={bsBeginningCash} onChange={(e) => setBsBeginningCash(e.target.value)} placeholder="e.g., 35000" className={`w-full px-4 py-2 border ${inputBg} focus:outline-none focus:ring-2 focus:ring-blue-500`} />
+            </div>
+            <div>
+              <label className={`block text-sm font-medium mb-2 ${textColor}`}>Accounts Receivable</label>
+              <input type="number" value={bsBeginningAR} onChange={(e) => setBsBeginningAR(e.target.value)} placeholder="e.g., 50000" className={`w-full px-4 py-2 border ${inputBg} focus:outline-none focus:ring-2 focus:ring-blue-500`} />
+            </div>
+            <div>
+              <label className={`block text-sm font-medium mb-2 ${textColor}`}>Raw Material Inventory</label>
+              <input type="number" value={bsBeginningRawMaterial} onChange={(e) => setBsBeginningRawMaterial(e.target.value)} placeholder="e.g., 20000" className={`w-full px-4 py-2 border ${inputBg} focus:outline-none focus:ring-2 focus:ring-blue-500`} />
+            </div>
+            <div>
+              <label className={`block text-sm font-medium mb-2 ${textColor}`}>WIP Inventory</label>
+              <input type="number" value={bsBeginningWIP} onChange={(e) => setBsBeginningWIP(e.target.value)} placeholder="e.g., 10000" className={`w-full px-4 py-2 border ${inputBg} focus:outline-none focus:ring-2 focus:ring-blue-500`} />
+            </div>
+            <div>
+              <label className={`block text-sm font-medium mb-2 ${textColor}`}>Finished Goods Inventory</label>
+              <input type="number" value={bsBeginningFG} onChange={(e) => setBsBeginningFG(e.target.value)} placeholder="e.g., 30000" className={`w-full px-4 py-2 border ${inputBg} focus:outline-none focus:ring-2 focus:ring-blue-500`} />
+            </div>
+            <div>
+              <label className={`block text-sm font-medium mb-2 ${textColor}`}>Other Current Assets</label>
+              <input type="number" value={bsBeginningOtherCurrentAssets} onChange={(e) => setBsBeginningOtherCurrentAssets(e.target.value)} placeholder="e.g., 5000" className={`w-full px-4 py-2 border ${inputBg} focus:outline-none focus:ring-2 focus:ring-blue-500`} />
+            </div>
+            <div>
+              <label className={`block text-sm font-medium mb-2 ${textColor}`}>Fixed Assets (PP&E)</label>
+              <input type="number" value={bsBeginningFixedAssets} onChange={(e) => setBsBeginningFixedAssets(e.target.value)} placeholder="e.g., 300000" className={`w-full px-4 py-2 border ${inputBg} focus:outline-none focus:ring-2 focus:ring-blue-500`} />
+            </div>
+            <div>
+              <label className={`block text-sm font-medium mb-2 ${textColor}`}>Accumulated Depreciation</label>
+              <input type="number" value={bsBeginningAccumDepr} onChange={(e) => setBsBeginningAccumDepr(e.target.value)} placeholder="e.g., 100000" className={`w-full px-4 py-2 border ${inputBg} focus:outline-none focus:ring-2 focus:ring-blue-500`} />
+            </div>
+            <div>
+              <label className={`block text-sm font-medium mb-2 ${textColor}`}>Other Assets</label>
+              <input type="number" value={bsBeginningOtherAssets} onChange={(e) => setBsBeginningOtherAssets(e.target.value)} placeholder="e.g., 10000" className={`w-full px-4 py-2 border ${inputBg} focus:outline-none focus:ring-2 focus:ring-blue-500`} />
+            </div>
+          </div>
+
+          {/* Beginning Liabilities */}
+          <h3 className={`text-xl font-semibold mb-4 ${headingColor}`}>Beginning Liabilities</h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-6">
+            <div>
+              <label className={`block text-sm font-medium mb-2 ${textColor}`}>Accounts Payable</label>
+              <input type="number" value={bsBeginningAP} onChange={(e) => setBsBeginningAP(e.target.value)} placeholder="e.g., 40000" className={`w-full px-4 py-2 border ${inputBg} focus:outline-none focus:ring-2 focus:ring-blue-500`} />
+            </div>
+            <div>
+              <label className={`block text-sm font-medium mb-2 ${textColor}`}>Wages Payable</label>
+              <input type="number" value={bsBeginningWagesPayable} onChange={(e) => setBsBeginningWagesPayable(e.target.value)} placeholder="e.g., 10000" className={`w-full px-4 py-2 border ${inputBg} focus:outline-none focus:ring-2 focus:ring-blue-500`} />
+            </div>
+            <div>
+              <label className={`block text-sm font-medium mb-2 ${textColor}`}>Taxes Payable</label>
+              <input type="number" value={bsBeginningTaxesPayable} onChange={(e) => setBsBeginningTaxesPayable(e.target.value)} placeholder="e.g., 15000" className={`w-full px-4 py-2 border ${inputBg} focus:outline-none focus:ring-2 focus:ring-blue-500`} />
+            </div>
+            <div>
+              <label className={`block text-sm font-medium mb-2 ${textColor}`}>Other Accrued Expenses</label>
+              <input type="number" value={bsBeginningOtherAccrued} onChange={(e) => setBsBeginningOtherAccrued(e.target.value)} placeholder="e.g., 5000" className={`w-full px-4 py-2 border ${inputBg} focus:outline-none focus:ring-2 focus:ring-blue-500`} />
+            </div>
+            <div>
+              <label className={`block text-sm font-medium mb-2 ${textColor}`}>Short-term Debt</label>
+              <input type="number" value={bsBeginningShortTermDebt} onChange={(e) => setBsBeginningShortTermDebt(e.target.value)} placeholder="e.g., 15000" className={`w-full px-4 py-2 border ${inputBg} focus:outline-none focus:ring-2 focus:ring-blue-500`} />
+            </div>
+            <div>
+              <label className={`block text-sm font-medium mb-2 ${textColor}`}>Long-term Debt</label>
+              <input type="number" value={bsBeginningLongTermDebt} onChange={(e) => setBsBeginningLongTermDebt(e.target.value)} placeholder="e.g., 100000" className={`w-full px-4 py-2 border ${inputBg} focus:outline-none focus:ring-2 focus:ring-blue-500`} />
+            </div>
+          </div>
+
+          {/* Beginning Equity */}
+          <h3 className={`text-xl font-semibold mb-4 ${headingColor}`}>Beginning Equity</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+            <div>
+              <label className={`block text-sm font-medium mb-2 ${textColor}`}>Common Stock</label>
+              <input type="number" value={bsBeginningCommonStock} onChange={(e) => setBsBeginningCommonStock(e.target.value)} placeholder="e.g., 150000" className={`w-full px-4 py-2 border ${inputBg} focus:outline-none focus:ring-2 focus:ring-blue-500`} />
+            </div>
+            <div>
+              <label className={`block text-sm font-medium mb-2 ${textColor}`}>Retained Earnings</label>
+              <input type="number" value={bsBeginningRetainedEarnings} onChange={(e) => setBsBeginningRetainedEarnings(e.target.value)} placeholder="e.g., 75000" className={`w-full px-4 py-2 border ${inputBg} focus:outline-none focus:ring-2 focus:ring-blue-500`} />
+            </div>
+          </div>
+
+          {/* Period Activity */}
+          <h3 className={`text-xl font-semibold mb-4 ${headingColor}`}>Period Activity (Optional Adjustments)</h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <div>
+              <label className={`block text-sm font-medium mb-2 ${textColor}`}>New Long-term Borrowing</label>
+              <input type="number" value={bsNewLongTermBorrowing} onChange={(e) => setBsNewLongTermBorrowing(e.target.value)} placeholder="e.g., 20000" className={`w-full px-4 py-2 border ${inputBg} focus:outline-none focus:ring-2 focus:ring-blue-500`} />
+            </div>
+            <div>
+              <label className={`block text-sm font-medium mb-2 ${textColor}`}>Long-term Debt Repayment</label>
+              <input type="number" value={bsLongTermDebtRepayment} onChange={(e) => setBsLongTermDebtRepayment(e.target.value)} placeholder="e.g., 10000" className={`w-full px-4 py-2 border ${inputBg} focus:outline-none focus:ring-2 focus:ring-blue-500`} />
+            </div>
+            <div>
+              <label className={`block text-sm font-medium mb-2 ${textColor}`}>Stock Issued</label>
+              <input type="number" value={bsStockIssued} onChange={(e) => setBsStockIssued(e.target.value)} placeholder="e.g., 10000" className={`w-full px-4 py-2 border ${inputBg} focus:outline-none focus:ring-2 focus:ring-blue-500`} />
+            </div>
+          </div>
+
+          <button
+            onClick={handleCalculateBalanceSheet}
+            className={`${buttonBg} font-medium px-8 py-3 text-lg mb-6`}
+          >
+            Calculate Balance Sheet
+          </button>
+
+          {balanceSheetErrors.length > 0 && (
+            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 mb-6">
+              <strong>Errors:</strong>
+              <ul className="list-disc list-inside">
+                {balanceSheetErrors.map((error, idx) => (
+                  <li key={idx}>{error}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {balanceSheetWarnings.length > 0 && (
+            <div className="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 mb-6">
+              <strong>Warnings:</strong>
+              <ul className="list-disc list-inside">
+                {balanceSheetWarnings.map((warning, idx) => (
+                  <li key={idx}>{warning}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {balanceSheetResult && (
+            <div className="space-y-6">
+              <div className="flex justify-between items-center">
+                <h3 className={`text-2xl font-semibold ${headingColor}`}>
+                  Budgeted Balance Sheet
+                </h3>
+                <button
+                  onClick={downloadBalanceSheetCSV}
+                  className={`${buttonBg} px-6 py-2 text-sm`}
+                >
+                  Download CSV
+                </button>
+              </div>
+
+              {/* Balance Check */}
+              <div className={`p-4 rounded ${balanceSheetResult.isBalanced ? 'bg-green-100 border border-green-400' : 'bg-red-100 border border-red-400'}`}>
+                <p className={`font-medium ${balanceSheetResult.isBalanced ? 'text-green-700' : 'text-red-700'}`}>
+                  {balanceSheetResult.isBalanced
+                    ? '✓ Balance Sheet is balanced (Assets = Liabilities + Equity)'
+                    : `✗ Balance Sheet does not balance. Difference: $${balanceSheetResult.balanceDifference.toFixed(2)}`}
+                </p>
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className={`w-full border ${darkMode ? 'border-gray-700' : 'border-gray-300'}`}>
+                  <thead className={darkMode ? 'bg-gray-800' : 'bg-gray-100'}>
+                    <tr>
+                      <th className={`py-3 px-4 text-left text-sm font-semibold ${headingColor}`}>Section</th>
+                      <th className={`py-3 px-4 text-left text-sm font-semibold ${headingColor}`}>Item</th>
+                      <th className={`py-3 px-4 text-right text-sm font-semibold ${headingColor}`}>Amount</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {formatBalanceSheetOutput(balanceSheetResult).map((row, idx) => (
+                      <tr
+                        key={idx}
+                        className={`border-b ${darkMode ? 'border-gray-800' : 'border-gray-200'} ${row.isTotal ? (darkMode ? 'bg-gray-800' : 'bg-gray-100') : ''}`}
+                      >
+                        <td className={`py-3 px-4 text-sm ${row.section.includes('ASSETS') || row.section.includes('LIABILITIES') || row.section.includes('EQUITY') ? 'font-bold' : ''} ${headingColor}`}>{row.section.includes('ASSETS') || row.section.includes('LIABILITIES') || row.section.includes('EQUITY') ? row.section : ''}</td>
+                        <td className={`py-3 px-4 text-sm ${row.isSubtotal || row.isTotal ? 'font-semibold' : ''} ${headingColor}`}>{row.label}</td>
+                        <td className={`py-3 px-4 text-sm text-right ${row.isSubtotal || row.isTotal ? 'font-semibold' : ''}`}>{row.amount}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Financial Ratios */}
+              <h3 className={`text-xl font-semibold mt-8 mb-4 ${headingColor}`}>
+                Financial Ratios
+              </h3>
+              <div className="overflow-x-auto">
+                <table className={`w-full border ${darkMode ? 'border-gray-700' : 'border-gray-300'}`}>
+                  <thead className={darkMode ? 'bg-gray-800' : 'bg-gray-100'}>
+                    <tr>
+                      <th className={`py-3 px-4 text-left text-sm font-semibold ${headingColor}`}>Category</th>
+                      <th className={`py-3 px-4 text-left text-sm font-semibold ${headingColor}`}>Ratio</th>
+                      <th className={`py-3 px-4 text-right text-sm font-semibold ${headingColor}`}>Value</th>
+                      <th className={`py-3 px-4 text-left text-sm font-semibold ${headingColor}`}>Interpretation</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {formatFinancialRatios(balanceSheetResult).map((ratio, idx) => (
+                      <tr
+                        key={idx}
+                        className={`border-b ${darkMode ? 'border-gray-800' : 'border-gray-200'}`}
+                      >
+                        <td className={`py-3 px-4 text-sm font-medium ${headingColor}`}>{ratio.category}</td>
+                        <td className={`py-3 px-4 text-sm ${headingColor}`}>{ratio.label}</td>
+                        <td className={`py-3 px-4 text-sm text-right font-medium`}>{ratio.value}</td>
+                        <td className={`py-3 px-4 text-sm ${ratio.interpretation.includes('Strong') || ratio.interpretation.includes('Good') || ratio.interpretation.includes('Excellent') || ratio.interpretation.includes('Positive') || ratio.interpretation.includes('Conservative') || ratio.interpretation.includes('Low debt') || ratio.interpretation.includes('Efficient') ? 'text-green-600' : 'text-yellow-600'}`}>{ratio.interpretation}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              <p className="text-lg leading-relaxed">
+                ✓ Balance Sheet calculated successfully
+              </p>
+            </div>
+          )}
+        </div>
+
+        <hr className={`my-12 ${hrColor}`} />
+
+        <h3 className={`text-2xl font-semibold mb-4 ${headingColor}`}>
+          About the Balance Sheet
+        </h3>
+        <p className="text-lg mb-4 leading-relaxed">
+          The Budgeted Balance Sheet projects your company's financial position at the end of the budget period. It combines data from all previous schedules to show assets, liabilities, and stockholders' equity, with the fundamental equation: Assets = Liabilities + Equity.
+        </p>
+        <p className="text-base leading-relaxed">
+          <strong>Key Ratios:</strong> Current Ratio (liquidity), Quick Ratio (immediate liquidity), Debt-to-Equity (leverage), Return on Assets (asset efficiency), Return on Equity (owner returns), Asset Turnover (sales efficiency).
+        </p>
+
+        <hr className={`my-12 ${hrColor}`} />
+
+        <h3 className={`text-2xl font-semibold mb-4 ${headingColor}`}>
+          Master Budget Complete
+        </h3>
+        <p className="text-lg mb-4 leading-relaxed">
+          Congratulations! You have completed all 13 schedules of the comprehensive master budget. Your budget now includes sales forecasts, production plans, cost projections, cash flow analysis, profitability projections, and a complete financial position statement.
         </p>
       </main>
 

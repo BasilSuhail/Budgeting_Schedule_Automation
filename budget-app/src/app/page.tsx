@@ -142,12 +142,42 @@ export default function Home() {
         </p>
 
         <p className="text-lg mb-6 leading-relaxed">
-          <strong>Schedule 8: Cash Receipts Budget</strong> — Fully functional. Calculate when cash is actually collected
+          <strong>Schedule 7: Cash Receipts Budget</strong> — Fully functional. Calculate when cash is actually collected
           from sales with collection timing tracking, accounts receivable management, and bad debt allowance.
         </p>
 
+        <p className="text-lg mb-6 leading-relaxed">
+          <strong>Schedule 8: Cash Disbursements Budget</strong> — Fully functional. Track all cash outflows including
+          material payments, payroll, overhead, SGA expenses, taxes, dividends, capital expenditures, and loan payments.
+        </p>
+
+        <p className="text-lg mb-6 leading-relaxed">
+          <strong>Schedule 9: Cash Budget</strong> — Fully functional. Master cash planning schedule combining receipts
+          and disbursements to forecast cash position, identify financing needs, and calculate operating and free cash flow.
+        </p>
+
+        <p className="text-lg mb-6 leading-relaxed">
+          <strong>Schedule 10: Cost of Goods Manufactured & Sold</strong> — Fully functional. Calculate the total cost
+          of producing and selling goods with Work-in-Process and Finished Goods inventory tracking, per-unit cost analysis,
+          and automatic integration with material, labor, and overhead schedules.
+        </p>
+
+        <p className="text-lg mb-6 leading-relaxed">
+          <strong>Schedule 11: Budgeted Income Statement</strong> — Fully functional. Project your company's profitability
+          with complete income statement including gross margin, operating income, interest expense, income tax, and net income
+          with comprehensive percentage analysis of all line items.
+        </p>
+
+        <p className="text-lg mb-6 leading-relaxed">
+          <strong>Schedule 12: Budgeted Statement of Cash Flows</strong> — Fully functional. Complete cash flow analysis using
+          the direct method with indirect method reconciliation. Includes operating, investing, and financing activities plus
+          quality metrics like free cash flow, debt service coverage, and cash flow adequacy ratios.
+        </p>
+
         <p className="text-lg mb-12 leading-relaxed">
-          Schedules 7, 9-14 are coming soon.
+          <strong>Schedule 13: Budgeted Balance Sheet</strong> — Fully functional. Project your company's financial position
+          with complete asset, liability, and equity tracking. Includes financial ratios (current ratio, quick ratio, ROA, ROE,
+          debt-to-equity) and balance check validation.
         </p>
 
         <hr className={`my-16 ${darkMode ? 'border-gray-700' : 'border-gray-300'}`} />

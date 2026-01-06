@@ -378,8 +378,10 @@ export interface CashReceiptsInputs {
 // ============================================================================
 
 export interface CashDisbursementInputs {
-  // Payment policies (already covered in other sections)
-  // This section will pull from other budgets
+  // Payment timing for materials
+  percentMaterialPaidSameQuarter?: number;
+  percentMaterialPaidNextQuarter?: number;
+  beginningAccountsPayable?: number;
 
   // Additional cash expenses
   incomeTaxPayments?: QuarterlyData;
@@ -402,25 +404,6 @@ export interface CashBudgetInputs {
   // Financing
   interestRateOnBorrowing?: number;  // e.g., 0.08 for 8% annual
   interestRateOnInvestments?: number;
-}
-
-// ============================================================================
-// 10. BALANCE SHEET INPUTS
-// ============================================================================
-
-export interface BalanceSheetInputs {
-  // Beginning balance sheet items
-  beginningCash: number;
-  beginningAccountsReceivable: number;
-  beginningInventoryRawMaterial: number;
-  beginningInventoryFinishedGoods: number;
-  beginningFixedAssets: number;
-  beginningAccumulatedDepreciation: number;
-
-  beginningAccountsPayable: number;
-  beginningLongTermDebt: number;
-  beginningCommonStock: number;
-  beginningRetainedEarnings: number;
 }
 
 // ============================================================================
@@ -706,11 +689,15 @@ export interface CashReceiptsOutput {
 
 export interface CashDisbursementOutput {
   materialPayments: QuarterlyData;
-  labourPayments: QuarterlyData;
+  laborPayments: QuarterlyData;
   overheadPayments: QuarterlyData;
-  sellingAdminPayments: QuarterlyData;
-  otherPayments: QuarterlyData;
+  sgaPayments: QuarterlyData;
+  incomeTaxPayments: QuarterlyData;
+  dividendPayments: QuarterlyData;
+  capitalExpenditures: QuarterlyData;
+  loanPayments: QuarterlyData;
   totalDisbursements: QuarterlyData;
+  endingAccountsPayable: QuarterlyData;
 }
 
 export interface CashBudgetOutput {
@@ -721,76 +708,226 @@ export interface CashBudgetOutput {
   excessOrDeficiency: QuarterlyData;
   financing: QuarterlyData;  // Borrowing or repayments
   endingCash: QuarterlyData;
+  operatingCashFlow: QuarterlyData;
+  freeCashFlow: QuarterlyData;
+}
+
+// ============================================================================
+// 10. COST OF GOODS MANUFACTURED & SOLD (COGS) INPUTS
+// ============================================================================
+
+export interface COGSInputs {
+  // Work-in-Process Inventory
+  beginningWIPInventory: number;
+  endingWIPInventory: number;
+
+  // Finished Goods Inventory
+  beginningFinishedGoodsInventory: number;
+  endingFinishedGoodsInventory: number;
 }
 
 export interface COGSOutput {
-  beginningInventory: number;
+  // Manufacturing costs (from Schedules 3, 4, 5)
   directMaterial: number;
-  directLabour: number;
+  directLabor: number;
   manufacturingOverhead: number;
   totalManufacturingCost: number;
-  endingInventory: number;
+
+  // Work-in-Process
+  beginningWIPInventory: number;
+  endingWIPInventory: number;
+  costOfGoodsManufactured: number;
+
+  // Finished Goods
+  beginningFinishedGoodsInventory: number;
+  endingFinishedGoodsInventory: number;
+  costOfGoodsAvailableForSale: number;
   costOfGoodsSold: number;
+
+  // Per-unit metrics
+  unitsProduced: number;
+  unitsSold: number;
+  costPerUnitManufactured: number;
+  costPerUnitSold: number;
+}
+
+// ============================================================================
+// 11. BUDGETED INCOME STATEMENT INPUTS & OUTPUT
+// ============================================================================
+
+export interface IncomeStatementInputs {
+  interestExpense?: number;
+  incomeTaxRate?: number; // 0-1 (e.g., 0.25 for 25%)
 }
 
 export interface IncomeStatementOutput {
   salesRevenue: number;
   costOfGoodsSold: number;
   grossMargin: number;
+  grossMarginPercentage: number;
   sellingAdminExpenses: number;
   operatingIncome: number;
+  operatingMarginPercentage: number;
   interestExpense: number;
+  netIncomeBeforeTax: number;
+  incomeTax: number;
   netIncome: number;
+  netProfitMarginPercentage: number;
+}
+
+// ============================================================================
+// 13. BUDGETED BALANCE SHEET INPUTS & OUTPUT
+// ============================================================================
+
+export interface BalanceSheetInputs {
+  // Beginning Balances (from prior period balance sheet)
+  beginningCash: number;
+  beginningAccountsReceivable: number;
+  beginningRawMaterialInventory: number;
+  beginningWIPInventory: number;
+  beginningFinishedGoodsInventory: number;
+  beginningOtherCurrentAssets: number;
+  beginningFixedAssets: number;
+  beginningAccumulatedDepreciation: number;
+  beginningOtherAssets: number;
+
+  // Beginning Liabilities
+  beginningAccountsPayable: number;
+  beginningWagesPayable: number;
+  beginningTaxesPayable: number;
+  beginningOtherAccruedExpenses: number;
+  beginningShortTermDebt: number;
+  beginningLongTermDebt: number;
+
+  // Beginning Equity
+  beginningCommonStock: number;
+  beginningRetainedEarnings: number;
+
+  // Period Activity (if not from other schedules)
+  newLongTermBorrowing?: number;
+  longTermDebtRepayment?: number;
+  stockIssued?: number;
+  otherCurrentAssetChange?: number;
+  otherAssetChange?: number;
 }
 
 export interface BalanceSheetOutput {
-  // Assets
+  // Current Assets
   cash: number;
   accountsReceivable: number;
   inventoryRawMaterial: number;
+  inventoryWIP: number;
   inventoryFinishedGoods: number;
+  totalInventory: number;
+  otherCurrentAssets: number;
   totalCurrentAssets: number;
+
+  // Fixed Assets
   fixedAssets: number;
   accumulatedDepreciation: number;
   netFixedAssets: number;
+
+  // Other Assets
+  otherAssets: number;
   totalAssets: number;
 
-  // Liabilities
+  // Current Liabilities
   accountsPayable: number;
+  wagesPayable: number;
+  taxesPayable: number;
+  otherAccruedExpenses: number;
+  shortTermDebt: number;
   totalCurrentLiabilities: number;
+
+  // Long-term Liabilities
   longTermDebt: number;
   totalLiabilities: number;
 
-  // Equity
+  // Stockholders' Equity
   commonStock: number;
-  retainedEarnings: number;
+  beginningRetainedEarnings: number;
+  netIncome: number;
+  dividendsPaid: number;
+  endingRetainedEarnings: number;
   totalEquity: number;
+
+  // Balance Check
   totalLiabilitiesAndEquity: number;
+  isBalanced: boolean;
+  balanceDifference: number;
+
+  // Financial Ratios
+  workingCapital: number;
+  currentRatio: number;
+  quickRatio: number;
+  debtToEquityRatio: number;
+  debtToAssetsRatio: number;
+  returnOnAssets: number;
+  returnOnEquity: number;
+  assetTurnover: number;
+}
+
+// ============================================================================
+// 12. BUDGETED STATEMENT OF CASH FLOWS INPUTS & OUTPUT
+// ============================================================================
+
+export interface CashFlowStatementInputs {
+  // Beginning balances (from prior period balance sheet)
+  beginningCash: number;
+  beginningAccountsReceivable: number;
+  beginningInventory: number;
+  beginningAccountsPayable: number;
+
+  // Financing activities
+  loanProceeds?: number;  // New borrowings
+  stockIssued?: number;   // Equity raised
+
+  // Asset sales (if any)
+  proceedsFromAssetSales?: number;
 }
 
 export interface CashFlowStatementOutput {
-  // Operating activities
+  // Operating Activities (Direct Method)
+  cashReceiptsFromCustomers: number;
+  cashPaidForMaterials: number;
+  cashPaidForLabor: number;
+  cashPaidForOverhead: number;
+  cashPaidForSGA: number;
+  cashPaidForTaxes: number;
+  netCashFromOperating: number;
+
+  // Investing Activities
+  capitalExpenditures: number;
+  proceedsFromAssetSales: number;
+  netCashFromInvesting: number;
+
+  // Financing Activities
+  loanProceeds: number;
+  loanRepayments: number;
+  stockIssued: number;
+  dividendsPaid: number;
+  netCashFromFinancing: number;
+
+  // Summary
+  netChangeInCash: number;
+  beginningCash: number;
+  endingCash: number;
+
+  // Reconciliation to Indirect Method
   netIncome: number;
   depreciation: number;
   changeInAccountsReceivable: number;
   changeInInventory: number;
   changeInAccountsPayable: number;
-  cashFromOperations: number;
+  indirectMethodOperatingCash: number;
 
-  // Investing activities
-  capitalExpenditures: number;
-  cashFromInvesting: number;
-
-  // Financing activities
-  debtProceeds: number;
-  debtRepayments: number;
-  dividendsPaid: number;
-  cashFromFinancing: number;
-
-  // Net change
-  netChangeInCash: number;
-  beginningCash: number;
-  endingCash: number;
+  // Quality Metrics
+  freeCashFlow: number;
+  operatingCashToNetIncomeRatio: number;
+  capitalIntensityRatio: number;  // CapEx as % of sales
+  dividendCoverageRatio: number;  // Operating cash / dividends
+  debtServiceCoverageRatio: number;  // Operating cash / debt payments
+  cashFlowAdequacyRatio: number;  // Operating cash / (CapEx + Dividends + Debt)
 }
 
 // ============================================================================
